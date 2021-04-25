@@ -4,8 +4,8 @@ using System.Text;
 
 namespace PavEcsGame.Components
 {
-    struct KeyboardControlComponent
+    struct RandomGeneratorComponent
     {
-        public int Index;
+        public Random Rnd;
     }
 }

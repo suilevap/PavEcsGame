@@ -82,7 +82,7 @@ namespace PavEcsGame.Systems
                 case 'p':
                     _world.NewEntity()
                         //.Tag<SpawnRequestComponent>()
-                        .Replace(new KeyboardControlComponent() { Index = 0})
+                        .Replace(new PlayerIndexComponent() { Index = 0})
                         .Replace(new SpeedComponent())
                         .Replace(new NewPositionComponent() { Value = pos })
                         .Replace(new SymbolComponent() { Value = '@' });
@@ -91,9 +91,10 @@ namespace PavEcsGame.Systems
                 case 'e':
                     _world.NewEntity()
                         //.Tag<SpawnRequestComponent>()
+                        .Replace(new RandomGeneratorComponent() { Rnd = new Random(pos.Value.GetHashCode())})
                         .Replace(new NewPositionComponent() { Value = pos })
                         .Replace(new SymbolComponent() { Value = 'e' })
-                        .Replace(new SpeedComponent() { Speed = new Int2(1, 0) });
+                        .Replace(new SpeedComponent());
                     break;
 
 

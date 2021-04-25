@@ -9,9 +9,15 @@ namespace PavEcsGame.Systems
 {
     class KeyboardMoveSystem : IEcsRunSystem, IEcsInitSystem
     {
-        EcsFilter<KeyboardControlComponent, SpeedComponent> _filter;
+        private readonly bool _waitKey;
+        EcsFilter<PlayerIndexComponent, SpeedComponent> _filter;
 
         private Dictionary<ConsoleKey, SpeedComponent>[] _configs;
+
+        public KeyboardMoveSystem(bool waitKey)
+        {
+            _waitKey = waitKey;
+        }
         public void Init()
         {
             _configs = new Dictionary<ConsoleKey, SpeedComponent>[]
@@ -31,7 +37,7 @@ namespace PavEcsGame.Systems
             if (_filter.IsEmpty())
                 return;
 
-            var key = (Console.KeyAvailable || true) ? Console.ReadKey().Key : default;
+            var key = (_waitKey || Console.KeyAvailable ) ? Console.ReadKey().Key : default;
             foreach (var i in _filter)
             {
                 var id = _filter.Get1(i).Index;
