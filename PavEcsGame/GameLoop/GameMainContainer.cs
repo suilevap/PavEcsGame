@@ -6,7 +6,7 @@ using Leopotam.Ecs.Types;
 using PavEcsGame.Components;
 using PavEcsGame.LeoEcsExtensions;
 using PavEcsGame.Systems;
-
+using PavEcsGame.Utils;
 
 namespace PavEcsGame.GameLoop
 {
@@ -15,6 +15,7 @@ namespace PavEcsGame.GameLoop
         private EcsWorld _world;
         private EcsSystems _systems;
         private IMapData<PositionComponent, EcsEntity> _map;
+        private WorkQueue _workQueue;
 
         public bool IsAlive => _world.IsAlive();
 
@@ -24,9 +25,9 @@ namespace PavEcsGame.GameLoop
             _systems = new EcsSystems(_world, "Default World");
 
             _map = new MapData<EcsEntity>();
-
+            _workQueue = new WorkQueue();
             _systems
-                .Add(new LoadMapSystem("Data/map1.txt"), "LoadMap")
+                .Add(new LoadMapSystem("Data/map1.txt"))
                 .Add(new SpawnSystem())
                 .Add(new MovementSystem())
                 .Add(new UpdatePositionSystem())
@@ -34,9 +35,11 @@ namespace PavEcsGame.GameLoop
                 .Add(new SymbolRenderSystem())
                 .Add(new KeyboardMoveSystem(waitKey: true))
                 .Add(new RandomMovementSystem())
+                .Add(new WorkQueueSystem())
                 .OneFrame<PreviousPositionComponent>()
                 //.Add(new SymbolReRenderAllSystem())
                 .InjectByDeclaredType(_map)
+                .InjectByDeclaredType(_workQueue)
                 .Init();
         }
 
