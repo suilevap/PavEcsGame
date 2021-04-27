@@ -33,7 +33,6 @@ namespace PavEcsGame.Systems
             if (lines == null || lines.Length == 0)
                 return;
 
-            await _work.ContinueInRun();
 
             _map.Init(new PositionComponent(new Int2(lines.Max(x => x.Length), lines.Length)));
 

@@ -22,6 +22,8 @@ namespace PavEcsGame.Utils
 
         public IAwaitable ContinueInRun() => new Awaiter(this);
 
+        public void Enqueue(Action action) => _queue.Enqueue(action);
+
         public void RunAll()
         {
             while (_queue.TryDequeue(out var action))
@@ -48,7 +50,7 @@ namespace PavEcsGame.Utils
 
             public void OnCompleted(Action continuation)
             {
-                _workQueue._queue.Enqueue(() =>
+                _workQueue.Enqueue(() =>
                 {
                     continuation?.Invoke();
                     IsCompleted = true;
