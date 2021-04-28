@@ -1,63 +1,63 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
+using System.Threading;
 
 namespace PavEcsGame.Utils
 {
-    public interface IAwaitable
-    {
-        IAwaiter GetAwaiter();
-    }
 
-    public interface IAwaiter : INotifyCompletion
-    {
-        bool IsCompleted { get; }
-
-        void GetResult();
-    }
     public class WorkQueue
     {
-        private readonly Queue<Action> _queue = new Queue<Action>();
+        private readonly Queue<WorkItem> _queue = new Queue<WorkItem>();
 
-        public IAwaitable ContinueInRun() => new Awaiter(this);
+        //return specific type instead of interface to avoid boxing
+        public WorkQueueAwaiter ContinueInQueue() => new WorkQueueAwaiter(this);
 
-        public void Enqueue(Action action) => _queue.Enqueue(action);
+        public void Enqueue(SendOrPostCallback callback, object state) => _queue.Enqueue(new WorkItem(callback, state));
 
         //execute only items where were enqueued till that moment (to avoid inifinte loops, when item execution add new item)
         public void RunEqueuedOnly()
         {
             int count = _queue.Count;
 
-            while (count > 0 && _queue.TryDequeue(out var action))
+            while (count > 0 && _queue.TryDequeue(out var item))
             {
-                action?.Invoke();
+                item.Callback(item.State);
+                count--;
             }
         }
 
-        private class Awaiter : IAwaiter, IAwaitable//INotifyCompletion
+        private readonly struct WorkItem
+        {
+            public readonly SendOrPostCallback Callback;
+            public readonly object State;
+
+            public WorkItem(SendOrPostCallback callback, object state)
+            {
+                Callback = callback;
+                State = state;
+            }
+        }
+
+        public readonly struct WorkQueueAwaiter : INotifyCompletion
         {
             private readonly WorkQueue _workQueue;
 
-            public Awaiter(WorkQueue workQueue)
+            public WorkQueueAwaiter(WorkQueue workQueue)
             {
                 _workQueue = workQueue;
             }
-            public bool IsCompleted { get; private set; }
+            public bool IsCompleted => false;
 
-            public IAwaiter GetAwaiter() => this;
+            public WorkQueueAwaiter GetAwaiter() => this;
 
-            public void GetResult()
-            {
-            }
+            public void GetResult() { }
 
             public void OnCompleted(Action continuation)
             {
-                _workQueue.Enqueue(() =>
-                {
-                    continuation?.Invoke();
-                    IsCompleted = true;
-                });
+                _workQueue.Enqueue(
+                    callback: _ => continuation?.Invoke(),
+                    state: null);
             }
         }
     }

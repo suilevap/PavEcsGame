@@ -12,12 +12,12 @@ namespace PavEcsGame.Utils
         }
         public override void Post(SendOrPostCallback d, object state)
         {
-            _workQueue.Enqueue(() => d.Invoke(state));
+            _workQueue.Enqueue(d, state);
         }
 
         public override void Send(SendOrPostCallback d, object state)
         {
-            _workQueue.Enqueue(() => d.Invoke(state));
+            _workQueue.Enqueue(d, state);
         }
 
         public override SynchronizationContext CreateCopy()
