@@ -24,9 +24,12 @@ namespace PavEcsGame.Utils
 
         public void Enqueue(Action action) => _queue.Enqueue(action);
 
-        public void RunAll()
+        //execute only items where were enqueued till that moment (to avoid inifinte loops, when item execution add new item)
+        public void RunEqueuedOnly()
         {
-            while (_queue.TryDequeue(out var action))
+            int count = _queue.Count;
+
+            while (count > 0 && _queue.TryDequeue(out var action))
             {
                 action?.Invoke();
             }

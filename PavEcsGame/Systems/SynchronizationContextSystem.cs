@@ -20,7 +20,7 @@ namespace PavEcsGame.Systems
 
         public void Run()
         {
-            _workQueue.RunAll();
+            _workQueue.RunEqueuedOnly();
         }
     }
 }
