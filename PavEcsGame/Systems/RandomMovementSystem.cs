@@ -9,7 +9,7 @@ namespace PavEcsGame.Systems
 {
     class RandomMovementSystem : IEcsRunSystem
     {
-        private EcsFilter<SpeedComponent, RandomGeneratorComponent> _filter;
+        private EcsFilter<SpeedComponent, RandomGeneratorComponent, IsActiveTag> _filter;
         public void Run()
         {
             foreach (var i in _filter)

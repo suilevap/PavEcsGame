@@ -10,7 +10,7 @@ namespace PavEcsGame.Systems
     class MovementSystem : IEcsRunSystem
     {
 
-        private EcsFilter<PositionComponent, SpeedComponent> _filter;
+        private EcsFilter<PositionComponent, SpeedComponent, IsActiveTag> _filter;
 
         public void Run()
         {

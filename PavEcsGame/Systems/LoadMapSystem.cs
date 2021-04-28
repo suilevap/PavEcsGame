@@ -18,7 +18,6 @@ namespace PavEcsGame.Systems
         private EcsWorld _world = null;
         private IMapData<PositionComponent, EcsEntity> _map;
 
-        private WorkQueue _work;
 
         public LoadMapSystem(string fileName)
         {
@@ -33,6 +32,7 @@ namespace PavEcsGame.Systems
             if (lines == null || lines.Length == 0)
                 return;
 
+            Random rnd = new Random(42);
 
             _map.Init(new PositionComponent(new Int2(lines.Max(x => x.Length), lines.Length)));
 
@@ -42,7 +42,10 @@ namespace PavEcsGame.Systems
                 pos.Value.X = 0;
                 foreach (var c in line)
                 {
-                    TrySpawnEntity(pos, c);
+                    TrySpawnEntity(c, rnd)
+                        ?.Replace(new NewPositionComponent() { Value = pos })
+                        .Tag<IsActiveTag>();
+
                     pos.Value.X++;
                 }
                 pos.Value.Y++;
@@ -50,39 +53,36 @@ namespace PavEcsGame.Systems
 
         }
 
-        private void TrySpawnEntity(PositionComponent pos, char symbol)
+        private EcsEntity? TrySpawnEntity(char symbol, Random rnd)
         {
+            EcsEntity? result = default;
             switch (symbol)
             {
                 //wall
                 case 'X':
                 case 'x':
-                    _world.NewEntity()
+                    result = _world.NewEntity()
                         //.Tag<SpawnRequestComponent>()
-                        .Replace(new NewPositionComponent() { Value = pos })
                         .Replace(new SymbolComponent() { Value = '#' });
                     break;
                 //player
                 case 'p':
-                    _world.NewEntity()
+                    result = _world.NewEntity()
                         //.Tag<SpawnRequestComponent>()
                         .Replace(new PlayerIndexComponent() { Index = 0})
                         .Replace(new SpeedComponent())
-                        .Replace(new NewPositionComponent() { Value = pos })
                         .Replace(new SymbolComponent() { Value = '@' });
                     break;
                 //enemy
                 case 'e':
-                    _world.NewEntity()
+                    result = _world.NewEntity()
                         //.Tag<SpawnRequestComponent>()
-                        .Replace(new RandomGeneratorComponent() { Rnd = new Random(pos.Value.GetHashCode())})
-                        .Replace(new NewPositionComponent() { Value = pos })
+                        .Replace(new RandomGeneratorComponent() { Rnd = rnd})
                         .Replace(new SymbolComponent() { Value = 'e' })
                         .Replace(new SpeedComponent());
                     break;
-
-
             }
+            return result;
         }
     }
 }

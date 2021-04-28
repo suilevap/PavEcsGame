@@ -10,7 +10,7 @@ namespace PavEcsGame.Systems
     class KeyboardMoveSystem : IEcsRunSystem, IEcsInitSystem
     {
         private readonly bool _waitKey;
-        EcsFilter<PlayerIndexComponent, SpeedComponent> _filter;
+        EcsFilter<PlayerIndexComponent, SpeedComponent, IsActiveTag> _filter;
 
         private Dictionary<ConsoleKey, SpeedComponent>[] _configs;
 
