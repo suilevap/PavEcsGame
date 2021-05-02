@@ -9,6 +9,6 @@ namespace PavEcsGame.Components
     [DebuggerDisplay("NextPos: {Value}")]
     struct NewPositionComponent
     {
-        public PositionComponent Value;
+        public PositionComponent? Value;
     }
 }

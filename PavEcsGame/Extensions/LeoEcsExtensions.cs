@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using Leopotam.Ecs;
 
-namespace PavEcsGame.LeoEcsExtensions
+namespace PavEcsGame.Extensions
 {
     public static class LeoEcsExtensions
     {
-        public static EcsSystems InjectByDeclaredType<T>(this EcsSystems systems,T dependency)
+        public static EcsSystems InjectByDeclaredType<T>(this EcsSystems systems, T dependency)
         {
             return systems.Inject(dependency, typeof(T));
         }
@@ -16,5 +16,6 @@ namespace PavEcsGame.LeoEcsExtensions
         {
             return ent.Replace(new T());
         }
+
     }
 }

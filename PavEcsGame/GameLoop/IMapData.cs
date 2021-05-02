@@ -5,17 +5,20 @@ using System.Collections.Generic;
 
 namespace PavEcsGame.GameLoop
 {
-    interface IMapData<TP, TV>
+    interface IReadOnlyMapData<TP, TV>
     {
         TP MinPos { get; }
         TP MaxPos { get; }
 
+        TV Get(in TP pos);
+        TP GetSafePos(in TP value);
+    }
+    interface IMapData<TP, TV> : IReadOnlyMapData<TP, TV>
+    {
         void Init(in TP size);
 
-        ref TV Get(in TP pos);
-        void Set(in TP pos,in TV item);
-        TP GetSafePos(in TP value);
-
+        ref TV GetRef(in TP pos);
+        void Set(in TP pos, in TV item);
     }
 
     static class MapDataExtensions
@@ -35,7 +38,7 @@ namespace PavEcsGame.GameLoop
         //        }
         //    }
         //}
-        public static IEnumerable<(PositionComponent pos, TV item)> GetAll<TV>(this IMapData<PositionComponent, TV> data)
+        public static IEnumerable<(PositionComponent pos, TV item)> GetAll<TV>(this IReadOnlyMapData<PositionComponent, TV> data)
         {
             PositionComponent pos = new PositionComponent();
             for (pos.Value.Y = data.MinPos.Value.Y; pos.Value.Y < data.MaxPos.Value.Y; pos.Value.Y++)

@@ -11,7 +11,7 @@ namespace PavEcsGame.Systems
 {
     class VerifyMapSystem : IEcsRunSystem
     {
-        private IMapData<PositionComponent, EcsEntity> _map;
+        private IReadOnlyMapData<PositionComponent, EcsEntity> _map;
         private EcsFilter<PositionComponent> _filter;
 
         public void Run()
@@ -24,9 +24,11 @@ namespace PavEcsGame.Systems
 
             foreach(var (pos,ent) in _map.GetAll())
             {
-                if (!ent.IsNull())
+                if (ent.IsAlive())
                 {
-                    Debug.Assert(ent.Has<PositionComponent>() && pos.Value == ent.Get<PositionComponent>().Value,
+                    Debug.Assert(ent.Has<PositionComponent>(),
+                        $"Stored ent without pos: {ent}");
+                    Debug.Assert(pos.Value == ent.Get<PositionComponent>().Value,
                         $"Stored in wrong place: {ent}, actual pos:{pos}, exptected: {ent.Get<PositionComponent>()}");
                 }
             }

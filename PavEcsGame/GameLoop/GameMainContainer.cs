@@ -4,7 +4,7 @@ using System.Text;
 using Leopotam.Ecs;
 using Leopotam.Ecs.Types;
 using PavEcsGame.Components;
-using PavEcsGame.LeoEcsExtensions;
+using PavEcsGame.Extensions;
 using PavEcsGame.Systems;
 using PavEcsGame.Utils;
 
@@ -29,13 +29,21 @@ namespace PavEcsGame.GameLoop
                 .Add(new SynchronizationContextSystem())
                 .Add(new LoadMapSystem("Data/map1.txt"))
                 .Add(new SpawnSystem())
-                .Add(new MovementSystem())
-                .Add(new UpdatePositionSystem())
-                .Add(new VerifyMapSystem())
-                .Add(new SymbolRenderSystem())
                 .Add(new KeyboardMoveSystem(waitKey: true))
                 .Add(new RandomMovementSystem())
+                .Add(new MovementSystem())
+                .Add(new UpdatePositionSystem())
+                .Add(new DamageOnCollisionSystem())
+#if DEBUG
+                .Add(new VerifyMapSystem())
+#endif
+                .Add(new SymbolRenderSystem())
+
+                .Add(new DestroyEntitySystem())
+
                 .OneFrame<PreviousPositionComponent>()
+                .OneFrame<TargetCollisionEventComponent>()
+                .OneFrame<SourceCollisionEventComponent>()
                 //.Add(new SymbolReRenderAllSystem())
                 .InjectByDeclaredType(_map)
                 .Init();

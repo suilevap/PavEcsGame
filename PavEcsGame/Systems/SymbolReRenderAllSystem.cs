@@ -9,7 +9,7 @@ namespace PavEcsGame.Systems
 {
     class SymbolReRenderAllSystem : IEcsInitSystem, IEcsRunSystem
     {
-        private IMapData<PositionComponent, EcsEntity> _map;
+        private IReadOnlyMapData<PositionComponent, EcsEntity> _map;
         private StringBuilder _sb;
 
         public void Init()
@@ -26,7 +26,7 @@ namespace PavEcsGame.Systems
                 for (int x = _map.MinPos.Value.X; x < _map.MaxPos.Value.X; x++)
                 {
                     var pos = new PositionComponent(new Int2(x, y));
-                    ref var ent = ref _map.Get(pos);
+                    var ent = _map.Get(pos);
                     Console.SetCursorPosition(x, y);
                     char symbol;
                     if (!ent.IsNull() && ent.Has<SymbolComponent>())
