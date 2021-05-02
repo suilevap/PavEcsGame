@@ -4,13 +4,17 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using PavEcsGame.Components;
+using PavEcsGame.Components.SystemComponents;
+using PavEcsGame.Systems.Managers;
 
 namespace PavEcsGame.Systems
 {
     class KeyboardMoveSystem : IEcsRunSystem, IEcsInitSystem
     {
         private readonly bool _waitKey;
-        EcsFilter<PlayerIndexComponent, SpeedComponent, IsActiveTag, MarkAsRenderedTag> _filter;
+        private EcsFilter<PlayerIndexComponent, SpeedComponent, IsActiveTag, MarkAsRenderedTag> _filter;
+
+        private TurnManager _turnManager;
 
         private Dictionary<ConsoleKey, SpeedComponent>[] _configs;
 
@@ -34,6 +38,8 @@ namespace PavEcsGame.Systems
 
         public void Run()
         {
+            if (_turnManager.CurrentPhase != TurnManager.Phase.TickUpdate)
+                return;
             if (_filter.IsEmpty())
                 return;
             var key = (_waitKey || Console.KeyAvailable ) ? Console.ReadKey(true).Key : default;

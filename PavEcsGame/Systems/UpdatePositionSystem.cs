@@ -8,18 +8,33 @@ using PavEcsGame.Components;
 using PavEcsGame.Extensions;
 using Microsoft.VisualBasic;
 using System.Diagnostics;
+using PavEcsGame.Components.SystemComponents;
+using PavEcsGame.Systems.Managers;
 
 namespace PavEcsGame.Systems
 {
-    class UpdatePositionSystem : IEcsRunSystem
+    class UpdatePositionSystem : IEcsRunSystem, IEcsInitSystem
     {
+        private TurnManager _turnManager;
+
         private IMapData<PositionComponent, EcsEntity> _map;
         private EcsFilter<PositionComponent, NewPositionComponent> _movePosFilter;
 
         private EcsFilter<NewPositionComponent> _newPosFilter;
+        
+        [EcsIgnoreInject]
+        private EcsEntity _systemEnt;
+        private TurnManager.SystemRegistration _registration;
+
+        public void Init()
+        {
+            _registration = _turnManager.Register(this);
+        }
 
         public void Run()
         {
+            _registration.UpdateState(_newPosFilter);
+
             //move to new pos in map and solve collide
             foreach(var i in _newPosFilter)
             {

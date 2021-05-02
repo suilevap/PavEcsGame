@@ -17,5 +17,18 @@ namespace PavEcsGame.Extensions
             return ent.Replace(new T());
         }
 
+        public static EcsEntity Tag<T>(this EcsEntity ent, bool set) where T : struct, IEcsIgnoreInFilter
+        {
+            if (set)
+            {
+                return ent.Replace(new T());
+            }
+            else
+            {
+                ent.Del<T>();
+                return ent;
+            }
+        }
+
     }
 }

@@ -6,6 +6,7 @@ using Leopotam.Ecs.Types;
 using PavEcsGame.Components;
 using PavEcsGame.Extensions;
 using PavEcsGame.Systems;
+using PavEcsGame.Systems.Managers;
 using PavEcsGame.Utils;
 
 namespace PavEcsGame.GameLoop
@@ -14,38 +15,55 @@ namespace PavEcsGame.GameLoop
     {
         private EcsWorld _world;
         private EcsSystems _systems;
-        private IMapData<PositionComponent, EcsEntity> _map;
 
         public bool IsAlive => _world.IsAlive();
 
         public void Start()
         {
-
             _world = new EcsWorld();
-            _systems = new EcsSystems(_world, "Default World");
+            var turnManager = new TurnManager(_world);
+            var map = new MapData<EcsEntity>();
 
-            _map = new MapData<EcsEntity>();
-            _systems
+            _systems = new EcsSystems(_world, "Root")
+                .InjectByDeclaredType(map)
+                .InjectByDeclaredType(turnManager);
+
+            var initSystems = new EcsSystems(_world, "Init")
                 .Add(new SynchronizationContextSystem())
                 .Add(new LoadMapSystem("Data/map1.txt"))
-                .Add(new SpawnSystem())
+                .Add(new SpawnSystem());
+
+            var controlSystems = new EcsSystems(_world,"Control")
                 .Add(new KeyboardMoveSystem(waitKey: true))
-                .Add(new RandomMovementSystem())
-                .Add(new MovementSystem())
+                .Add(new RandomMovementSystem());
+
+            var tickSystems = new EcsSystems(_world,"Tick")   
+                .Add(new MovementSystem());
+
+            var simSystems = new EcsSystems(_world, "Sim")
                 .Add(new UpdatePositionSystem())
-                .Add(new DamageOnCollisionSystem())
 #if DEBUG
                 .Add(new VerifyMapSystem())
 #endif
-                .Add(new SymbolRenderSystem())
+                .Add(new DamageOnCollisionSystem())
+                .Add(new DestroyEntitySystem());
 
-                .Add(new DestroyEntitySystem())
+            var renderSystems = new EcsSystems(_world, "Render")
+                .Add(new SymbolRenderSystem());
 
+            var cleanupSystems = new EcsSystems(_world, "Cleanup")
                 .OneFrame<PreviousPositionComponent>()
                 .OneFrame<TargetCollisionEventComponent>()
-                .OneFrame<SourceCollisionEventComponent>()
+                .OneFrame<SourceCollisionEventComponent>();
+
+            _systems
+                .Add(initSystems)
+                .Add(controlSystems)
+                .Add(tickSystems)
+                .Add(simSystems)
+                .Add(renderSystems)
+                .Add(cleanupSystems)
                 //.Add(new SymbolReRenderAllSystem())
-                .InjectByDeclaredType(_map)
                 .Init();
         }
 

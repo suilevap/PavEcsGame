@@ -4,6 +4,8 @@ using System.Text;
 using Leopotam.Ecs;
 using Leopotam.Ecs.Types;
 using PavEcsGame.Components;
+using PavEcsGame.Components.SystemComponents;
+using PavEcsGame.Systems.Managers;
 
 namespace PavEcsGame.Systems
 {
@@ -11,9 +13,12 @@ namespace PavEcsGame.Systems
     {
 
         private EcsFilter<PositionComponent, SpeedComponent, IsActiveTag> _filter;
+        private TurnManager _turnManager;
 
         public void Run()
         {
+            if (_turnManager.CurrentPhase != TurnManager.Phase.TickUpdate)
+                return; //skip speed apply
             foreach (var i in _filter)
             {
                 ref var pos = ref _filter.Get1(i);

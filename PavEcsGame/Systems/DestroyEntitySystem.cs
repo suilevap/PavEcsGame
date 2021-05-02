@@ -1,20 +1,33 @@
 using Leopotam.Ecs;
 using PavEcsGame.Components;
+using PavEcsGame.Components.SystemComponents;
+using PavEcsGame.Extensions;
 using PavEcsGame.GameLoop;
+using PavEcsGame.Systems.Managers;
 
 namespace PavEcsGame.Systems
 {
-    public class DestroyEntitySystem : IEcsRunSystem
+    public class DestroyEntitySystem : IEcsRunSystem, IEcsInitSystem
     {
-        private EcsFilter<DestroyRequestTag> _destroyFilter;
-        private IMapData<PositionComponent, EcsEntity> _mapData;
+        private TurnManager _turnManager;
+        private EcsFilter<DestroyRequestTag>.Exclude<PositionComponent>.Exclude<MarkAsRenderedTag> _destroyFilter;
         private EcsFilter<PositionComponent, DestroyRequestTag> _removeFromMapFilter;
-        
+        private TurnManager.SystemRegistration _registration;
+
+        public void Init()
+        {
+            _registration = _turnManager.Register(this);
+        }
+
         public void Run()
         {
+            _registration.UpdateState(_removeFromMapFilter);
+
             foreach (var i in _removeFromMapFilter)
             {
-                _mapData.Set(in _removeFromMapFilter.Get1(i), EcsEntity.Null);
+                //_mapData.Set(in _removeFromMapFilter.Get1(i), EcsEntity.Null);
+                //move to void
+                _removeFromMapFilter.GetEntity(i).Get<NewPositionComponent>().Value = default;
             }
 
             foreach (var i in _destroyFilter)
