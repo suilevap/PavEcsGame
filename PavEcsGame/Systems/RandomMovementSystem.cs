@@ -13,7 +13,7 @@ namespace PavEcsGame.Systems
     {
         private TurnManager _turnManager;
 
-        private EcsFilter<SpeedComponent, RandomGeneratorComponent, IsActiveTag> _filter;
+        private EcsFilter<SpeedComponent, RandomGeneratorComponent, CommandTokenComponent, IsActiveTag> _filter;
         public void Run()
         {
             if (_turnManager.CurrentPhase != TurnManager.Phase.TickUpdate)
@@ -24,6 +24,7 @@ namespace PavEcsGame.Systems
                 var rnd = _filter.Get2(i).Rnd;
 
                 speed.Speed = new Int2(1 - rnd.Next(3), 1 - rnd.Next(3));
+                _filter.Get3(i).ActionCount--;
             }
         }
     }

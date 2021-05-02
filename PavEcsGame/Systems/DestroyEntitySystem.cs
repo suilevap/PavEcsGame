@@ -12,11 +12,11 @@ namespace PavEcsGame.Systems
         private TurnManager _turnManager;
         private EcsFilter<DestroyRequestTag>.Exclude<PositionComponent>.Exclude<MarkAsRenderedTag> _destroyFilter;
         private EcsFilter<PositionComponent, DestroyRequestTag> _removeFromMapFilter;
-        private TurnManager.SystemRegistration _registration;
+        private TurnManager.SimSystemRegistration _registration;
 
         public void Init()
         {
-            _registration = _turnManager.Register(this);
+            _registration = _turnManager.RegisterSimulationSystem(this);
         }
 
         public void Run()

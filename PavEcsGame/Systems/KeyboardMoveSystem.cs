@@ -12,7 +12,7 @@ namespace PavEcsGame.Systems
     class KeyboardMoveSystem : IEcsRunSystem, IEcsInitSystem
     {
         private readonly bool _waitKey;
-        private EcsFilter<PlayerIndexComponent, SpeedComponent, IsActiveTag, MarkAsRenderedTag> _filter;
+        private EcsFilter<PlayerIndexComponent, SpeedComponent, CommandTokenComponent, IsActiveTag> _filter;
 
         private TurnManager _turnManager;
 
@@ -54,11 +54,13 @@ namespace PavEcsGame.Systems
                     && _configs[id].TryGetValue(key, out var newSpeed))
                 {
                     currentSpeed = newSpeed;
+                    ref var tokensComponent = ref _filter.Get3(i);
+                    tokensComponent.ActionCount--;
                 }
-                else
-                {
-                    currentSpeed.Speed = new Int2();
-                }
+                // else
+                // {
+                //     currentSpeed.Speed = new Int2();
+                // }
             }
         }
     }

@@ -24,11 +24,11 @@ namespace PavEcsGame.Systems
         
         [EcsIgnoreInject]
         private EcsEntity _systemEnt;
-        private TurnManager.SystemRegistration _registration;
+        private TurnManager.SimSystemRegistration _registration;
 
         public void Init()
         {
-            _registration = _turnManager.Register(this);
+            _registration = _turnManager.RegisterSimulationSystem(this);
         }
 
         public void Run()

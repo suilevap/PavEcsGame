@@ -34,11 +34,13 @@ namespace PavEcsGame.GameLoop
                 .Add(new SpawnSystem());
 
             var controlSystems = new EcsSystems(_world,"Control")
-                .Add(new KeyboardMoveSystem(waitKey: true))
+                .Add(new CommandTokenDistributionSystem(TimeSpan.FromSeconds(1f)))
+                .Add(new KeyboardMoveSystem(waitKey: false))
                 .Add(new RandomMovementSystem());
 
             var tickSystems = new EcsSystems(_world,"Tick")   
-                .Add(new MovementSystem());
+                .Add(new MovementSystem())
+                .Add(new FrictionSystem());
 
             var simSystems = new EcsSystems(_world, "Sim")
                 .Add(new UpdatePositionSystem())
@@ -63,6 +65,7 @@ namespace PavEcsGame.GameLoop
                 .Add(simSystems)
                 .Add(renderSystems)
                 .Add(cleanupSystems)
+                .Add(turnManager)
                 //.Add(new SymbolReRenderAllSystem())
                 .Init();
         }

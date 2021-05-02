@@ -71,7 +71,10 @@ namespace PavEcsGame.Systems
                         //.Tag<SpawnRequestComponent>()
                         .Replace(new PlayerIndexComponent() { Index = 0})
                         .Replace(new SpeedComponent())
-                        .Replace(new SymbolComponent() { Value = '@' });
+                        .Replace(new SymbolComponent() { Value = '@' })
+                        .Replace(new MoveFrictionComponent() { FrictionValue = 1 })
+                        .Replace(new WaitCommandTokenComponent(1));
+
                     break;
                 //enemy
                 case 'e':
@@ -79,7 +82,9 @@ namespace PavEcsGame.Systems
                         //.Tag<SpawnRequestComponent>()
                         .Replace(new RandomGeneratorComponent() { Rnd = rnd})
                         .Replace(new SymbolComponent() { Value = 'e' })
-                        .Replace(new SpeedComponent());
+                        .Replace(new SpeedComponent())
+                        .Replace(new MoveFrictionComponent() { FrictionValue = 1 })
+                        .Replace(new WaitCommandTokenComponent(1));
                     break;
             }
             return result;

@@ -1,14 +1,20 @@
+using System;
 using System.Diagnostics;
 using Leopotam.Ecs;
+using PavEcsGame.Components;
 using PavEcsGame.Components.SystemComponents;
 using PavEcsGame.Extensions;
 
 namespace PavEcsGame.Systems.Managers
 {
-    public class TurnManager
+    public class TurnManager : IEcsRunSystem
     {
+        [EcsIgnoreInject]
         private readonly EcsWorld _world;
+        [EcsIgnoreInject]
         private readonly EcsFilter _hasMoreWorkFilter;
+
+        private long _tick;
 
         public enum Phase
         {
@@ -24,18 +30,68 @@ namespace PavEcsGame.Systems.Managers
 
         public Phase CurrentPhase => _hasMoreWorkFilter.IsEmpty() ? Phase.TickUpdate : Phase.Simulation;
 
-        public SystemRegistration Register(IEcsSystem system)
+        public long Tick => _tick;
+
+        public SimSystemRegistration RegisterSimulationSystem(IEcsSystem system)
         {
-             var result = _world.NewEntity()
-                .Replace(new SystemRefComponent() { System = system });
-            return new SystemRegistration(result);
+            var result = _world.NewEntity()
+               .Replace(new SystemRefComponent() { System = system });
+            return new SimSystemRegistration(result);
         }
 
-        public readonly struct SystemRegistration
+        public TickSystemRegistration RegisterTickSystem(IEcsSystem system)
+        {
+            var result = _world.NewEntity()
+                .Replace(new SystemRefComponent() { System = system });
+            return new TickSystemRegistration(result, this);
+        }
+
+
+        public void Run()
+        {
+            if (CurrentPhase == Phase.TickUpdate)
+            {
+                _tick++;
+            }
+        }
+
+        public readonly struct TickSystemRegistration
+        {
+            private readonly EcsEntity _systemEntity;
+            private readonly TurnManager _turnManager;
+
+            public TickSystemRegistration(EcsEntity systemEntity, TurnManager turnManager)
+            {
+                _turnManager = turnManager;
+                Debug.Assert(systemEntity.Has<SystemRefComponent>(), "Invalid update set for non system entity");
+                systemEntity.Replace(new WaitCommandTokenComponent(1));
+                _systemEntity = systemEntity;
+            }
+            public bool TryGetToken(bool hasWorkToDo)
+            {
+                if (_turnManager.CurrentPhase == Phase.TickUpdate && hasWorkToDo)
+                {
+                    if (_systemEntity.Has<CommandTokenComponent>())
+                    {
+                        ref var tokens = ref _systemEntity.Get<CommandTokenComponent>();
+                        tokens.ActionCount--;
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            public bool TryGetToken(EcsFilter mainFilter)
+            {
+                return TryGetToken(!mainFilter.IsEmpty());
+            }
+        }
+
+        public readonly struct SimSystemRegistration
         {
             private readonly EcsEntity _systemEntity;
 
-            public SystemRegistration(EcsEntity systemEntity)
+            public SimSystemRegistration(EcsEntity systemEntity)
             {
                 Debug.Assert(systemEntity.Has<SystemRefComponent>(), "Invalid update set for non system entity");
                 _systemEntity = systemEntity;
