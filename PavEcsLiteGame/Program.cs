@@ -1,4 +1,5 @@
 ﻿using System;
+using PavEcsGame.GameLoop;
 
 namespace PavEcsLiteGame
 {
@@ -6,7 +7,13 @@ namespace PavEcsLiteGame
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            GameMainContainer game = new GameMainContainer();
+
+            game.Start();
+            while (game.IsAlive)
+            {
+                game.Update();
+            }
         }
     }
 }

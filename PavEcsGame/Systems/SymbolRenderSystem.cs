@@ -6,6 +6,7 @@ using Leopotam.Ecs.Types;
 using PavEcsGame.Components;
 using PavEcsGame.GameLoop;
 using PavEcsGame.Extensions;
+using System.Threading;
 
 namespace PavEcsGame.Systems
 {
@@ -25,12 +26,14 @@ namespace PavEcsGame.Systems
         public void Run()
         {
             //Console.Clear();
+            bool smthChanged = !_clearPreviousPosFilter.IsEmpty() || !_updateCurrentPosFilter.IsEmpty();
             foreach(var i in _clearPreviousPosFilter)
             {
                 ref var prevPos = ref _clearPreviousPosFilter.Get1(i);
                 if (!_map.Get(prevPos.Value).IsAlive())
                 {
                     RenderItem(in prevPos.Value, in SymbolComponent.Empty);
+                    smthChanged = true;
                 }
                 _clearPreviousPosFilter.GetEntity(i).Del<MarkAsRenderedTag>();
             }
@@ -42,6 +45,11 @@ namespace PavEcsGame.Systems
                 RenderItem(in pos, in symbol);
                 _updateCurrentPosFilter.GetEntity(i).Tag<MarkAsRenderedTag>();
             }
+
+            // if (smthChanged)
+            // {
+            //     Thread.Sleep(50);
+            // }
 
             static void RenderItem(in PositionComponent pos, in SymbolComponent symbol)
             {

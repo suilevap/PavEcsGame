@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyName>PavEcsGame.Lite</AssemblyName>
+    <RootNamespace>PavEcsGame</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ecs-types\Leopotam.Ecs.Types.csproj" />
+    <ProjectReference Include="..\ecslite\Leopotam.EcsLite.csproj" />
+    <ProjectReference Include="..\PavEcsGame.Components\PavEcsGame.Components.csproj" />
+    <ProjectReference Include="..\PaveEcsGame.Common\PaveEcsGame.Common.csproj" />
+  </ItemGroup>
+
+</Project>

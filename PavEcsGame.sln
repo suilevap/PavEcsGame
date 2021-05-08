@@ -17,7 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PavEcsGame.Components", "Pa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leopotam.EcsLite", "ecslite\Leopotam.EcsLite.csproj", "{C34FD364-10CC-4F6F-94C5-3DE775270F3C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PavEcsLiteGame", "PavEcsLiteGame\PavEcsLiteGame.csproj", "{6121D5D4-C92E-4D49-B670-DF877E7969D0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PavEcsGame.Lite", "PavEcsLiteGame\PavEcsGame.Lite.csproj", "{6121D5D4-C92E-4D49-B670-DF877E7969D0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaveEcsGame.Common", "PaveEcsGame.Common\PaveEcsGame.Common.csproj", "{7A3E2D62-BE03-45BF-945C-3C6562097AAA}"
 EndProject
