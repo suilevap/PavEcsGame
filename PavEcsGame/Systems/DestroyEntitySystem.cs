@@ -10,7 +10,7 @@ namespace PavEcsGame.Systems
     public class DestroyEntitySystem : IEcsRunSystem, IEcsInitSystem
     {
         private TurnManager _turnManager;
-        private EcsFilter<DestroyRequestTag>.Exclude<PositionComponent>.Exclude<MarkAsRenderedTag> _destroyFilter;
+        private EcsFilter<DestroyRequestTag>.Exclude<PositionComponent,MarkAsRenderedTag> _destroyFilter;
         private EcsFilter<PositionComponent, DestroyRequestTag> _removeFromMapFilter;
         private TurnManager.SimSystemRegistration _registration;
 

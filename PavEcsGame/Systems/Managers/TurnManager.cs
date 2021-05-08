@@ -35,14 +35,14 @@ namespace PavEcsGame.Systems.Managers
         public SimSystemRegistration RegisterSimulationSystem(IEcsSystem system)
         {
             var result = _world.NewEntity()
-               .Replace(new SystemRefComponent() { System = system });
+               .Replace(new SystemRefComponent<IEcsSystem>() { System = system });
             return new SimSystemRegistration(result);
         }
 
         public TickSystemRegistration RegisterTickSystem(IEcsSystem system)
         {
             var result = _world.NewEntity()
-                .Replace(new SystemRefComponent() { System = system });
+                .Replace(new SystemRefComponent<IEcsSystem>() { System = system });
             return new TickSystemRegistration(result, this);
         }
 
@@ -63,7 +63,7 @@ namespace PavEcsGame.Systems.Managers
             public TickSystemRegistration(EcsEntity systemEntity, TurnManager turnManager)
             {
                 _turnManager = turnManager;
-                Debug.Assert(systemEntity.Has<SystemRefComponent>(), "Invalid update set for non system entity");
+                Debug.Assert(systemEntity.Has<SystemRefComponent<IEcsSystem>>(), "Invalid update set for non system entity");
                 systemEntity.Replace(new WaitCommandTokenComponent(1));
                 _systemEntity = systemEntity;
             }
@@ -93,7 +93,7 @@ namespace PavEcsGame.Systems.Managers
 
             public SimSystemRegistration(EcsEntity systemEntity)
             {
-                Debug.Assert(systemEntity.Has<SystemRefComponent>(), "Invalid update set for non system entity");
+                Debug.Assert(systemEntity.Has<SystemRefComponent<IEcsSystem>>(), "Invalid update set for non system entity");
                 _systemEntity = systemEntity;
             }
             public void UpdateState(bool hasWorkToDo)

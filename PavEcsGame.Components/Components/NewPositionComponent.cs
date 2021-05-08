@@ -7,7 +7,7 @@ using System.Text;
 namespace PavEcsGame.Components
 {
     [DebuggerDisplay("NextPos: {Value}")]
-    struct NewPositionComponent
+    public struct NewPositionComponent
     {
         public PositionComponent? Value;
     }

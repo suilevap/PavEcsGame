@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leopotam.Ecs", "ecs\Leopota
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leopotam.Ecs.Types", "ecs-types\Leopotam.Ecs.Types.csproj", "{1A4ECFA2-77A9-4D40-A42D-8CC822A9FC0C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PavEcsGame.Components", "PavEcsGame.Components\PavEcsGame.Components.csproj", "{772CDD2E-EF65-44E5-9B43-A3D90453396F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{1A4ECFA2-77A9-4D40-A42D-8CC822A9FC0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A4ECFA2-77A9-4D40-A42D-8CC822A9FC0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A4ECFA2-77A9-4D40-A42D-8CC822A9FC0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{772CDD2E-EF65-44E5-9B43-A3D90453396F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{772CDD2E-EF65-44E5-9B43-A3D90453396F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{772CDD2E-EF65-44E5-9B43-A3D90453396F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{772CDD2E-EF65-44E5-9B43-A3D90453396F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

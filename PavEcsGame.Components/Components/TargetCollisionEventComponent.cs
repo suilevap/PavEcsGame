@@ -8,9 +8,9 @@ using Leopotam.Ecs;
 namespace PavEcsGame.Components
 {
     [DebuggerDisplay("{OtherEntity}")]
-    struct SourceCollisionEventComponent
+    public struct TargetCollisionEventComponent<T> where T : struct
     {
-        public EcsEntity OtherEntity;
+        public T OtherEntity;
 
         //public NewPositionComponent Position;
     }

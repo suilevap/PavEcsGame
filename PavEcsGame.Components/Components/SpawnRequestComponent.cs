@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Leopotam.Ecs;
 
 namespace PavEcsGame.Components
 {
-    struct PreviousPositionComponent
+    public struct SpawnRequestComponent : IEcsIgnoreInFilter
     {
-        public PositionComponent Value;
+
     }
 }

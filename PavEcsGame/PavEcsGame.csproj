@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ecs-types\Leopotam.Ecs.Types.csproj" />
     <ProjectReference Include="..\ecs\Leopotam.Ecs.csproj" />
+    <ProjectReference Include="..\PavEcsGame.Components\PavEcsGame.Components.csproj" />
   </ItemGroup>
 
   <ItemGroup>

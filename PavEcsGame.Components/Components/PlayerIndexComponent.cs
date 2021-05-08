@@ -4,7 +4,7 @@ using System.Text;
 
 namespace PavEcsGame.Components
 {
-    struct PlayerIndexComponent
+    public struct PlayerIndexComponent
     {
         public int Index;
     }

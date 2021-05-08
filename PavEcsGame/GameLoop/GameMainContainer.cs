@@ -55,8 +55,8 @@ namespace PavEcsGame.GameLoop
 
             var cleanupSystems = new EcsSystems(_world, "Cleanup")
                 .OneFrame<PreviousPositionComponent>()
-                .OneFrame<TargetCollisionEventComponent>()
-                .OneFrame<SourceCollisionEventComponent>();
+                .OneFrame<TargetCollisionEventComponent<EcsEntity>>()
+                .OneFrame<SourceCollisionEventComponent<EcsEntity>>();
 
             _systems
                 .Add(initSystems)

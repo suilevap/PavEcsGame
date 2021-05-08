@@ -10,7 +10,7 @@ namespace PavEcsGame.Systems
 {
     class DamageOnCollisionSystem : IEcsRunSystem
     {
-        private EcsFilter<TargetCollisionEventComponent, IsActiveTag> _filter;
+        private EcsFilter<TargetCollisionEventComponent<EcsEntity>, IsActiveTag> _filter;
 
         public void Run()
         {

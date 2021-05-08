@@ -55,10 +55,10 @@ namespace PavEcsGame.Systems
                     {
                         if (otherEnt != ent) //try to move to same pos
                         {
-                            ref var coll = ref ent.Get<SourceCollisionEventComponent>();
+                            ref var coll = ref ent.Get<SourceCollisionEventComponent<EcsEntity>>();
                             coll.OtherEntity = otherEnt;
 
-                            ref var otherColl = ref otherEnt.Get<TargetCollisionEventComponent>();
+                            ref var otherColl = ref otherEnt.Get<TargetCollisionEventComponent<EcsEntity>>();
                             otherColl.OtherEntity = ent;
                         }
                         ent.Del<NewPositionComponent>();

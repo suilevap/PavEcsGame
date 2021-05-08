@@ -5,5 +5,5 @@ using System.Text;
 
 namespace PavEcsGame.Components
 {
-    struct IsActiveTag : IEcsIgnoreInFilter { }
+    public struct IsActiveTag : IEcsIgnoreInFilter { }
 }

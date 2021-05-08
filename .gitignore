@@ -1,3 +1,5 @@
 /.vs/
 /PavEcsGame/obj/
 /PavEcsGame/bin
+/PavEcsGame.Components/bin
+/PavEcsGame.Components/obj

@@ -4,8 +4,7 @@ using System.Text;
 
 namespace PavEcsGame.Components
 {
-    struct RandomGeneratorComponent
+    public interface ITag
     {
-        public Random Rnd;
     }
 }

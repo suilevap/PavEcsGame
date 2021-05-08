@@ -7,7 +7,7 @@ using Leopotam.Ecs.Types;
 namespace PavEcsGame.Components
 {
     [DebuggerDisplay("Speed: {Speed}")]
-    struct SpeedComponent
+    public struct SpeedComponent
     {
         public SpeedComponent(int x, int y)
             :this(new Int2(x,y))

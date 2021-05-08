@@ -2,8 +2,8 @@ using Leopotam.Ecs;
 
 namespace PavEcsGame.Components.SystemComponents
 {
-    public struct SystemRefComponent
+    public struct SystemRefComponent<T>
     {
-        public IEcsSystem System;
+        public T System;
     }
 }

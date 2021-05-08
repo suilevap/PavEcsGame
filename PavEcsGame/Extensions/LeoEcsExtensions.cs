@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Leopotam.Ecs;
+﻿using Leopotam.Ecs;
+using PavEcsGame.Components;
 
 namespace PavEcsGame.Extensions
 {
@@ -12,12 +10,12 @@ namespace PavEcsGame.Extensions
             return systems.Inject(dependency, typeof(T));
         }
 
-        public static EcsEntity Tag<T>(this EcsEntity ent) where T : struct, IEcsIgnoreInFilter
+        public static EcsEntity Tag<T>(this EcsEntity ent) where T : struct, ITag//, IEcsIgnoreInFilter
         {
             return ent.Replace(new T());
         }
 
-        public static EcsEntity Tag<T>(this EcsEntity ent, bool set) where T : struct, IEcsIgnoreInFilter
+        public static EcsEntity Tag<T>(this EcsEntity ent, bool set) where T : struct, ITag//, IEcsIgnoreInFilter
         {
             if (set)
             {
@@ -29,6 +27,16 @@ namespace PavEcsGame.Extensions
                 return ent;
             }
         }
+
+        // public static bool TryGet<T>(this EcsEntity ent, ref T component) where T : struct
+        // {
+        //     if (ent.Has<T>())
+        //     {
+        //         component = ref ent.Get<T>();
+        //         return true;
+        //     }
+        //     return false;
+        // }
 
     }
 }

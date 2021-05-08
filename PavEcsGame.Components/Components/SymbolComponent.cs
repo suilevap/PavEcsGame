@@ -7,7 +7,7 @@ namespace PavEcsGame.Components
 {
 
     [DebuggerDisplay("S: {Value}")]
-    struct SymbolComponent
+    public struct SymbolComponent
     {
         public static readonly SymbolComponent Empty = new SymbolComponent() { Value = ' ' };
 

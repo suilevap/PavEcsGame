@@ -7,7 +7,7 @@ using Leopotam.Ecs.Types;
 namespace PavEcsGame.Components
 {
     [DebuggerDisplay("{Value}")]
-    struct PositionComponent
+    public struct PositionComponent
     {
         public Int2 Value;
 
