@@ -3,9 +3,9 @@ using PavEcsGame.Components;
 using System;
 using System.Collections.Generic;
 
-namespace PavEcsGame.GameLoop
+namespace PavEcsGame
 {
-    interface IReadOnlyMapData<TP, TV>
+    public interface IReadOnlyMapData<TP, TV>
     {
         TP MinPos { get; }
         TP MaxPos { get; }
@@ -13,7 +13,8 @@ namespace PavEcsGame.GameLoop
         TV Get(in TP pos);
         TP GetSafePos(in TP value);
     }
-    interface IMapData<TP, TV> : IReadOnlyMapData<TP, TV>
+
+    public interface IMapData<TP, TV> : IReadOnlyMapData<TP, TV>
     {
         void Init(in TP size);
 
@@ -21,7 +22,7 @@ namespace PavEcsGame.GameLoop
         void Set(in TP pos, in TV item);
     }
 
-    static class MapDataExtensions
+    public static class MapDataExtensions
     {
         //public static IEnumerable<(Int2 pos, TV item)> GetAll<TV>(this IMapData<Int2, TV> data)
         //{

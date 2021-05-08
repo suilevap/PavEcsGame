@@ -4,3 +4,7 @@
 [submodule "ecs-types"]
 	path = ecs-types
 	url = https://github.com/Leopotam/ecs-types.git
+[submodule "ecslite"]
+	path = ecslite
+	url = https://github.com/Leopotam/ecslite.git
+	branch = develop

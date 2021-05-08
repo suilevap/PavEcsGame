@@ -20,8 +20,9 @@ namespace PavEcsGame.Utils
         {
             int count = _queue.Count;
 
-            while (count > 0 && _queue.TryDequeue(out var item))
+            while (count > 0 &&  _queue.Count != 0)
             {
+                var item = _queue.Dequeue();
                 item.Callback(item.State);
                 count--;
             }

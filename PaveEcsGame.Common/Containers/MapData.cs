@@ -4,10 +4,9 @@ using System.Text;
 using Leopotam.Ecs.Types;
 using PavEcsGame.Components;
 
-namespace PavEcsGame.GameLoop
+namespace PavEcsGame
 {
-
-    class MapData<T> : IMapData<Int2, T>, IMapData<PositionComponent, T>
+    public class MapData<T> : IMapData<Int2, T>, IMapData<PositionComponent, T>
     {
 
         private T[,] _data;
