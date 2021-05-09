@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
 using PavEcsGame.Components;
-using PavEcsGame.GameLoop;
 using PavEcsGame.Extensions;
-using System.Threading;
 using Leopotam.EcsLite;
 
 namespace PavEcsGame.Systems
@@ -15,29 +9,27 @@ namespace PavEcsGame.Systems
     {
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntity> _map;
 
-        private readonly EcsFilter/*<PreviousPositionComponent>*/ _clearPreviousPosFilter;
-        private readonly EcsPool<PreviousPositionComponent> _prevPosPool;
-        private readonly EcsFilter/*<PositionComponent, SymbolComponent>.Exclude<MarkAsRenderedTag>*/ _updateCurrentPosFilter;
-        private readonly EcsPool<PositionComponent> _posPool;
-        private readonly EcsPool<SymbolComponent> _symbolPool;
-        private readonly EcsPool<MarkAsRenderedTag> _markAsRenderPool;
-
         private readonly EcsWorld _world;
+        private EcsFilterSpec<EcsSpec<PreviousPositionComponent>, EcsSpec<MarkAsRenderedTag>, EcsSpec> _clearPrevPosSpec;
+        private EcsFilterSpec<EcsSpec<PositionComponent, SymbolComponent>, EcsSpec, EcsSpec<MarkAsRenderedTag>> _updateCurrentPosSpec;
 
 
         public SymbolRenderSystem(IReadOnlyMapData<PositionComponent, EcsPackedEntity> map, EcsWorld world)
         {
             _map = map;
             _world = world;
-            _clearPreviousPosFilter = _world.Filter<PreviousPositionComponent>().End();
-            _prevPosPool = _world.GetPool<PreviousPositionComponent>();
 
-            _updateCurrentPosFilter =
-                _world.Filter<PositionComponent>().Inc<SymbolComponent>().Exc<MarkAsRenderedTag>().End();
+            _clearPrevPosSpec = _world.CreateFilterSpec(
+                include: EcsSpec<PreviousPositionComponent>.Create,
+                optional: EcsSpec<MarkAsRenderedTag>.Create,
+                exclude: EcsSpec.CreateEmpty
+            );
 
-            _posPool = _world.GetPool<PositionComponent>();
-            _symbolPool = _world.GetPool<SymbolComponent>();
-            _markAsRenderPool = _world.GetPool<MarkAsRenderedTag>();
+            _updateCurrentPosSpec = _world.CreateFilterSpec(
+                include: EcsSpec<PositionComponent,SymbolComponent>.Create,
+                optional: EcsSpec.CreateEmpty,
+                exclude: EcsSpec<MarkAsRenderedTag>.Create
+            );
         }
         public void Init(EcsSystems systems)
         {
@@ -46,31 +38,23 @@ namespace PavEcsGame.Systems
 
         public void Run(EcsSystems systems)
         {
-            //Console.Clear();
-            bool smthChanged = !_clearPreviousPosFilter.IsEmpty() || !_updateCurrentPosFilter.IsEmpty();
-            foreach(var i in _clearPreviousPosFilter)
+            foreach(var ent in _clearPrevPosSpec.Filter)
             {
-                ref var prevPos = ref _prevPosPool.Get(i);
+                ref var prevPos = ref _clearPrevPosSpec.Include.Pool1.Get(ent);
                 if (!_map.Get(prevPos.Value).Unpack(_world, out var entity))
                 {
                     RenderItem(in prevPos.Value, in SymbolComponent.Empty);
-                    smthChanged = true;
                 }
-                _markAsRenderPool.Del(entity);
+                _clearPrevPosSpec.Optional.Pool1.Del(ent);
             }
 
-            foreach(var i in _updateCurrentPosFilter)
+            foreach(var ent in _updateCurrentPosSpec.Filter)
             {
-                ref var pos = ref _posPool.Get(i);
-                ref var symbol = ref _symbolPool.Get(i);
+                ref var pos = ref _updateCurrentPosSpec.Include.Pool1.Get(ent);
+                ref var symbol = ref _updateCurrentPosSpec.Include.Pool2.Get(ent);
                 RenderItem(in pos, in symbol);
-                _markAsRenderPool.Del(i);
+                _updateCurrentPosSpec.Exclude.Pool1.Add(ent);
             }
-
-            // if (smthChanged)
-            // {
-            //     Thread.Sleep(50);
-            // }
 
             static void RenderItem(in PositionComponent pos, in SymbolComponent symbol)
             {

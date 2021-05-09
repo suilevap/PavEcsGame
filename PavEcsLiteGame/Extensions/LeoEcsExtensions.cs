@@ -24,28 +24,6 @@ namespace PavEcsGame.Extensions
 
     }
 
-    public class EcsFilterWithData<T> where T: struct
-    {
-        private EcsPool<T> _pool1;
-        private EcsFilter _filter;
-
-        public EcsFilterWithData(EcsWorld world)
-        {
-            _pool1 = world.GetPool<T>();
-            _filter = world.Filter<T>().End();
-        }
-
-        public delegate void ActionRun(int entity, ref T c);
-
-        public void Run(ActionRun action)
-        {
-            foreach (var entity in _filter)
-            {
-                action(entity, ref _pool1.Get(entity));
-            }
-        }
-    }
-
     public readonly struct EcsEntityBuilder
     {
         private readonly int _entity;
