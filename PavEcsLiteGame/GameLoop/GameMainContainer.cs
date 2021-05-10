@@ -23,6 +23,7 @@ namespace PavEcsGame.GameLoop
             _world = new EcsWorld();
             //var turnManager = new TurnManager(_world);
             var map = new MapData<EcsPackedEntity>();
+            var universe = new EcsUniverse();
 
             _systems = new EcsSystems(_world, "Root");
             //.InjectByDeclaredType(map)
@@ -30,7 +31,7 @@ namespace PavEcsGame.GameLoop
 
             _systems//var initSystems = new EcsSystems(_world, "Init")
                 .Add(new SynchronizationContextSystem())
-                .Add(new LoadMapSystem("Data/map1.txt", _world, map))
+                .Add(new LoadMapSystem("Data/map1.txt", universe, map))
                 ;//.Add(new SpawnSystem());
 
             //            _systems//var controlSystems = new EcsSystems(_world,"Control")
@@ -51,9 +52,10 @@ namespace PavEcsGame.GameLoop
             //                .Add(new DestroyEntitySystem());
 
             _systems//var renderSystems = new EcsSystems(_world, "Render")
-                .Add(new SymbolRenderSystem(map, _world));
+                .Add(new SymbolRenderSystem(map, universe));
 
             _systems//var cleanupSystems = new EcsSystems(_world, "Cleanup")
+                //TODO: proper delete
                 .DelHere<PreviousPositionComponent>()
                 .DelHere<TargetCollisionEventComponent<EcsPackedEntity>>()
                 .DelHere<SourceCollisionEventComponent<EcsPackedEntity>>();

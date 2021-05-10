@@ -3,33 +3,56 @@ using Leopotam.EcsLite;
 
 namespace PavEcsGame.Extensions
 {
-    public interface IFilterGenerator
+    public interface IEcsSpecBuilder<out T>
+        where T : struct
     {
         EcsFilter.Mask Include(EcsWorld world);
         EcsFilter.Mask Exclude(EcsFilter.Mask mask);
+
+        EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder);
+
+        EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems);
+
+        T Create(EcsWorld world);
     }
 
-    public readonly struct EcsSpec : IFilterGenerator
+    public readonly struct EcsSpec
     {
-        public EcsFilter.Mask Include(EcsWorld world)
+        public static Builder Empty()
         {
-            throw new InvalidOperationException("Empty spec is impossible to use as include filter");
+            return new Builder();
         }
 
-        public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+        public struct Builder : IEcsSpecBuilder<EcsSpec>
         {
-            return mask;
-        }
+            public EcsFilter.Mask Include(EcsWorld world)
+            {
+                throw new InvalidOperationException("Empty spec is impossible to use as include filter");
+            }
 
-        public static readonly EcsSpec Empty = new EcsSpec();
+            public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+            {
+                return mask;
+            }
 
-        public static EcsSpec CreateEmpty(EcsWorld _)
-        {
-            return new EcsSpec();
+            public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
+            {
+                return setBuilder;
+            }
+
+            public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
+            {
+                return null;
+            }
+
+            public EcsSpec Create(EcsWorld world)
+            {
+                return new EcsSpec();
+            }
         }
     }
 
-    public readonly struct EcsSpec<T1> : IFilterGenerator
+    public readonly struct EcsSpec<T1>
         where T1 : struct
     {
         public EcsPool<T1> Pool1 { get; }
@@ -39,25 +62,44 @@ namespace PavEcsGame.Extensions
             Pool1 = pool1;
         }
 
-        public EcsFilter.Mask Include(EcsWorld world)
+        public static Builder Build()
         {
-            return world.Filter<T1>();
+            return new Builder();
         }
 
-        public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+        public readonly struct Builder : IEcsSpecBuilder<EcsSpec<T1>>
         {
-            return mask.Exc<T1>();
-        }
+            public EcsFilter.Mask Include(EcsWorld world)
+            {
+                return world.Filter<T1>();
+            }
 
-        public static EcsSpec<T1> Create(EcsWorld world)
-        {
-            return new EcsSpec<T1>(
-                world.GetPool<T1>()
-            );
+            public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+            {
+                return mask.Exc<T1>();
+            }
+
+            public EcsSpec<T1> Create(EcsWorld world)
+            {
+                return new EcsSpec<T1>(
+                    world.GetPool<T1>()
+                );
+            }
+
+            public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
+            {
+                return setBuilder
+                    .Add<T1>();
+            }
+
+            public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
+            {
+                return universe.GetWorld<T1>(systems);
+            }
         }
     }
 
-    public readonly struct EcsSpec<T1, T2> : IFilterGenerator
+    public readonly struct EcsSpec<T1, T2>
         where T1 : struct
         where T2 : struct
     {
@@ -81,30 +123,50 @@ namespace PavEcsGame.Extensions
             Pool2 = pool2;
         }
 
-        public EcsFilter.Mask Include(EcsWorld world)
+        public static Builder Build()
         {
-            return world
-                .Filter<T1>()
-                .Inc<T2>();
+            return new Builder();
         }
 
-        public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+        public readonly struct Builder : IEcsSpecBuilder<EcsSpec<T1, T2>>
         {
-            return mask
-                .Exc<T1>()
-                .Exc<T2>();
-        }
+            public EcsFilter.Mask Include(EcsWorld world)
+            {
+                return world
+                    .Filter<T1>()
+                    .Inc<T2>();
+            }
 
-        public static EcsSpec<T1, T2> Create(EcsWorld world)
-        {
-            return new EcsSpec<T1, T2>(
-                world.GetPool<T1>(),
-                world.GetPool<T2>()
-            );
+            public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+            {
+                return mask
+                    .Exc<T1>()
+                    .Exc<T2>();
+            }
+
+            public EcsSpec<T1, T2> Create(EcsWorld world)
+            {
+                return new EcsSpec<T1, T2>(
+                    world.GetPool<T1>(),
+                    world.GetPool<T2>()
+                );
+            }
+
+            public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
+            {
+                return setBuilder
+                    .Add<T1>()
+                    .Add<T2>();
+            }
+
+            public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
+            {
+                return universe.GetWorld<T1>(systems);
+            }
         }
     }
 
-    public readonly struct EcsSpec<T1, T2, T3> : IFilterGenerator
+    public readonly struct EcsSpec<T1, T2, T3>
         where T1 : struct
         where T2 : struct
         where T3 : struct
@@ -134,33 +196,55 @@ namespace PavEcsGame.Extensions
             Pool3 = pool3;
         }
 
-        public EcsFilter.Mask Include(EcsWorld world)
+        public static Builder Build()
         {
-            return world
-                .Filter<T1>()
-                .Inc<T2>()
-                .Inc<T3>();
+            return new Builder();
         }
 
-        public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+        public readonly struct Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3>>
         {
-            return mask
-                .Exc<T1>()
-                .Exc<T2>()
-                .Exc<T3>();
-        }
+            public EcsFilter.Mask Include(EcsWorld world)
+            {
+                return world
+                    .Filter<T1>()
+                    .Inc<T2>()
+                    .Inc<T3>();
+            }
 
-        public static EcsSpec<T1, T2, T3> Create(EcsWorld world)
-        {
-            return new EcsSpec<T1, T2, T3>(
-                world.GetPool<T1>(),
-                world.GetPool<T2>(),
-                world.GetPool<T3>()
-            );
+            public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+            {
+                return mask
+                    .Exc<T1>()
+                    .Exc<T2>()
+                    .Exc<T3>();
+            }
+
+            public EcsSpec<T1, T2, T3> Create(EcsWorld world)
+            {
+                return new EcsSpec<T1, T2, T3>(
+                    world.GetPool<T1>(),
+                    world.GetPool<T2>(),
+                    world.GetPool<T3>()
+                );
+            }
+
+
+            public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
+            {
+                return setBuilder
+                    .Add<T1>()
+                    .Add<T2>()
+                    .Add<T3>();
+            }
+
+            public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
+            {
+                return universe.GetWorld<T1>(systems);
+            }
         }
     }
 
-    public readonly struct EcsSpec<T1, T2, T3, T4> : IFilterGenerator
+    public readonly struct EcsSpec<T1, T2, T3, T4>
         where T1 : struct
         where T2 : struct
         where T3 : struct
@@ -196,36 +280,58 @@ namespace PavEcsGame.Extensions
             Pool4 = pool4;
         }
 
-        public EcsFilter.Mask Include(EcsWorld world)
+        public static Builder Build()
         {
-            return world
-                .Filter<T1>()
-                .Inc<T2>()
-                .Inc<T3>()
-                .Inc<T4>();
+            return new Builder();
         }
 
-        public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+        public readonly struct Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3, T4>>
         {
-            return mask
-                .Exc<T1>()
-                .Exc<T2>()
-                .Exc<T3>()
-                .Exc<T4>();
-        }
+            public EcsFilter.Mask Include(EcsWorld world)
+            {
+                return world
+                    .Filter<T1>()
+                    .Inc<T2>()
+                    .Inc<T3>()
+                    .Inc<T4>();
+            }
 
-        public static EcsSpec<T1, T2, T3, T4> Create(EcsWorld world)
-        {
-            return new EcsSpec<T1, T2, T3, T4>(
-                world.GetPool<T1>(),
-                world.GetPool<T2>(),
-                world.GetPool<T3>(),
-                world.GetPool<T4>()
-            );
+            public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+            {
+                return mask
+                    .Exc<T1>()
+                    .Exc<T2>()
+                    .Exc<T3>()
+                    .Exc<T4>();
+            }
+
+            public EcsSpec<T1, T2, T3, T4> Create(EcsWorld world)
+            {
+                return new EcsSpec<T1, T2, T3, T4>(
+                    world.GetPool<T1>(),
+                    world.GetPool<T2>(),
+                    world.GetPool<T3>(),
+                    world.GetPool<T4>()
+                );
+            }
+
+            public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
+            {
+                return setBuilder
+                    .Add<T1>()
+                    .Add<T2>()
+                    .Add<T3>()
+                    .Add<T4>();
+            }
+
+            public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
+            {
+                return universe.GetWorld<T1>(systems);
+            }
         }
     }
 
-    public readonly struct EcsSpec<T1, T2, T3, T4, T5> : IFilterGenerator
+    public readonly struct EcsSpec<T1, T2, T3, T4, T5>
         where T1 : struct
         where T2 : struct
         where T3 : struct
@@ -266,39 +372,63 @@ namespace PavEcsGame.Extensions
             Pool5 = pool5;
         }
 
-        public EcsFilter.Mask Include(EcsWorld world)
+        public static Builder Build()
         {
-            return world
-                .Filter<T1>()
-                .Inc<T2>()
-                .Inc<T3>()
-                .Inc<T4>()
-                .Inc<T5>();
+            return new Builder();
         }
 
-        public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+        public readonly struct Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3, T4, T5>>
         {
-            return mask
-                .Exc<T1>()
-                .Exc<T2>()
-                .Exc<T3>()
-                .Exc<T4>()
-                .Exc<T5>();
-        }
+            public EcsFilter.Mask Include(EcsWorld world)
+            {
+                return world
+                    .Filter<T1>()
+                    .Inc<T2>()
+                    .Inc<T3>()
+                    .Inc<T4>()
+                    .Inc<T5>();
+            }
 
-        public static EcsSpec<T1, T2, T3, T4, T5> Create(EcsWorld world)
-        {
-            return new EcsSpec<T1, T2, T3, T4, T5>(
-                world.GetPool<T1>(),
-                world.GetPool<T2>(),
-                world.GetPool<T3>(),
-                world.GetPool<T4>(),
-                world.GetPool<T5>()
-            );
+            public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+            {
+                return mask
+                    .Exc<T1>()
+                    .Exc<T2>()
+                    .Exc<T3>()
+                    .Exc<T4>()
+                    .Exc<T5>();
+            }
+
+            public EcsSpec<T1, T2, T3, T4, T5> Create(EcsWorld world)
+            {
+                return new EcsSpec<T1, T2, T3, T4, T5>(
+                    world.GetPool<T1>(),
+                    world.GetPool<T2>(),
+                    world.GetPool<T3>(),
+                    world.GetPool<T4>(),
+                    world.GetPool<T5>()
+                );
+            }
+
+
+            public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
+            {
+                return setBuilder
+                    .Add<T1>()
+                    .Add<T2>()
+                    .Add<T3>()
+                    .Add<T4>()
+                    .Add<T5>();
+            }
+
+            public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
+            {
+                return universe.GetWorld<T1>(systems);
+            }
         }
     }
 
-    public readonly struct EcsSpec<T1, T2, T3, T4, T5, T6> : IFilterGenerator
+    public readonly struct EcsSpec<T1, T2, T3, T4, T5, T6>
         where T1 : struct
         where T2 : struct
         where T3 : struct
@@ -344,38 +474,62 @@ namespace PavEcsGame.Extensions
             Pool6 = pool6;
         }
 
-        public EcsFilter.Mask Include(EcsWorld world)
+        public static Builder Build()
         {
-            return world
-                .Filter<T1>()
-                .Inc<T2>()
-                .Inc<T3>()
-                .Inc<T4>()
-                .Inc<T5>()
-                .Inc<T6>();
+            return new Builder();
         }
 
-        public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+        public readonly struct Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3, T4, T5, T6>>
         {
-            return mask
-                .Exc<T1>()
-                .Exc<T2>()
-                .Exc<T3>()
-                .Exc<T4>()
-                .Exc<T5>()
-                .Exc<T6>();
-        }
+            public EcsFilter.Mask Include(EcsWorld world)
+            {
+                return world
+                    .Filter<T1>()
+                    .Inc<T2>()
+                    .Inc<T3>()
+                    .Inc<T4>()
+                    .Inc<T5>()
+                    .Inc<T6>();
+            }
 
-        public static EcsSpec<T1, T2, T3, T4, T5, T6> Create(EcsWorld world)
-        {
-            return new EcsSpec<T1, T2, T3, T4, T5, T6>(
-                world.GetPool<T1>(),
-                world.GetPool<T2>(),
-                world.GetPool<T3>(),
-                world.GetPool<T4>(),
-                world.GetPool<T5>(),
-                world.GetPool<T6>()
-            );
+            public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+            {
+                return mask
+                    .Exc<T1>()
+                    .Exc<T2>()
+                    .Exc<T3>()
+                    .Exc<T4>()
+                    .Exc<T5>()
+                    .Exc<T6>();
+            }
+
+            public EcsSpec<T1, T2, T3, T4, T5, T6> Create(EcsWorld world)
+            {
+                return new EcsSpec<T1, T2, T3, T4, T5, T6>(
+                    world.GetPool<T1>(),
+                    world.GetPool<T2>(),
+                    world.GetPool<T3>(),
+                    world.GetPool<T4>(),
+                    world.GetPool<T5>(),
+                    world.GetPool<T6>()
+                );
+            }
+
+            public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
+            {
+                return setBuilder
+                    .Add<T1>()
+                    .Add<T2>()
+                    .Add<T3>()
+                    .Add<T4>()
+                    .Add<T5>()
+                    .Add<T6>();
+            }
+
+            public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
+            {
+                return universe.GetWorld<T1>(systems);
+            }
         }
     }
 }

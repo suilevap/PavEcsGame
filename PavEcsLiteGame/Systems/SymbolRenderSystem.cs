@@ -2,6 +2,7 @@
 using PavEcsGame.Components;
 using PavEcsGame.Extensions;
 using Leopotam.EcsLite;
+using PavEcsGame.Components.SystemComponents;
 
 namespace PavEcsGame.Systems
 {
@@ -9,39 +10,41 @@ namespace PavEcsGame.Systems
     {
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntity> _map;
 
-        private readonly EcsWorld _world;
-        private EcsFilterSpec<EcsSpec<PreviousPositionComponent>, EcsSpec<MarkAsRenderedTag>, EcsSpec> _clearPrevPosSpec;
-        private EcsFilterSpec<EcsSpec<PositionComponent, SymbolComponent>, EcsSpec, EcsSpec<MarkAsRenderedTag>> _updateCurrentPosSpec;
+        private readonly EcsFilterSpec<EcsSpec<PreviousPositionComponent>, EcsSpec<MarkAsRenderedTag>, EcsSpec> _clearPrevPosSpec;
+        private readonly EcsFilterSpec<EcsSpec<PositionComponent, SymbolComponent>, EcsSpec, EcsSpec<MarkAsRenderedTag>> _updateCurrentPosSpec;
 
 
-        public SymbolRenderSystem(IReadOnlyMapData<PositionComponent, EcsPackedEntity> map, EcsWorld world)
+        public SymbolRenderSystem(IReadOnlyMapData<PositionComponent, EcsPackedEntity> map, EcsUniverse universe)
         {
             _map = map;
-            _world = world;
 
-            _clearPrevPosSpec = _world.CreateFilterSpec(
-                include: EcsSpec<PreviousPositionComponent>.Create,
-                optional: EcsSpec<MarkAsRenderedTag>.Create,
-                exclude: EcsSpec.CreateEmpty
+            _clearPrevPosSpec = universe.CreateFilterSpec(
+                include: EcsSpec<PreviousPositionComponent>.Build(),
+                optional: EcsSpec<MarkAsRenderedTag>.Build(),
+                exclude: EcsSpec.Empty()
             );
 
-            _updateCurrentPosSpec = _world.CreateFilterSpec(
-                include: EcsSpec<PositionComponent,SymbolComponent>.Create,
-                optional: EcsSpec.CreateEmpty,
-                exclude: EcsSpec<MarkAsRenderedTag>.Create
+            _updateCurrentPosSpec = universe.CreateFilterSpec(
+                include: EcsSpec<PositionComponent, SymbolComponent>.Build(),
+                optional: EcsSpec.Empty(),
+                exclude: EcsSpec<MarkAsRenderedTag>.Build()
             );
         }
         public void Init(EcsSystems systems)
         {
+            _clearPrevPosSpec.Init(systems);
+            _updateCurrentPosSpec.Init(systems);
+
             Console.CursorVisible = false;
         }
 
         public void Run(EcsSystems systems)
         {
+            var world = _clearPrevPosSpec.World;
             foreach(var ent in _clearPrevPosSpec.Filter)
             {
                 ref var prevPos = ref _clearPrevPosSpec.Include.Pool1.Get(ent);
-                if (!_map.Get(prevPos.Value).Unpack(_world, out var entity))
+                if (!_map.Get(prevPos.Value).Unpack(world, out var entity))
                 {
                     RenderItem(in prevPos.Value, in SymbolComponent.Empty);
                 }
