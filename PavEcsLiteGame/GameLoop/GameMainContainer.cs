@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using Leopotam.Ecs;
 using Leopotam.Ecs.Types;
@@ -7,6 +9,7 @@ using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Extensions;
 using PavEcsGame.Systems;
+using PavEcsGame.Systems.Managers;
 using PavEcsGame.Utils;
 
 namespace PavEcsGame.GameLoop
@@ -14,6 +17,7 @@ namespace PavEcsGame.GameLoop
     class GameMainContainer
     {
         private EcsWorld _world;
+        private EcsUniverse _universe;
         private EcsSystems _systems;
 
         public bool IsAlive => _world.IsAlive();
@@ -21,55 +25,52 @@ namespace PavEcsGame.GameLoop
         public void Start()
         {
             _world = new EcsWorld();
-            //var turnManager = new TurnManager(_world);
-            var map = new MapData<EcsPackedEntity>();
+            var map = new MapData<EcsPackedEntityWithWorld>();
             var universe = new EcsUniverse();
+            _universe = universe;
+            var turnManager = new TurnManager(universe);
 
             _systems = new EcsSystems(_world, "Root");
-            //.InjectByDeclaredType(map)
-            //.InjectByDeclaredType(turnManager);
 
-            _systems//var initSystems = new EcsSystems(_world, "Init")
+            _systems
                 .Add(new SynchronizationContextSystem())
+                .Add(turnManager)
                 .Add(new LoadMapSystem("Data/map1.txt", universe, map))
                 ;//.Add(new SpawnSystem());
 
-            //            _systems//var controlSystems = new EcsSystems(_world,"Control")
-            //                .Add(new CommandTokenDistributionSystem(TimeSpan.FromSeconds(1f)))
-            //                .Add(new KeyboardMoveSystem(waitKey: false))
-            //                .Add(new RandomMovementSystem());
+            _systems 
+                .Add(new CommandTokenDistributionSystem(TimeSpan.FromSeconds(1f), universe))
+                .Add(new KeyboardMoveSystem(waitKey: false, turnManager, universe))
+                .Add(new RandomMovementSystem(turnManager, universe));
 
-            //            _systems//var tickSystems = new EcsSystems(_world,"Tick")   
-            //                .Add(new MovementSystem())
-            //                .Add(new FrictionSystem());
-
-            //            _systems//var simSystems = new EcsSystems(_world, "Sim")
-            //                .Add(new UpdatePositionSystem())
-            //#if DEBUG
-            //                .Add(new VerifyMapSystem())
-            //#endif
-            //                .Add(new DamageOnCollisionSystem())
-            //                .Add(new DestroyEntitySystem());
-
-            _systems//var renderSystems = new EcsSystems(_world, "Render")
-                .Add(new SymbolRenderSystem(map, universe));
-
-            _systems//var cleanupSystems = new EcsSystems(_world, "Cleanup")
-                //TODO: proper delete
-                .DelHere<PreviousPositionComponent>()
-                .DelHere<TargetCollisionEventComponent<EcsPackedEntity>>()
-                .DelHere<SourceCollisionEventComponent<EcsPackedEntity>>();
+            _systems 
+                .Add(new MovementSystem(turnManager, universe))
+                .Add(new FrictionSystem(turnManager, universe));
 
             _systems
-                //.Add(initSystems)
-                //.Add(controlSystems)
-                //.Add(tickSystems)
-                //.Add(simSystems)
-                //.Add(renderSystems)
-                //.Add(cleanupSystems)
-                //.Add(turnManager)
-                ////.Add(new SymbolReRenderAllSystem())
+                .Add(new UpdatePositionSystem(turnManager, map, universe))
+//#if DEBUG
+//                .Add(new VerifyMapSystem())
+//#endif
+                .Add(new DamageOnCollisionSystem(universe))
+                .Add(new DestroyEntitySystem(turnManager, universe));
+
+            _systems
+                .Add(new SymbolRenderSystem(map, universe));
+
+            _systems
+                .UniDelHere<PreviousPositionComponent>(universe)
+                .UniDelHere<CollisionEventComponent<EcsPackedEntityWithWorld>>(universe);
+
+            _systems
                 .Init();
+
+            Debug.Print("Universe worlds count: {0}", universe.GetAllKeys().Count());
+            foreach (var gr in universe.GetAllWorlds(_systems))
+            {
+                Debug.Print("world: {0}, components count: {1}", gr.Key, gr.Count());
+                Debug.Print("c: {0}", string.Join('|',gr.Select(x=>x.Name)));
+            }
         }
 
         public void Update()
@@ -84,11 +85,23 @@ namespace PavEcsGame.GameLoop
                 _systems.Destroy();
                 _systems = null;
             }
+
             if (_world != null)
             {
                 _world.Destroy();
                 _world = null;
             }
+
+            if (_universe != null)
+            {
+                foreach (var gr in _universe.GetAllWorlds(_systems))
+                {
+                    gr.Key.Destroy();
+                }
+
+                _universe = null;
+            }
+
         }
     }
 }

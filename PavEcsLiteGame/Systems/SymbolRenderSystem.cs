@@ -8,13 +8,13 @@ namespace PavEcsGame.Systems
 {
     public class SymbolRenderSystem : IEcsInitSystem, IEcsRunSystem
     {
-        private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntity> _map;
+        private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
         private readonly EcsFilterSpec<EcsSpec<PreviousPositionComponent>, EcsSpec<MarkAsRenderedTag>, EcsSpec> _clearPrevPosSpec;
         private readonly EcsFilterSpec<EcsSpec<PositionComponent, SymbolComponent>, EcsSpec, EcsSpec<MarkAsRenderedTag>> _updateCurrentPosSpec;
 
 
-        public SymbolRenderSystem(IReadOnlyMapData<PositionComponent, EcsPackedEntity> map, EcsUniverse universe)
+        public SymbolRenderSystem(IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> map, EcsUniverse universe)
         {
             _map = map;
 
@@ -40,29 +40,43 @@ namespace PavEcsGame.Systems
 
         public void Run(EcsSystems systems)
         {
-            var world = _clearPrevPosSpec.World;
-            foreach(var ent in _clearPrevPosSpec.Filter)
-            {
-                ref var prevPos = ref _clearPrevPosSpec.Include.Pool1.Get(ent);
-                if (!_map.Get(prevPos.Value).Unpack(world, out var entity))
-                {
-                    RenderItem(in prevPos.Value, in SymbolComponent.Empty);
-                }
-                _clearPrevPosSpec.Optional.Pool1.Del(ent);
-            }
+            ClearPreviousPos();
 
-            foreach(var ent in _updateCurrentPosSpec.Filter)
-            {
-                ref var pos = ref _updateCurrentPosSpec.Include.Pool1.Get(ent);
-                ref var symbol = ref _updateCurrentPosSpec.Include.Pool2.Get(ent);
-                RenderItem(in pos, in symbol);
-                _updateCurrentPosSpec.Exclude.Pool1.Add(ent);
-            }
+            RenderInNewPos();
 
             static void RenderItem(in PositionComponent pos, in SymbolComponent symbol)
             {
                 Console.SetCursorPosition(pos.Value.X, pos.Value.Y);
                 Console.Write(symbol.Value);
+            }
+
+            void ClearPreviousPos()
+            {
+                var prevPosPool = _clearPrevPosSpec.Include.Pool1;
+                var markAsRenderedTagPool = _clearPrevPosSpec.Optional.Pool1;
+                foreach (var ent in _clearPrevPosSpec.Filter)
+                {
+                    ref var prevPos = ref prevPosPool.Get(ent);
+                    if (!_map.Get(prevPos.Value).IsAlive())
+                    {
+                        RenderItem(in prevPos.Value, in SymbolComponent.Empty);
+                    }
+
+                    markAsRenderedTagPool.Del(ent);
+                }
+            }
+
+            void RenderInNewPos()
+            {
+                var (posPool, symbolPool) = _updateCurrentPosSpec.Include;
+                var markAsRenderedTagPool = _updateCurrentPosSpec.Exclude.Pool1;
+                foreach (var ent in _updateCurrentPosSpec.Filter)
+                {
+                    ref var pos = ref posPool.Get(ent);
+                    ref var symbol = ref symbolPool.Get(ent);
+                    RenderItem(in pos, in symbol);
+                    markAsRenderedTagPool.Add(ent);
+                }
             }
         }
     }

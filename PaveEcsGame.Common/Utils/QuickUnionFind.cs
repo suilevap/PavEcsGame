@@ -29,6 +29,13 @@ namespace PaveEcsGame.Utils
             return id;
         }
 
+        public IEnumerable<IGrouping<int, T>> GetAllGroups() => _map
+            .Select(p => (item: p.Key, root: RootInternal(p.Value)))
+            .GroupBy(x => x.root, x => x.item);
+
+        public IEnumerable<(int key, T item)> GetAll() => _map
+            .Select(p => ( key: RootInternal(p.Value), item: p.Key));
+
         public int Root(T item)
         {
             var id = GetId(item);

@@ -13,6 +13,5 @@ namespace PavEcsGame.Components
 
         public char Value;
 
-
     }
 }
