@@ -16,8 +16,15 @@ namespace PavEcsGame.Extensions
         T Create(EcsWorld world);
     }
 
-    public readonly struct EcsSpec
+    public interface IEcsLinkedToWorld
     {
+        bool IsBelongToWorld(EcsWorld world);
+    }
+
+    public readonly struct EcsSpec : IEcsLinkedToWorld
+    {
+        public bool IsBelongToWorld(EcsWorld world) => true;
+
         public static Builder Empty()
         {
             return new Builder();
@@ -52,14 +59,22 @@ namespace PavEcsGame.Extensions
         }
     }
 
-    public readonly struct EcsSpec<T1>
+    public readonly struct EcsSpec<T1> : IEcsLinkedToWorld
         where T1 : struct
     {
+        private readonly EcsWorld _world;
+        public bool IsBelongToWorld(EcsWorld world) => _world == world;
+
         public EcsPool<T1> Pool1 { get; }
 
-        public EcsSpec(EcsPool<T1> pool1)
+        public EcsSpec(EcsWorld world)
         {
-            Pool1 = pool1;
+            _world = world;
+            Pool1 = world.GetPool<T1>();
+        }
+        public void Deconstruct(out EcsPool<T1> pool1)
+        {
+            pool1 = Pool1;
         }
 
         public static Builder Build()
@@ -81,9 +96,7 @@ namespace PavEcsGame.Extensions
 
             public EcsSpec<T1> Create(EcsWorld world)
             {
-                return new EcsSpec<T1>(
-                    world.GetPool<T1>()
-                );
+                return new EcsSpec<T1>(world);
             }
 
             public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
@@ -99,7 +112,7 @@ namespace PavEcsGame.Extensions
         }
     }
 
-    public readonly struct EcsSpec<T1, T2>
+    public readonly struct EcsSpec<T1, T2> : IEcsLinkedToWorld
         where T1 : struct
         where T2 : struct
     {
@@ -107,20 +120,30 @@ namespace PavEcsGame.Extensions
 
         public EcsPool<T2> Pool2 { get; }
 
-
-        public EcsSpec(in EcsSpec<T1> EcsSpec, EcsPool<T2> pool2)
-        {
-            Pool1 = EcsSpec.Pool1;
-            Pool2 = pool2;
-        }
+        private readonly EcsWorld _world;
+        public bool IsBelongToWorld(EcsWorld world) => _world == world;
+        //public EcsSpec(in EcsSpec<T1> ecsSpec, EcsPool<T2> pool2)
+        //{
+        //    Pool1 = ecsSpec.Pool1;
+        //    Pool2 = pool2;
+        //    _world = ecsSpec._world;
+        //}
 
         public EcsSpec(
-            EcsPool<T1> pool1,
-            EcsPool<T2> pool2
-        )
+            EcsWorld world)
         {
-            Pool1 = pool1;
-            Pool2 = pool2;
+            _world = world;
+            Pool1 = world.GetPool<T1>();
+            Pool2 = world.GetPool<T2>();
+        }
+
+        public void Deconstruct(
+            out EcsPool<T1> pool1,
+            out EcsPool<T2> pool2
+            )
+        {
+            pool1 = Pool1;
+            pool2 = Pool2;
         }
 
         public static Builder Build()
@@ -146,10 +169,7 @@ namespace PavEcsGame.Extensions
 
             public EcsSpec<T1, T2> Create(EcsWorld world)
             {
-                return new EcsSpec<T1, T2>(
-                    world.GetPool<T1>(),
-                    world.GetPool<T2>()
-                );
+                return new EcsSpec<T1, T2>(world);
             }
 
             public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
@@ -166,7 +186,7 @@ namespace PavEcsGame.Extensions
         }
     }
 
-    public readonly struct EcsSpec<T1, T2, T3>
+    public readonly struct EcsSpec<T1, T2, T3> : IEcsLinkedToWorld
         where T1 : struct
         where T2 : struct
         where T3 : struct
@@ -177,23 +197,25 @@ namespace PavEcsGame.Extensions
 
         public EcsPool<T3> Pool3 { get; }
 
-
-        public EcsSpec(in EcsSpec<T1, T2> EcsSpec, EcsPool<T3> pool3)
+        private readonly EcsWorld _world;
+        public bool IsBelongToWorld(EcsWorld world) => _world == world;
+        public EcsSpec(EcsWorld world)
         {
-            Pool1 = EcsSpec.Pool1;
-            Pool2 = EcsSpec.Pool2;
-            Pool3 = pool3;
+            _world = world;
+            Pool1 = world.GetPool<T1>();
+            Pool2 = world.GetPool<T2>();
+            Pool3 = world.GetPool<T3>();
         }
 
-        public EcsSpec(
-            EcsPool<T1> pool1,
-            EcsPool<T2> pool2,
-            EcsPool<T3> pool3
+        public void Deconstruct(
+            out EcsPool<T1> pool1,
+            out EcsPool<T2> pool2,
+            out EcsPool<T3> pool3
         )
         {
-            Pool1 = pool1;
-            Pool2 = pool2;
-            Pool3 = pool3;
+            pool1 = Pool1;
+            pool2 = Pool2;
+            pool3 = Pool3;
         }
 
         public static Builder Build()
@@ -221,11 +243,7 @@ namespace PavEcsGame.Extensions
 
             public EcsSpec<T1, T2, T3> Create(EcsWorld world)
             {
-                return new EcsSpec<T1, T2, T3>(
-                    world.GetPool<T1>(),
-                    world.GetPool<T2>(),
-                    world.GetPool<T3>()
-                );
+                return new EcsSpec<T1, T2, T3>(world);
             }
 
 
@@ -244,7 +262,7 @@ namespace PavEcsGame.Extensions
         }
     }
 
-    public readonly struct EcsSpec<T1, T2, T3, T4>
+    public readonly struct EcsSpec<T1, T2, T3, T4> : IEcsLinkedToWorld
         where T1 : struct
         where T2 : struct
         where T3 : struct
@@ -258,26 +276,28 @@ namespace PavEcsGame.Extensions
 
         public EcsPool<T4> Pool4 { get; }
 
-
-        public EcsSpec(in EcsSpec<T1, T2, T3> EcsSpec, EcsPool<T4> pool4)
+        private readonly EcsWorld _world;
+        public bool IsBelongToWorld(EcsWorld world) => _world == world;
+        public EcsSpec(EcsWorld world)
         {
-            Pool1 = EcsSpec.Pool1;
-            Pool2 = EcsSpec.Pool2;
-            Pool3 = EcsSpec.Pool3;
-            Pool4 = pool4;
+            _world = world;
+            Pool1 = world.GetPool<T1>();
+            Pool2 = world.GetPool<T2>();
+            Pool3 = world.GetPool<T3>();
+            Pool4 = world.GetPool<T4>();
         }
 
-        public EcsSpec(
-            EcsPool<T1> pool1,
-            EcsPool<T2> pool2,
-            EcsPool<T3> pool3,
-            EcsPool<T4> pool4
+        public void Deconstruct(
+            out EcsPool<T1> pool1,
+            out EcsPool<T2> pool2,
+            out EcsPool<T3> pool3,
+            out EcsPool<T4> pool4
         )
         {
-            Pool1 = pool1;
-            Pool2 = pool2;
-            Pool3 = pool3;
-            Pool4 = pool4;
+            pool1 = Pool1;
+            pool2 = Pool2;
+            pool3 = Pool3;
+            pool4 = Pool4;
         }
 
         public static Builder Build()
@@ -307,12 +327,7 @@ namespace PavEcsGame.Extensions
 
             public EcsSpec<T1, T2, T3, T4> Create(EcsWorld world)
             {
-                return new EcsSpec<T1, T2, T3, T4>(
-                    world.GetPool<T1>(),
-                    world.GetPool<T2>(),
-                    world.GetPool<T3>(),
-                    world.GetPool<T4>()
-                );
+                return new EcsSpec<T1, T2, T3, T4>(world);
             }
 
             public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
@@ -331,7 +346,7 @@ namespace PavEcsGame.Extensions
         }
     }
 
-    public readonly struct EcsSpec<T1, T2, T3, T4, T5>
+    public readonly struct EcsSpec<T1, T2, T3, T4, T5> : IEcsLinkedToWorld
         where T1 : struct
         where T2 : struct
         where T3 : struct
@@ -348,28 +363,31 @@ namespace PavEcsGame.Extensions
 
         public EcsPool<T5> Pool5 { get; }
 
-        public EcsSpec(in EcsSpec<T1, T2, T3, T4> EcsSpec, EcsPool<T5> pool5)
+        private readonly EcsWorld _world;
+        public bool IsBelongToWorld(EcsWorld world) => _world == world;
+        public EcsSpec(EcsWorld world)
         {
-            Pool1 = EcsSpec.Pool1;
-            Pool2 = EcsSpec.Pool2;
-            Pool3 = EcsSpec.Pool3;
-            Pool4 = EcsSpec.Pool4;
-            Pool5 = pool5;
+            _world = world;
+            Pool1 = world.GetPool<T1>();
+            Pool2 = world.GetPool<T2>();
+            Pool3 = world.GetPool<T3>();
+            Pool4 = world.GetPool<T4>();
+            Pool5 = world.GetPool<T5>();
         }
 
-        public EcsSpec(
-            EcsPool<T1> pool1,
-            EcsPool<T2> pool2,
-            EcsPool<T3> pool3,
-            EcsPool<T4> pool4,
-            EcsPool<T5> pool5
+        public void Deconstruct(
+            out EcsPool<T1> pool1,
+            out EcsPool<T2> pool2,
+            out EcsPool<T3> pool3,
+            out EcsPool<T4> pool4,
+            out EcsPool<T5> pool5
         )
         {
-            Pool1 = pool1;
-            Pool2 = pool2;
-            Pool3 = pool3;
-            Pool4 = pool4;
-            Pool5 = pool5;
+            pool1 = Pool1;
+            pool2 = Pool2;
+            pool3 = Pool3;
+            pool4 = Pool4;
+            pool5 = Pool5;
         }
 
         public static Builder Build()
@@ -401,13 +419,7 @@ namespace PavEcsGame.Extensions
 
             public EcsSpec<T1, T2, T3, T4, T5> Create(EcsWorld world)
             {
-                return new EcsSpec<T1, T2, T3, T4, T5>(
-                    world.GetPool<T1>(),
-                    world.GetPool<T2>(),
-                    world.GetPool<T3>(),
-                    world.GetPool<T4>(),
-                    world.GetPool<T5>()
-                );
+                return new EcsSpec<T1, T2, T3, T4, T5>(world);
             }
 
 
@@ -428,7 +440,7 @@ namespace PavEcsGame.Extensions
         }
     }
 
-    public readonly struct EcsSpec<T1, T2, T3, T4, T5, T6>
+    public readonly struct EcsSpec<T1, T2, T3, T4, T5, T6> : IEcsLinkedToWorld
         where T1 : struct
         where T2 : struct
         where T3 : struct
@@ -448,30 +460,34 @@ namespace PavEcsGame.Extensions
 
         public EcsPool<T6> Pool6 { get; }
 
-        public EcsSpec(in EcsSpec<T1, T2, T3, T4, T5> EcsSpec, EcsPool<T6> pool6)
+        private readonly EcsWorld _world;
+        public bool IsBelongToWorld(EcsWorld world) => _world == world;
+        public EcsSpec(EcsWorld world)
         {
-            Pool1 = EcsSpec.Pool1;
-            Pool2 = EcsSpec.Pool2;
-            Pool3 = EcsSpec.Pool3;
-            Pool4 = EcsSpec.Pool4;
-            Pool5 = EcsSpec.Pool5;
-            Pool6 = pool6;
+            _world = world;
+            Pool1 = world.GetPool<T1>();
+            Pool2 = world.GetPool<T2>();
+            Pool3 = world.GetPool<T3>();
+            Pool4 = world.GetPool<T4>();
+            Pool5 = world.GetPool<T5>();
+            Pool6 = world.GetPool<T6>();
         }
 
-        public EcsSpec(
-            EcsPool<T1> pool1,
-            EcsPool<T2> pool2,
-            EcsPool<T3> pool3,
-            EcsPool<T4> pool4,
-            EcsPool<T5> pool5,
-            EcsPool<T6> pool6)
+        public void Deconstruct(
+            out EcsPool<T1> pool1,
+            out EcsPool<T2> pool2,
+            out EcsPool<T3> pool3,
+            out EcsPool<T4> pool4,
+            out EcsPool<T5> pool5,
+            out EcsPool<T6> pool6
+        )
         {
-            Pool1 = pool1;
-            Pool2 = pool2;
-            Pool3 = pool3;
-            Pool4 = pool4;
-            Pool5 = pool5;
-            Pool6 = pool6;
+            pool1 = Pool1;
+            pool2 = Pool2;
+            pool3 = Pool3;
+            pool4 = Pool4;
+            pool5 = Pool5;
+            pool6 = Pool6;
         }
 
         public static Builder Build()
@@ -505,14 +521,7 @@ namespace PavEcsGame.Extensions
 
             public EcsSpec<T1, T2, T3, T4, T5, T6> Create(EcsWorld world)
             {
-                return new EcsSpec<T1, T2, T3, T4, T5, T6>(
-                    world.GetPool<T1>(),
-                    world.GetPool<T2>(),
-                    world.GetPool<T3>(),
-                    world.GetPool<T4>(),
-                    world.GetPool<T5>(),
-                    world.GetPool<T6>()
-                );
+                return new EcsSpec<T1, T2, T3, T4, T5, T6>(world);
             }
 
             public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)

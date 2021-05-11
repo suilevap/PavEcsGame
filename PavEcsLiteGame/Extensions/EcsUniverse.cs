@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Leopotam.EcsLite;
 using PaveEcsGame.Utils;
 
@@ -28,7 +29,7 @@ namespace PavEcsGame.Extensions
         public EcsWorld GetWorld<T>(EcsSystems systems)
         {
             var key = GetKey<T>();
-            var name = _prefix + key;
+            var name = GetName(key);
             var world = systems.GetWorld(name);
             if (world == null)
             {
@@ -43,6 +44,15 @@ namespace PavEcsGame.Extensions
         {
             return _quickUnionFind.GetAllRoots();
         }
+
+        public IEnumerable<IGrouping<EcsWorld, Type>> GetAllWorlds(EcsSystems systems)
+        {
+            return _quickUnionFind
+                .GetAll()
+                .GroupBy(p => systems.GetWorld(GetName(p.key)), p=>p.item);
+        }
+
+        private string GetName(int key) => _prefix + key;
 
         public class Builder
         {
