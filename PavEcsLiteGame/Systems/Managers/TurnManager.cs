@@ -4,7 +4,7 @@ using Leopotam.Ecs;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Components.SystemComponents;
-using PavEcsGame.Extensions;
+using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems.Managers
 {

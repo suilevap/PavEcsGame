@@ -10,6 +10,7 @@ using Microsoft.VisualBasic;
 using System.Diagnostics;
 using PavEcsGame.Components.SystemComponents;
 using PavEcsGame.Systems.Managers;
+using PaveEcsGame;
 
 namespace PavEcsGame.Systems
 {

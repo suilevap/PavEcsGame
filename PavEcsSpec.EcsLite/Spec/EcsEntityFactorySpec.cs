@@ -1,6 +1,6 @@
 ﻿using Leopotam.EcsLite;
 
-namespace PavEcsGame.Extensions
+namespace PavEcsSpec.EcsLite
 {
     public class EcsEntityFactorySpec<TPools>
         where TPools : struct
@@ -27,12 +27,17 @@ namespace PavEcsGame.Extensions
             _initData = null;
         }
 
-        public EcsPackedEntityWithWorld? NewEntity() => 
-            World.IsAlive() 
-                ? World.PackEntityWithWorld(World.NewEntity()) 
+        public EcsPackedEntityWithWorld? NewEntity()
+        {
+            return World.IsAlive()
+                ? World.PackEntityWithWorld(World.NewEntity())
                 : default;
+        }
 
-        public EcsUnsafeEntity NewUnsafeEntity() => new EcsUnsafeEntity(World.NewEntity());
+        public EcsUnsafeEntity NewUnsafeEntity()
+        {
+            return new EcsUnsafeEntity(World.NewEntity());
+        }
 
         public static EcsEntityFactorySpec<TPools> Create(
             EcsUniverse universe,

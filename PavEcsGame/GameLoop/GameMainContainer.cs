@@ -7,7 +7,6 @@ using PavEcsGame.Components;
 using PavEcsGame.Extensions;
 using PavEcsGame.Systems;
 using PavEcsGame.Systems.Managers;
-using PavEcsGame.Utils;
 
 namespace PavEcsGame.GameLoop
 {

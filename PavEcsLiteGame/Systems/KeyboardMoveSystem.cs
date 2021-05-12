@@ -6,15 +6,14 @@ using System.Text;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Components.SystemComponents;
-using PavEcsGame.Extensions;
 using PavEcsGame.Systems.Managers;
+using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
     class KeyboardMoveSystem : IEcsRunSystem, IEcsInitSystem
     {
         private readonly bool _waitKey;
-        //private EcsFilter<PlayerIndexComponent, SpeedComponent, CommandTokenComponent, IsActiveTag> _filter;
 
         private readonly TurnManager _turnManager;
 

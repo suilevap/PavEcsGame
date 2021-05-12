@@ -8,7 +8,6 @@ using Leopotam.Ecs.Types;
 using PavEcsGame.Components;
 using PavEcsGame.GameLoop;
 using PavEcsGame.Extensions;
-using PavEcsGame.Utils;
 
 namespace PavEcsGame.Systems
 {
@@ -17,7 +16,6 @@ namespace PavEcsGame.Systems
         private readonly string _fileName;
         private EcsWorld _world = null;
         private IMapData<PositionComponent, EcsEntity> _map;
-
 
         public LoadMapSystem(string fileName)
         {

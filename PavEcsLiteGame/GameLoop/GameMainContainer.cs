@@ -7,10 +7,9 @@ using Leopotam.Ecs;
 using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
-using PavEcsGame.Extensions;
 using PavEcsGame.Systems;
 using PavEcsGame.Systems.Managers;
-using PavEcsGame.Utils;
+using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.GameLoop
 {

@@ -1,14 +1,10 @@
-﻿using Leopotam.Ecs;
-using PavEcsGame.Utils;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using Leopotam.EcsLite;
+using PaveEcsGame.Utils;
 
 namespace PavEcsGame.Systems
 {
-    class SynchronizationContextSystem : IEcsInitSystem, IEcsRunSystem
+    internal class SynchronizationContextSystem : IEcsInitSystem, IEcsRunSystem
     {
         private WorkQueue _workQueue;
 

@@ -13,13 +13,18 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leopotam.Ecs", "ecs\Leopota
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leopotam.Ecs.Types", "ecs-types\Leopotam.Ecs.Types.csproj", "{1A4ECFA2-77A9-4D40-A42D-8CC822A9FC0C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PavEcsGame.Components", "PavEcsGame.Components\PavEcsGame.Components.csproj", "{772CDD2E-EF65-44E5-9B43-A3D90453396F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PavEcsGame.Components", "PavEcsGame.Components\PavEcsGame.Components.csproj", "{772CDD2E-EF65-44E5-9B43-A3D90453396F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leopotam.EcsLite", "ecslite\Leopotam.EcsLite.csproj", "{C34FD364-10CC-4F6F-94C5-3DE775270F3C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PavEcsGame.Lite", "PavEcsLiteGame\PavEcsGame.Lite.csproj", "{6121D5D4-C92E-4D49-B670-DF877E7969D0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PavEcsGame.Lite", "PavEcsLiteGame\PavEcsGame.Lite.csproj", "{6121D5D4-C92E-4D49-B670-DF877E7969D0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DA6043CE-C521-4455-9866-5ECA013905C1} = {DA6043CE-C521-4455-9866-5ECA013905C1}
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaveEcsGame.Common", "PaveEcsGame.Common\PaveEcsGame.Common.csproj", "{7A3E2D62-BE03-45BF-945C-3C6562097AAA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PaveEcsGame.Common", "PaveEcsGame.Common\PaveEcsGame.Common.csproj", "{7A3E2D62-BE03-45BF-945C-3C6562097AAA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PavEcsSpec.EcsLite", "PavEcsSpec.EcsLite\PavEcsSpec.EcsLite.csproj", "{DA6043CE-C521-4455-9866-5ECA013905C1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,6 +60,10 @@ Global
 		{7A3E2D62-BE03-45BF-945C-3C6562097AAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A3E2D62-BE03-45BF-945C-3C6562097AAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A3E2D62-BE03-45BF-945C-3C6562097AAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA6043CE-C521-4455-9866-5ECA013905C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA6043CE-C521-4455-9866-5ECA013905C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA6043CE-C521-4455-9866-5ECA013905C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA6043CE-C521-4455-9866-5ECA013905C1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

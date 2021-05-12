@@ -5,12 +5,13 @@ using Leopotam.Ecs;
 using Leopotam.Ecs.Types;
 using PavEcsGame.GameLoop;
 using PavEcsGame.Components;
-using PavEcsGame.Extensions;
 using Microsoft.VisualBasic;
 using System.Diagnostics;
 using Leopotam.EcsLite;
 using PavEcsGame.Components.SystemComponents;
 using PavEcsGame.Systems.Managers;
+using PavEcsSpec.EcsLite;
+using PaveEcsGame;
 
 namespace PavEcsGame.Systems
 {

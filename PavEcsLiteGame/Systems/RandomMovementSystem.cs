@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Leopotam.EcsLite;
-using PavEcsGame.Extensions;
+using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {

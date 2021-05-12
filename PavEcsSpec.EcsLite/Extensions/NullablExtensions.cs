@@ -1,8 +1,8 @@
-namespace PaveEcsGame
+namespace PavEcsSpec.EcsLite
 {
-    public static class NullableExtensions
+    internal static class NullableExtensions
     {
-        public static bool TryGet<T>(this T? item, out T value)  where T: struct
+        internal static bool TryGet<T>(this T? item, out T value)  where T: struct
         {
             if (item.HasValue)
             {

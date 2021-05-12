@@ -1,7 +1,6 @@
-﻿using System;
-using Leopotam.EcsLite;
+﻿using Leopotam.EcsLite;
 
-namespace PavEcsGame.Extensions
+namespace PavEcsSpec.EcsLite
 {
     public class EcsFilterSpec<TIncl, TOptional, TExclude>
         where TIncl : struct

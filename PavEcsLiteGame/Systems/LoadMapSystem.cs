@@ -4,7 +4,7 @@ using System.Linq;
 using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
-using PavEcsGame.Extensions;
+using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
@@ -87,10 +87,13 @@ namespace PavEcsGame.Systems
                 foreach (var c in line)
                 {
                     var ent = TrySpawnEntity(c, rnd);
-                    ent.TryAdd(_commonFactory.Pools,
-                        new NewPositionComponent {Value = pos},
-                        default
-                    );
+                    if (ent.Unpack(out _, out var unsafeEnt))
+                    {
+                        unsafeEnt.Add(_commonFactory.Pools,
+                            new NewPositionComponent {Value = pos},
+                            default
+                        );
+                    }
 
                     pos.Value.X++;
                 }
@@ -102,38 +105,41 @@ namespace PavEcsGame.Systems
         private EcsPackedEntityWithWorld? TrySpawnEntity(char symbol, Random rnd)
         {
             EcsPackedEntityWithWorld? result = default;
+            EcsUnsafeEntity ent;
             switch (symbol)
             {
                 //wall
                 case 'X':
                 case 'x':
-                    result = _wallFactory.NewEntity()
+                    ent = _wallFactory.NewUnsafeEntity()
                         //.Tag<SpawnRequestComponent>()
-                        .TryAdd(_wallFactory.Pools, new SymbolComponent {Value = '#'});
+                        .Add(_wallFactory.Pools, new SymbolComponent {Value = '#'});
+                    result = _wallFactory.World.PackEntityWithWorld(ent);
                     break;
                 //player
                 case 'p':
-                    result = _playerFactory.NewEntity()
+                    ent = _playerFactory.NewUnsafeEntity()
                         //.Tag<SpawnRequestComponent>()
-                        .TryAdd(_playerFactory.Pools,
+                        .Add(_playerFactory.Pools,
                             new PlayerIndexComponent {Index = 0},
                             new SpeedComponent(),
                             new SymbolComponent {Value = '@'},
                             new MoveFrictionComponent {FrictionValue = 1},
                             new WaitCommandTokenComponent(1));
-                    result.AssertIsNotEmpty();
+                    result = _playerFactory.World.PackEntityWithWorld(ent);
                     break;
                 //enemy
                 case 'e':
-                    result = _enemyFactory.NewEntity()
+                    ent = _enemyFactory.NewUnsafeEntity()
                         //.Tag<SpawnRequestComponent>()
-                        .TryAdd(_enemyFactory.Pools,
+                        .Add(_enemyFactory.Pools,
                             new RandomGeneratorComponent {Rnd = rnd},
                             new SpeedComponent(),
                             new SymbolComponent {Value = 'e'},
                             new MoveFrictionComponent {FrictionValue = 1},
                             new WaitCommandTokenComponent(1))
                         ;
+                    result = _enemyFactory.World.PackEntityWithWorld(ent);
                     break;
             }
 

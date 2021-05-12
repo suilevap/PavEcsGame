@@ -1,4 +1,5 @@
-﻿namespace PavEcsGame.Extensions
+﻿
+namespace PavEcsSpec.EcsLite
 {
     public static class EcsUniverseExtensions
     {

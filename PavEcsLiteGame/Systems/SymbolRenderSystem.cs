@@ -1,8 +1,8 @@
 ﻿using System;
 using PavEcsGame.Components;
-using PavEcsGame.Extensions;
 using Leopotam.EcsLite;
 using PavEcsGame.Components.SystemComponents;
+using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
@@ -12,7 +12,6 @@ namespace PavEcsGame.Systems
 
         private readonly EcsFilterSpec<EcsSpec<PreviousPositionComponent>, EcsSpec<MarkAsRenderedTag>, EcsSpec> _clearPrevPosSpec;
         private readonly EcsFilterSpec<EcsSpec<PositionComponent, SymbolComponent>, EcsSpec, EcsSpec<MarkAsRenderedTag>> _updateCurrentPosSpec;
-
 
         public SymbolRenderSystem(IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> map, EcsUniverse universe)
         {

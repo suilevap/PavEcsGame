@@ -2,8 +2,8 @@ using System;
 using Leopotam.Ecs;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
-using PavEcsGame.Extensions;
 using PavEcsGame.Systems.Managers;
+using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {

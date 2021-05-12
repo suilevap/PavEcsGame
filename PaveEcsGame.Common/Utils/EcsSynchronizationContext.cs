@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace PavEcsGame.Utils
+namespace PaveEcsGame.Utils
 {
     public class EcsSynchronizationContext : SynchronizationContext
     {

@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace PavEcsGame.Utils
+namespace PaveEcsGame.Utils
 {
-
     public class WorkQueue
     {
         private readonly Queue<WorkItem> _queue = new Queue<WorkItem>();

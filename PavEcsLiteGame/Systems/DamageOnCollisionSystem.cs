@@ -5,7 +5,7 @@ using Leopotam.Ecs;
 using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
-using PavEcsGame.Extensions;
+using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
@@ -14,8 +14,6 @@ namespace PavEcsGame.Systems
         private EcsFilterSpec<EcsSpec<CollisionEventComponent<EcsPackedEntityWithWorld>>, EcsSpec, EcsSpec> _spec;
 
         private EcsEntityFactorySpec<EcsSpec<DestroyRequestTag, IsActiveTag>> _destroyFactorySpec;
-        //private EcsFilter<TargetCollisionEventComponent<EcsEntity>, IsActiveTag> _filter;
-
 
         public DamageOnCollisionSystem(EcsUniverse universe)
         {

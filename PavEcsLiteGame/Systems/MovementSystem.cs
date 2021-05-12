@@ -6,15 +6,14 @@ using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Components.SystemComponents;
-using PavEcsGame.Extensions;
 using PavEcsGame.Systems.Managers;
+using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
     class MovementSystem : IEcsRunSystem, IEcsInitSystem
     {
 
-        //private EcsFilter<PositionComponent, SpeedComponent, IsActiveTag> _filter;
         private readonly TurnManager _turnManager;
         private TurnManager.SimSystemRegistration _reg;
         private readonly EcsFilterSpec<EcsSpec<PositionComponent, SpeedComponent, IsActiveTag>, EcsSpec<NewPositionComponent>, EcsSpec> _spec;

@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Leopotam.EcsLite;
-using PaveEcsGame.Utils;
 
-namespace PavEcsGame.Extensions
+namespace PavEcsSpec.EcsLite
 {
-    public class EcsUniverse
+    public class EcsUniverse : IEcsInitSystem
     {
         private readonly string _prefix;
         private readonly QuickUnionFind<Type> _quickUnionFind = new QuickUnionFind<Type>();
@@ -14,6 +13,13 @@ namespace PavEcsGame.Extensions
         public EcsUniverse(string prefix = "world_")
         {
             _prefix = prefix;
+        }
+
+
+        public void Init(EcsSystems systems)
+        {
+            //todo init all filters and factories
+            throw new NotImplementedException();
         }
 
         public Builder StartSet()
@@ -49,10 +55,13 @@ namespace PavEcsGame.Extensions
         {
             return _quickUnionFind
                 .GetAll()
-                .GroupBy(p => systems.GetWorld(GetName(p.key)), p=>p.item);
+                .GroupBy(p => systems.GetWorld(GetName(p.key)), p => p.item);
         }
 
-        private string GetName(int key) => _prefix + key;
+        private string GetName(int key)
+        {
+            return _prefix + key;
+        }
 
         public class Builder
         {
@@ -75,5 +84,6 @@ namespace PavEcsGame.Extensions
                 _universe._quickUnionFind.Union(_types);
             }
         }
+
     }
 }
