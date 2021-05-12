@@ -326,6 +326,12 @@ namespace PavEcsSpec.EcsLite
         {
             return ent.Unpack(out _, out EcsUnsafeEntity id) && id == unsafeId;
         }
+        public static bool IsBelongTo(this EcsPackedEntityWithWorld ent, IEcsLinkedToWorld worldContainer)
+        {
+            return ent.Unpack(out var world, out EcsUnsafeEntity _) 
+                   && worldContainer.IsBelongToWorld(world);
+        }
+
 
         public static void AssertIsNotEmpty(this EcsPackedEntityWithWorld? ent)
         {

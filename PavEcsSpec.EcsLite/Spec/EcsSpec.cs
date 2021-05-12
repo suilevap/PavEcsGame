@@ -29,10 +29,7 @@ namespace PavEcsSpec.EcsLite
             return true;
         }
 
-        public static Builder Empty()
-        {
-            return new Builder();
-        }
+        public static Builder Empty() => new Builder();
 
         public struct Builder : IEcsSpecBuilder<EcsSpec>
         {

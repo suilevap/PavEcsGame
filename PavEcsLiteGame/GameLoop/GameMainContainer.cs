@@ -49,9 +49,9 @@ namespace PavEcsGame.GameLoop
 
             _systems
                 .Add(new UpdatePositionSystem(turnManager, map, universe))
-//#if DEBUG
-//                .Add(new VerifyMapSystem())
-//#endif
+#if DEBUG
+                .Add(new VerifyMapSystem(universe, map))
+#endif
                 .Add(new DamageOnCollisionSystem(universe))
                 .Add(new DestroyEntitySystem(turnManager, universe));
 

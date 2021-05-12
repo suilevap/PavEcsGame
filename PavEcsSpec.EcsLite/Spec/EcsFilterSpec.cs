@@ -2,7 +2,7 @@
 
 namespace PavEcsSpec.EcsLite
 {
-    public class EcsFilterSpec<TIncl, TOptional, TExclude> : IInitSpec
+    public class EcsFilterSpec<TIncl, TOptional, TExclude> : IInitSpec, IEcsLinkedToWorld
         where TIncl : struct
         where TOptional : struct
         where TExclude : struct
@@ -71,5 +71,7 @@ namespace PavEcsSpec.EcsLite
             public IEcsSpecBuilder<TOptional> Optional;
             public EcsUniverse Universe;
         }
+
+        public bool IsBelongToWorld(EcsWorld world) => World == world;
     }
 }

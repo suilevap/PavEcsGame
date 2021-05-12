@@ -2,7 +2,7 @@
 
 namespace PavEcsSpec.EcsLite
 {
-    public class EcsEntityFactorySpec<TPools> : IInitSpec
+    public class EcsEntityFactorySpec<TPools> : IInitSpec, IEcsLinkedToWorld
         where TPools : struct
     {
         private InitData _initData;
@@ -38,6 +38,7 @@ namespace PavEcsSpec.EcsLite
         {
             return new EcsUnsafeEntity(World.NewEntity());
         }
+        public bool IsBelongToWorld(EcsWorld world) => World == world;
 
         internal static EcsEntityFactorySpec<TPools> Create(
             EcsUniverse universe,
