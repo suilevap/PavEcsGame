@@ -58,9 +58,6 @@ namespace PavEcsGame.Systems
 
         public void Init(EcsSystems systems)
         {
-            _movePosSpec.Init(systems);
-            _newPosSpec.Init(systems);
-            _collEvenFactorySpec.Init(systems);
             _registration = _turnManager.RegisterSimulationSystem(this);
         }
 

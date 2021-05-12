@@ -10,16 +10,20 @@ namespace PavEcsSpec.EcsLite
         private readonly string _prefix;
         private readonly QuickUnionFind<Type> _quickUnionFind = new QuickUnionFind<Type>();
 
+        private readonly List<IInitSpec> _registeredSpec = new List<IInitSpec>();
+
         public EcsUniverse(string prefix = "world_")
         {
             _prefix = prefix;
         }
 
-
         public void Init(EcsSystems systems)
         {
-            //todo init all filters and factories
-            throw new NotImplementedException();
+            foreach (var initSpec in _registeredSpec)
+            {
+                initSpec.Init(systems);
+            }
+            _registeredSpec.Clear();
         }
 
         public Builder StartSet()
@@ -63,6 +67,45 @@ namespace PavEcsSpec.EcsLite
             return _prefix + key;
         }
 
+        public EcsFilterSpec<TIncl, TOptional, TExclude> CreateFilterSpec<TIncl, TOptional, TExclude>(
+            IEcsSpecBuilder<TIncl> include,
+            IEcsSpecBuilder<TOptional> optional,
+            IEcsSpecBuilder<TExclude> exclude
+        )
+            where TIncl : struct
+            where TOptional : struct
+            where TExclude : struct
+        {
+            var result =
+                EcsFilterSpec<TIncl, TOptional, TExclude>.Create(this, include, optional, exclude);
+            _registeredSpec.Add(result);
+            return result;
+        }
+
+        public EcsEntityFactorySpec<TPools> CreateEntityFactorySpec<TPools>(
+            IEcsSpecBuilder<TPools> pools
+        )
+            where TPools : struct
+        {
+            var result = 
+                EcsEntityFactorySpec<TPools>.Create(this, pools);
+            _registeredSpec.Add(result);
+            return result;
+        }
+
+        public EcsEntityFactorySpec<TPools> CreateEntityFactorySpec<TPools, TParentPools>(
+            EcsEntityFactorySpec<TParentPools> parent,
+            IEcsSpecBuilder<TPools> pools
+        )
+            where TPools : struct
+            where TParentPools : struct
+        {
+            var result =
+                EcsEntityFactorySpec<TPools>.Create(this, pools, parent); ;
+            _registeredSpec.Add(result);
+            return result;
+        }
+
         public class Builder
         {
             private readonly List<Type> _types = new List<Type>();
@@ -84,6 +127,5 @@ namespace PavEcsSpec.EcsLite
                 _universe._quickUnionFind.Union(_types);
             }
         }
-
     }
 }

@@ -2,7 +2,7 @@
 
 namespace PavEcsSpec.EcsLite
 {
-    public class EcsEntityFactorySpec<TPools>
+    public class EcsEntityFactorySpec<TPools> : IInitSpec
         where TPools : struct
     {
         private InitData _initData;
@@ -15,7 +15,7 @@ namespace PavEcsSpec.EcsLite
         public EcsWorld World { get; private set; }
         public TPools Pools { get; private set; }
 
-        public void Init(EcsSystems systems)
+        void IInitSpec.Init(EcsSystems systems)
         {
             var universe = _initData.Universe;
             var pools = _initData.Pools;
@@ -39,7 +39,7 @@ namespace PavEcsSpec.EcsLite
             return new EcsUnsafeEntity(World.NewEntity());
         }
 
-        public static EcsEntityFactorySpec<TPools> Create(
+        internal static EcsEntityFactorySpec<TPools> Create(
             EcsUniverse universe,
             IEcsSpecBuilder<TPools> pools
         )
@@ -56,7 +56,7 @@ namespace PavEcsSpec.EcsLite
             return new EcsEntityFactorySpec<TPools>(initData);
         }
 
-        public static EcsEntityFactorySpec<TPools> Create<TParentPools>(
+        internal static EcsEntityFactorySpec<TPools> Create<TParentPools>(
             EcsUniverse universe,
             IEcsSpecBuilder<TPools> pools,
             EcsEntityFactorySpec<TParentPools> parentFactory

@@ -66,10 +66,6 @@ namespace PavEcsGame.Systems
 
         public async void Init(EcsSystems systems)
         {
-            _playerFactory.Init(systems);
-            _commonFactory.Init(systems);
-            _enemyFactory.Init(systems);
-            _wallFactory.Init(systems);
 
             var lines = await File.ReadAllLinesAsync(_fileName);
 

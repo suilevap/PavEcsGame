@@ -25,7 +25,6 @@ namespace PavEcsGame.Systems
         }
         public void Init(EcsSystems systems)
         {
-            _spec.Init(systems);
             _reg = _turnManager.RegisterSimulationSystem(this);
         }
 

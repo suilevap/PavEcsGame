@@ -11,7 +11,7 @@ using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
-    class RandomMovementSystem : IEcsRunSystem, IEcsInitSystem
+    internal class RandomMovementSystem : IEcsRunSystem
     {
         private readonly TurnManager _turnManager;
         private readonly EcsFilterSpec<EcsSpec<SpeedComponent, RandomGeneratorComponent, CommandTokenComponent, IsActiveTag>, EcsSpec, EcsSpec> _spec;
@@ -24,11 +24,7 @@ namespace PavEcsGame.Systems
                 EcsSpec<SpeedComponent, RandomGeneratorComponent, CommandTokenComponent, IsActiveTag>.Build(),
                 EcsSpec.Empty(),
                 EcsSpec.Empty()
-                );
-        }
-        public void Init(EcsSystems systems)
-        {
-            _spec.Init(systems);
+            );
         }
 
         public void Run(EcsSystems systems)

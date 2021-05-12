@@ -62,6 +62,7 @@ namespace PavEcsSpec.EcsLite
             }
         }
     }
+
     public readonly struct EcsSpec<T1> : IEcsLinkedToWorld
         where T1 : struct
     {
@@ -74,7 +75,7 @@ namespace PavEcsSpec.EcsLite
 
         public EcsPool<T1> Pool1 { get; }
 
-        public EcsSpec(EcsWorld world)
+        internal EcsSpec(EcsWorld world)
         {
             _world = world;
             Pool1 = world.GetPool<T1>();
@@ -134,14 +135,14 @@ namespace PavEcsSpec.EcsLite
         {
             return _world == world;
         }
-        //public EcsSpec(in EcsSpec<T1> ecsSpec, EcsPool<T2> pool2)
+        //internal EcsSpec(in EcsSpec<T1> ecsSpec, EcsPool<T2> pool2)
         //{
         //    Pool1 = ecsSpec.Pool1;
         //    Pool2 = pool2;
         //    _world = ecsSpec._world;
         //}
 
-        public EcsSpec(
+        internal EcsSpec(
             EcsWorld world)
         {
             _world = world;
@@ -216,7 +217,7 @@ namespace PavEcsSpec.EcsLite
             return _world == world;
         }
 
-        public EcsSpec(EcsWorld world)
+        internal EcsSpec(EcsWorld world)
         {
             _world = world;
             Pool1 = world.GetPool<T1>();
@@ -300,7 +301,7 @@ namespace PavEcsSpec.EcsLite
             return _world == world;
         }
 
-        public EcsSpec(EcsWorld world)
+        internal EcsSpec(EcsWorld world)
         {
             _world = world;
             Pool1 = world.GetPool<T1>();
@@ -392,7 +393,7 @@ namespace PavEcsSpec.EcsLite
             return _world == world;
         }
 
-        public EcsSpec(EcsWorld world)
+        internal EcsSpec(EcsWorld world)
         {
             _world = world;
             Pool1 = world.GetPool<T1>();
@@ -494,7 +495,7 @@ namespace PavEcsSpec.EcsLite
             return _world == world;
         }
 
-        public EcsSpec(EcsWorld world)
+        internal EcsSpec(EcsWorld world)
         {
             _world = world;
             Pool1 = world.GetPool<T1>();

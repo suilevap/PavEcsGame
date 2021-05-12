@@ -31,8 +31,6 @@ namespace PavEcsGame.Systems
         }
         public void Init(EcsSystems systems)
         {
-            _clearPrevPosSpec.Init(systems);
-            _updateCurrentPosSpec.Init(systems);
 
             Console.CursorVisible = false;
         }

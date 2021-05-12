@@ -2,7 +2,8 @@
 
 namespace PavEcsSpec.EcsLite
 {
-    internal sealed class UniverseDelHereSystem<T> : IEcsInitSystem, IEcsRunSystem where T : struct
+    internal sealed class UniverseDelHereSystem<T> : IEcsRunSystem 
+        where T : struct
     {
         private readonly EcsFilterSpec<EcsSpec<T>, EcsSpec, EcsSpec> _spec;
 
@@ -14,10 +15,6 @@ namespace PavEcsSpec.EcsLite
                 EcsSpec.Empty());
         }
 
-        public void Init(EcsSystems systems)
-        {
-            _spec.Init(systems);
-        }
 
         public void Run(EcsSystems systems)
         {

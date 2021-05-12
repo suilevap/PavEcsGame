@@ -35,8 +35,6 @@ namespace PavEcsGame.Systems
         }
         public void Init(EcsSystems systems)
         {
-            _destroySpec.Init(systems);
-            _removeFormMapSpec.Init(systems);
             _registration = _turnManager.RegisterSimulationSystem(this);
         }
 

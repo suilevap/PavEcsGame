@@ -8,7 +8,7 @@ using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems.Managers
 {
-    public class TurnManager : IEcsRunSystem, IEcsInitSystem
+    public class TurnManager : IEcsRunSystem
     {
 
         private long _tick;
@@ -52,12 +52,6 @@ namespace PavEcsGame.Systems.Managers
                 .Add(_systemEntityFactorySpec.Pools,
                     new SystemRefComponent<IEcsSystem>() { System = system });
             return new TickSystemRegistration(result, this);
-        }
-
-        public void Init(EcsSystems systems)
-        {
-            _tokenSpec.Init(systems);
-            _systemEntityFactorySpec.Init(systems);
         }
 
         public void Run(EcsSystems systems)

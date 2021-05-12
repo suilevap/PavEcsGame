@@ -25,14 +25,15 @@ namespace PavEcsGame.GameLoop
         {
             _world = new EcsWorld();
             var map = new MapData<EcsPackedEntityWithWorld>();
-            var universe = new EcsUniverse();
-            _universe = universe;
-            var turnManager = new TurnManager(universe);
-
             _systems = new EcsSystems(_world, "Root");
 
             _systems
-                .Add(new SynchronizationContextSystem())
+                .AddUniverse(out var universe)
+                .Add(new SynchronizationContextSystem());
+            _universe = universe;
+            var turnManager = new TurnManager(universe);
+
+            _systems
                 .Add(turnManager)
                 .Add(new LoadMapSystem("Data/map1.txt", universe, map))
                 ;//.Add(new SpawnSystem());
@@ -64,11 +65,16 @@ namespace PavEcsGame.GameLoop
             _systems
                 .Init();
 
+            PrintUniverseInfo(universe);
+        }
+
+        private void PrintUniverseInfo(EcsUniverse universe)
+        {
             Debug.Print("Universe worlds count: {0}", universe.GetAllKeys().Count());
             foreach (var gr in universe.GetAllWorlds(_systems))
             {
                 Debug.Print("world: {0}, components count: {1}", gr.Key, gr.Count());
-                Debug.Print("c: {0}", string.Join('|',gr.Select(x=>x.Name)));
+                Debug.Print("c: {0}", string.Join('|', gr.Select(x => x.Name)));
             }
         }
 

@@ -32,8 +32,6 @@ namespace PavEcsGame.Systems
         public void Init(EcsSystems systems)
         {
             _previousRecharge = DateTime.UtcNow;
-            _waitTokenSpec.Init(systems);
-            _withTokenSpec.Init(systems);
         }
 
         public void Run(EcsSystems systems)

@@ -32,7 +32,6 @@ namespace PavEcsGame.Systems
         }
         public void Init(EcsSystems systems)
         {
-            _spec.Init(systems);
             _configs = new Dictionary<ConsoleKey, SpeedComponent>[]
             {
                 new Dictionary<ConsoleKey, SpeedComponent>(){

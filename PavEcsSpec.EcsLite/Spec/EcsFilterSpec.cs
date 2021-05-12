@@ -2,7 +2,7 @@
 
 namespace PavEcsSpec.EcsLite
 {
-    public class EcsFilterSpec<TIncl, TOptional, TExclude>
+    public class EcsFilterSpec<TIncl, TOptional, TExclude> : IInitSpec
         where TIncl : struct
         where TOptional : struct
         where TExclude : struct
@@ -21,7 +21,7 @@ namespace PavEcsSpec.EcsLite
 
         public EcsFilter Filter { get; private set; }
 
-        public void Init(EcsSystems systems)
+        void IInitSpec.Init(EcsSystems systems)
         {
             var universe = _initData.Universe;
             var include = _initData.Include;
@@ -41,7 +41,7 @@ namespace PavEcsSpec.EcsLite
             _initData = null;
         }
 
-        public static EcsFilterSpec<TIncl, TOptional, TExclude> Create(
+        internal static EcsFilterSpec<TIncl, TOptional, TExclude> Create(
             EcsUniverse universe,
             IEcsSpecBuilder<TIncl> include,
             IEcsSpecBuilder<TOptional> optional,

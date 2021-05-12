@@ -9,7 +9,7 @@ using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
-    class DamageOnCollisionSystem : IEcsRunSystem, IEcsInitSystem
+    internal class DamageOnCollisionSystem : IEcsRunSystem
     {
         private EcsFilterSpec<EcsSpec<CollisionEventComponent<EcsPackedEntityWithWorld>>, EcsSpec, EcsSpec> _spec;
 
@@ -27,11 +27,7 @@ namespace PavEcsGame.Systems
                 EcsSpec<DestroyRequestTag, IsActiveTag>.Build()
             );
         }
-        public void Init(EcsSystems systems)
-        {
-            _spec.Init(systems);
-            _destroyFactorySpec.Init(systems);
-        }
+
         public void Run(EcsSystems systems)
         {
             var (destroyReqPool, isActivePool) = _destroyFactorySpec.Pools;
