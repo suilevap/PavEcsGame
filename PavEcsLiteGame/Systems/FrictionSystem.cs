@@ -17,11 +17,9 @@ namespace PavEcsGame.Systems
         public FrictionSystem(TurnManager turnManager, EcsUniverse universe)
         {
             _turnManager = turnManager;
-            _spec = universe.CreateFilterSpec(
-                EcsSpec<SpeedComponent, MoveFrictionComponent>.Build(),
-                EcsSpec.Empty(),
-                EcsSpec.Empty()
-            );
+            _spec = universe.StartFilterSpec(
+                    EcsSpec<SpeedComponent, MoveFrictionComponent>.Build())
+                .End();
         }
         public void Init(EcsSystems systems)
         {

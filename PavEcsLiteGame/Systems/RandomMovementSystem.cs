@@ -20,11 +20,10 @@ namespace PavEcsGame.Systems
         public RandomMovementSystem(TurnManager turnManager, EcsUniverse universe)
         {
             _turnManager = turnManager;
-            _spec = universe.CreateFilterSpec(
-                EcsSpec<SpeedComponent, RandomGeneratorComponent, CommandTokenComponent, IsActiveTag>.Build(),
-                EcsSpec.Empty(),
-                EcsSpec.Empty()
-            );
+            _spec = universe
+                .StartFilterSpec(
+                    EcsSpec<SpeedComponent, RandomGeneratorComponent, CommandTokenComponent, IsActiveTag>.Build())
+                .End();
         }
 
         public void Run(EcsSystems systems)

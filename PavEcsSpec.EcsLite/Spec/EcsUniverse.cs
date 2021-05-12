@@ -26,7 +26,7 @@ namespace PavEcsSpec.EcsLite
             _registeredSpec.Clear();
         }
 
-        public Builder StartSet()
+        internal Builder StartSet()
         {
             return new Builder(this);
         }
@@ -36,7 +36,7 @@ namespace PavEcsSpec.EcsLite
             return _quickUnionFind.Root(typeof(T));
         }
 
-        public EcsWorld GetWorld<T>(EcsSystems systems)
+        internal EcsWorld GetWorld<T>(EcsSystems systems)
         {
             var key = GetKey<T>();
             var name = GetName(key);

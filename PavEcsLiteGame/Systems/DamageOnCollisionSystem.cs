@@ -17,11 +17,10 @@ namespace PavEcsGame.Systems
 
         public DamageOnCollisionSystem(EcsUniverse universe)
         {
-            _spec = universe.CreateFilterSpec(
-                EcsSpec<CollisionEventComponent<EcsPackedEntityWithWorld>>.Build(),
-                EcsSpec.Empty(),
-                EcsSpec.Empty()
-            );
+            _spec = universe
+                .StartFilterSpec(
+                    EcsSpec<CollisionEventComponent<EcsPackedEntityWithWorld>>.Build())
+                .End();
 
             _destroyFactorySpec = universe.CreateEntityFactorySpec(
                 EcsSpec<DestroyRequestTag, IsActiveTag>.Build()

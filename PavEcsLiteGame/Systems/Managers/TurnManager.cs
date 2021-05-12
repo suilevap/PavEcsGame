@@ -12,8 +12,8 @@ namespace PavEcsGame.Systems.Managers
     {
 
         private long _tick;
-        private EcsFilterSpec<EcsSpec<SystemHasMoreWorkTag, SystemRefComponent<IEcsSystem>>, EcsSpec<WaitCommandTokenComponent, CommandTokenComponent>, EcsSpec> _tokenSpec;
-        private EcsEntityFactorySpec<EcsSpec<SystemRefComponent<IEcsSystem>>> _systemEntityFactorySpec;
+        private readonly EcsFilterSpec<EcsSpec<SystemHasMoreWorkTag, SystemRefComponent<IEcsSystem>>, EcsSpec<WaitCommandTokenComponent, CommandTokenComponent>, EcsSpec> _tokenSpec;
+        private readonly EcsEntityFactorySpec<EcsSpec<SystemRefComponent<IEcsSystem>>> _systemEntityFactorySpec;
 
         public enum Phase
         {
@@ -23,15 +23,16 @@ namespace PavEcsGame.Systems.Managers
 
         public TurnManager(EcsUniverse universe)
         {
-            _tokenSpec = universe.CreateFilterSpec(
-                EcsSpec<SystemHasMoreWorkTag, SystemRefComponent<IEcsSystem>>.Build(),
-                EcsSpec<WaitCommandTokenComponent, CommandTokenComponent>.Build(),
-                EcsSpec.Empty());
+            _tokenSpec = universe
+                .StartFilterSpec(
+                    EcsSpec<SystemHasMoreWorkTag, SystemRefComponent<IEcsSystem>>.Build())
+                .Optional(
+                    EcsSpec<WaitCommandTokenComponent, CommandTokenComponent>.Build())
+                .End();
 
             _systemEntityFactorySpec = universe.CreateEntityFactorySpec(
                 EcsSpec<SystemRefComponent<IEcsSystem>>.Build());
             //_world = world;
-            //_hasMoreWorkFilter = _world.GetFilter(typeof(EcsFilter<SystemHasMoreWorkTag>), true);
         }
 
         public Phase CurrentPhase => _tokenSpec.Filter.IsEmpty() ? Phase.TickUpdate : Phase.Simulation;

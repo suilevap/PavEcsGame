@@ -21,17 +21,19 @@ namespace PavEcsGame.Systems
         {
             _turnManager = turnManager;
 
-            _destroySpec = universe.CreateFilterSpec(
-                EcsSpec<DestroyRequestTag>.Build(),
-                EcsSpec.Empty(),
-                EcsSpec<PositionComponent, MarkAsRenderedTag>.Build()
-            );
+            _destroySpec = universe
+                .StartFilterSpec(
+                    EcsSpec<DestroyRequestTag>.Build())
+                .Exclude(
+                    EcsSpec<PositionComponent, MarkAsRenderedTag>.Build())
+                .End();
 
-            _removeFormMapSpec = universe.CreateFilterSpec(
-                EcsSpec<PositionComponent, DestroyRequestTag>.Build(),
-                EcsSpec<NewPositionComponent>.Build(),
-                EcsSpec.Empty()
-            );
+            _removeFormMapSpec = universe
+                .StartFilterSpec(
+                    EcsSpec<PositionComponent, DestroyRequestTag>.Build())
+                .Optional(
+                    EcsSpec<NewPositionComponent>.Build())
+                .End();
         }
         public void Init(EcsSystems systems)
         {

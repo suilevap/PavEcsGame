@@ -83,13 +83,11 @@ namespace PavEcsSpec.EcsLite
             pool1 = Pool1;
         }
 
-        public static Builder Build()
-        {
-            return new Builder();
-        }
+        public static Builder Build() => Builder.Instance;
 
-        public readonly struct Builder : IEcsSpecBuilder<EcsSpec<T1>>
+        public class Builder : IEcsSpecBuilder<EcsSpec<T1>>
         {
+            internal static Builder Instance { get; } = new Builder();
             public EcsFilter.Mask Include(EcsWorld world)
             {
                 return world.Filter<T1>();
@@ -156,13 +154,12 @@ namespace PavEcsSpec.EcsLite
             pool2 = Pool2;
         }
 
-        public static Builder Build()
-        {
-            return new Builder();
-        }
+        public static Builder Build() => Builder.Instance;
 
-        public readonly struct Builder : IEcsSpecBuilder<EcsSpec<T1, T2>>
+        public class Builder : IEcsSpecBuilder<EcsSpec<T1, T2>>
         {
+            internal static Builder Instance { get; } = new Builder();
+
             public EcsFilter.Mask Include(EcsWorld world)
             {
                 return world
@@ -233,13 +230,12 @@ namespace PavEcsSpec.EcsLite
             pool3 = Pool3;
         }
 
-        public static Builder Build()
-        {
-            return new Builder();
-        }
+        public static Builder Build() => Builder.Instance;
 
-        public readonly struct Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3>>
+        public class Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3>>
         {
+            internal static Builder Instance { get; } = new Builder();
+
             public EcsFilter.Mask Include(EcsWorld world)
             {
                 return world
@@ -320,13 +316,12 @@ namespace PavEcsSpec.EcsLite
             pool4 = Pool4;
         }
 
-        public static Builder Build()
-        {
-            return new Builder();
-        }
+        public static Builder Build() => Builder.Instance;
 
-        public readonly struct Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3, T4>>
+        public class Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3, T4>>
         {
+            internal static Builder Instance { get; } = new Builder();
+
             public EcsFilter.Mask Include(EcsWorld world)
             {
                 return world
@@ -415,13 +410,12 @@ namespace PavEcsSpec.EcsLite
             pool5 = Pool5;
         }
 
-        public static Builder Build()
-        {
-            return new Builder();
-        }
+        public static Builder Build() =>  Builder.Instance;
 
-        public readonly struct Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3, T4, T5>>
+        public class Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3, T4, T5>>
         {
+            internal static Builder Instance { get; } = new Builder();
+
             public EcsFilter.Mask Include(EcsWorld world)
             {
                 return world
@@ -446,7 +440,6 @@ namespace PavEcsSpec.EcsLite
             {
                 return new EcsSpec<T1, T2, T3, T4, T5>(world);
             }
-
 
             public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
             {
@@ -520,13 +513,12 @@ namespace PavEcsSpec.EcsLite
             pool6 = Pool6;
         }
 
-        public static Builder Build()
-        {
-            return new Builder();
-        }
+        public static Builder Build() => Builder.Instance;
 
-        public readonly struct Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3, T4, T5, T6>>
+        public class Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3, T4, T5, T6>>
         {
+            internal static Builder Instance { get; } = new Builder();
+
             public EcsFilter.Mask Include(EcsWorld world)
             {
                 return world

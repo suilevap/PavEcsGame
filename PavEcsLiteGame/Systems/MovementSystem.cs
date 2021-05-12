@@ -22,11 +22,12 @@ namespace PavEcsGame.Systems
         public MovementSystem(TurnManager turnManager, EcsUniverse universe)
         {
             _turnManager = turnManager;
-            _spec = universe.CreateFilterSpec(
-                EcsSpec<PositionComponent, SpeedComponent, IsActiveTag>.Build(),
-                EcsSpec<NewPositionComponent>.Build(),
-                EcsSpec.Empty()
-            );
+            _spec = universe
+                .StartFilterSpec(
+                    EcsSpec<PositionComponent, SpeedComponent, IsActiveTag>.Build())
+                .Optional(
+                    EcsSpec<NewPositionComponent>.Build())
+                .End();
         }
         public void Init(EcsSystems systems)
         {

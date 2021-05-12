@@ -41,19 +41,21 @@ namespace PavEcsGame.Systems
                 EcsSpec<CollisionEventComponent<EcsPackedEntityWithWorld>>.Build()
             );
 
-            _movePosSpec = universe.CreateFilterSpec(
-                EcsSpec<
-                    PositionComponent, 
-                    NewPositionComponent>.Build(),
-                EcsSpec<PreviousPositionComponent>.Build(),
-                EcsSpec.Empty()
-            );
+            _movePosSpec = universe
+                .StartFilterSpec(
+                    EcsSpec<
+                        PositionComponent,
+                        NewPositionComponent>.Build())
+                .Optional(
+                    EcsSpec<PreviousPositionComponent>.Build())
+                .End();
 
-            _newPosSpec = universe.CreateFilterSpec(
-                EcsSpec<NewPositionComponent>.Build(),
-                EcsSpec<PositionComponent>.Build(),
-                EcsSpec.Empty()
-            );
+            _newPosSpec = universe
+                .StartFilterSpec(
+                    EcsSpec<NewPositionComponent>.Build())
+                .Optional(
+                    EcsSpec<PositionComponent>.Build())
+                .End();
         }
 
         public void Init(EcsSystems systems)

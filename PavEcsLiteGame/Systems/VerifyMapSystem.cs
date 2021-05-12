@@ -20,9 +20,10 @@ namespace PavEcsGame.Systems
         public VerifyMapSystem(EcsUniverse universe, IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> map)
         {
             _map = map;
-            _spec = universe.CreateFilterSpec(
-                EcsSpec<PositionComponent>.Build()
-            );
+            _spec = universe
+                .StartFilterSpec(
+                    EcsSpec<PositionComponent>.Build())
+                .End();
         }
 
         public void Run(EcsSystems systems)

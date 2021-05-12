@@ -17,17 +17,19 @@ namespace PavEcsGame.Systems
         {
             _map = map;
 
-            _clearPrevPosSpec = universe.CreateFilterSpec(
-                include: EcsSpec<PreviousPositionComponent>.Build(),
-                optional: EcsSpec<MarkAsRenderedTag>.Build(),
-                exclude: EcsSpec.Empty()
-            );
+            _clearPrevPosSpec = universe
+                .StartFilterSpec(
+                    EcsSpec<PreviousPositionComponent>.Build())
+                .Optional(
+                    EcsSpec<MarkAsRenderedTag>.Build())
+                .End();
 
-            _updateCurrentPosSpec = universe.CreateFilterSpec(
-                include: EcsSpec<PositionComponent, SymbolComponent>.Build(),
-                optional: EcsSpec.Empty(),
-                exclude: EcsSpec<MarkAsRenderedTag>.Build()
-            );
+            _updateCurrentPosSpec = universe
+                .StartFilterSpec(
+                    EcsSpec<PositionComponent, SymbolComponent>.Build())
+                .Exclude(
+                    EcsSpec<MarkAsRenderedTag>.Build())
+                .End();
         }
         public void Init(EcsSystems systems)
         {

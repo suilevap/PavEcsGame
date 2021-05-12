@@ -17,17 +17,17 @@ namespace PavEcsGame.Systems
         public CommandTokenDistributionSystem(TimeSpan autoRechargeTime, EcsUniverse universe)
         {
             _autoRechargeTime = autoRechargeTime;
-            _waitTokenSpec = universe.CreateFilterSpec(
-                EcsSpec<WaitCommandTokenComponent>.Build(),
-                EcsSpec<CommandTokenComponent>.Build(),
-                EcsSpec.Empty()
-            );
+            _waitTokenSpec = universe
+                .StartFilterSpec(
+                    EcsSpec<WaitCommandTokenComponent>.Build())
+                .Optional(
+                    EcsSpec<CommandTokenComponent>.Build())
+                .End();
 
-            _withTokenSpec = universe.CreateFilterSpec(
-                EcsSpec<CommandTokenComponent>.Build(),
-                EcsSpec.Empty(),
-                EcsSpec.Empty()
-            );
+            _withTokenSpec = universe
+                .StartFilterSpec(
+                    EcsSpec<CommandTokenComponent>.Build())
+                .End();
         }
         public void Init(EcsSystems systems)
         {

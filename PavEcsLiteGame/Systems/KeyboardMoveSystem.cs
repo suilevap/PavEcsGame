@@ -24,11 +24,10 @@ namespace PavEcsGame.Systems
         {
             _waitKey = waitKey;
             _turnManager = turnManager;
-            _spec = universe.CreateFilterSpec(
-                EcsSpec<PlayerIndexComponent, SpeedComponent, CommandTokenComponent, IsActiveTag>.Build(),
-                EcsSpec.Empty(),
-                EcsSpec.Empty()
-            );
+            _spec = universe
+                .StartFilterSpec(
+                    EcsSpec<PlayerIndexComponent, SpeedComponent, CommandTokenComponent, IsActiveTag>.Build())
+                .End();
         }
         public void Init(EcsSystems systems)
         {
