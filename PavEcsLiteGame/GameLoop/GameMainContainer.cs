@@ -39,6 +39,7 @@ namespace PavEcsGame.GameLoop
             _systems
                 .Add(turnManager)
                 .Add(new LoadMapSystem("Data/map1.txt", universe, map))
+                .Add(new TileSystem(universe, map))
                 ;//.Add(new SpawnSystem());
 
             _systems 

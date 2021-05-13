@@ -35,7 +35,8 @@ namespace PavEcsGame.Systems
             {
                 if (lightValue < 0.01f)
                 {
-                    Symbol = SymbolComponent.Empty;
+                    //Symbol = SymbolComponent.Empty;
+                    Symbol.MainColor = ConsoleColor.DarkGray;
                 }
                 else
                 {

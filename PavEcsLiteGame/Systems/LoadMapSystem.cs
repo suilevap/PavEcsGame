@@ -23,9 +23,9 @@ namespace PavEcsGame.Systems
         private readonly EcsEntityFactorySpec<EcsSpec<PlayerIndexComponent, SpeedComponent, SymbolComponent,
             MoveFrictionComponent, WaitCommandTokenComponent>> _playerFactory;
 
-        private readonly EcsEntityFactorySpec<EcsSpec<SymbolComponent>> _wallFactory;
+        private readonly EcsEntityFactorySpec<EcsSpec<SymbolComponent, TileComponent>> _wallFactory;
         private readonly EcsEntityFactorySpec<EcsSpec<MapLoadedEvent>> _mapChangedEventFactory;
-        private EcsEntityFactorySpec<EcsSpec<LightSourceComponent, PositionComponent>> _lightSourceFactory;
+        private readonly EcsEntityFactorySpec<EcsSpec<LightSourceComponent, PositionComponent>> _lightSourceFactory;
 
 
         public LoadMapSystem(string fileName, EcsUniverse universe, IMapData<PositionComponent, EcsPackedEntityWithWorld> map)
@@ -66,7 +66,8 @@ namespace PavEcsGame.Systems
             _wallFactory = universe.CreateEntityFactorySpec(
                 _commonFactory,
                 EcsSpec<
-                    SymbolComponent>.Build()
+                    SymbolComponent,
+                    TileComponent>.Build()
             );
 
             _mapChangedEventFactory = universe.CreateEntityFactorySpec(
@@ -127,12 +128,14 @@ namespace PavEcsGame.Systems
                 case 'x':
                     ent = _wallFactory.NewUnsafeEntity()
                         //.Tag<SpawnRequestComponent>()
-                        .Add(_wallFactory.Pools, new SymbolComponent
-                        {
-                            Value = '#', 
-                            Depth = Depth.Foreground,
-                            MainColor = ConsoleColor.DarkGray
-                        });
+                        .Add(_wallFactory.Pools, 
+                            new SymbolComponent
+                            {
+                                Value = '#', 
+                                Depth = Depth.Foreground,
+                                MainColor = ConsoleColor.Gray
+                            },
+                            new TileComponent(){RuleName = "wall_rule"});
                     result = _wallFactory.World.PackEntityWithWorld(ent);
                     break;
                 //player
