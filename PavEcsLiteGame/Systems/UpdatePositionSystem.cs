@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
-using PavEcsGame.GameLoop;
+﻿using Leopotam.EcsLite;
 using PavEcsGame.Components;
-using Microsoft.VisualBasic;
-using System.Diagnostics;
-using Leopotam.EcsLite;
-using PavEcsGame.Components.SystemComponents;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
 using PaveEcsGame;
+using System.Diagnostics;
 
 namespace PavEcsGame.Systems
 {
@@ -27,7 +19,7 @@ namespace PavEcsGame.Systems
             EcsSpec<PreviousPositionComponent>,
             EcsSpec> _movePosSpec;
         private readonly EcsFilterSpec<EcsSpec<NewPositionComponent>, EcsSpec<PositionComponent>, EcsSpec> _newPosSpec;
-        private readonly EcsEntityFactorySpec<EcsSpec<CollisionEventComponent<EcsPackedEntityWithWorld>>> _collEvenFactorySpec;
+        private readonly EcsEntityFactorySpec<EcsSpec<CollisionEvent<EcsPackedEntityWithWorld>>> _collEvenFactorySpec;
 
         public UpdatePositionSystem(
             TurnManager turnManager, 
@@ -38,7 +30,7 @@ namespace PavEcsGame.Systems
             _map = mapData;
 
             _collEvenFactorySpec = universe.CreateEntityFactorySpec(
-                EcsSpec<CollisionEventComponent<EcsPackedEntityWithWorld>>.Build()
+                EcsSpec<CollisionEvent<EcsPackedEntityWithWorld>>.Build()
             );
 
             _movePosSpec = universe
@@ -68,11 +60,11 @@ namespace PavEcsGame.Systems
             _registration.UpdateState(_newPosSpec.Filter);
 
             //move to new pos in map and solve collide
-            GenerateCollisions();
+            PlaceToNewPos();
             RemoveFromMap();
             MoveToNewPos();
 
-            void GenerateCollisions()
+            void PlaceToNewPos()
             {
                 EcsPool<NewPositionComponent> newPosPool = _newPosSpec.Include.Pool1;
                 foreach (EcsUnsafeEntity ent in _newPosSpec.Filter)
@@ -95,7 +87,7 @@ namespace PavEcsGame.Systems
                             if (otherUnsafeEnt != ent) //try to move to same pos
                             {
                                 _collEvenFactorySpec.NewUnsafeEntity()
-                                    .Add(_collEvenFactorySpec.Pools, new CollisionEventComponent<EcsPackedEntityWithWorld>()
+                                    .Add(_collEvenFactorySpec.Pools, new CollisionEvent<EcsPackedEntityWithWorld>()
                                     {
                                         Source = _newPosSpec.World.PackEntityWithWorld(ent),
                                         Target = otherEnt
@@ -111,20 +103,20 @@ namespace PavEcsGame.Systems
             void RemoveFromMap()
             {
                 var (posPool, newPosPool) = _movePosSpec.Include;
-                //remove from previous pos anf strore previos pos
+                var prevPool = _movePosSpec.Optional.Pool1;
+                //remove from previous pos anf store previous pos
                 foreach (EcsUnsafeEntity ent in _movePosSpec.Filter)
                 {
-                    //var ent = _movePosFilter.GetEntity(i);
-                    //ref var pos = ref _movePosFilter.Get1(i);
-
 
                     ref var pos = ref posPool.Get(ent);
-                    Debug.Assert(_map.Get(pos).IsSame(ent), "Unexpected ent in previous pos");
+                    ref var mapEnt = ref _map.GetRef(pos);
+                    Debug.Assert(mapEnt.IsSame(ent), $"Unexpected ent in previous pos.\n" +
+                                                     $" Exp :{_movePosSpec.World.PackEntityWithWorld(ent).ToLogString()}.\n" +
+                                                     $" Act : {mapEnt.ToLogString()} ");
 
                     _map.Set(pos, default);
 
-                    _movePosSpec.Optional.Pool1.Set(ent).Value = pos;
-                    //ent.Get<PreviousPositionComponent>().Value = pos;
+                    prevPool.Set(ent).Value = pos;
                 }
             }
 

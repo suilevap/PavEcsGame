@@ -4,6 +4,7 @@ using System.Linq;
 using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
+using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
@@ -23,6 +24,8 @@ namespace PavEcsGame.Systems
             MoveFrictionComponent, WaitCommandTokenComponent>> _playerFactory;
 
         private readonly EcsEntityFactorySpec<EcsSpec<SymbolComponent>> _wallFactory;
+        private readonly EcsEntityFactorySpec<EcsSpec<MapLoadedEvent>> _mapChangedEventFactory;
+        private EcsEntityFactorySpec<EcsSpec<LightSourceComponent, PositionComponent>> _lightSourceFactory;
 
 
         public LoadMapSystem(string fileName, EcsUniverse universe, IMapData<PositionComponent, EcsPackedEntityWithWorld> map)
@@ -46,6 +49,9 @@ namespace PavEcsGame.Systems
                     WaitCommandTokenComponent>.Build()
             );
 
+            _lightSourceFactory = universe.CreateEntityFactorySpec(
+                EcsSpec<LightSourceComponent, PositionComponent>.Build());
+
             _enemyFactory = universe.CreateEntityFactorySpec(
                 _commonFactory,
                 EcsSpec<
@@ -62,6 +68,10 @@ namespace PavEcsGame.Systems
                 EcsSpec<
                     SymbolComponent>.Build()
             );
+
+            _mapChangedEventFactory = universe.CreateEntityFactorySpec(
+                EcsSpec<MapLoadedEvent>.Build()
+            );
         }
 
         public async void Init(EcsSystems systems)
@@ -75,6 +85,13 @@ namespace PavEcsGame.Systems
             var rnd = new Random(42);
 
             _map.Init(new PositionComponent(new Int2(lines.Max(x => x.Length), lines.Length)));
+
+            _mapChangedEventFactory.NewUnsafeEntity()
+                .Add(_mapChangedEventFactory.Pools,
+                    new MapLoadedEvent()
+                    {
+                        Size = _map.MaxPos.Value - _map.MinPos.Value
+                    });
 
             var pos = new PositionComponent();
             foreach (var line in lines)
@@ -96,6 +113,7 @@ namespace PavEcsGame.Systems
 
                 pos.Value.Y++;
             }
+
         }
 
         private EcsPackedEntityWithWorld? TrySpawnEntity(char symbol, Random rnd)
@@ -109,7 +127,12 @@ namespace PavEcsGame.Systems
                 case 'x':
                     ent = _wallFactory.NewUnsafeEntity()
                         //.Tag<SpawnRequestComponent>()
-                        .Add(_wallFactory.Pools, new SymbolComponent {Value = '#'});
+                        .Add(_wallFactory.Pools, new SymbolComponent
+                        {
+                            Value = '#', 
+                            Depth = Depth.Foreground,
+                            MainColor = ConsoleColor.DarkGray
+                        });
                     result = _wallFactory.World.PackEntityWithWorld(ent);
                     break;
                 //player
@@ -119,9 +142,17 @@ namespace PavEcsGame.Systems
                         .Add(_playerFactory.Pools,
                             new PlayerIndexComponent {Index = 0},
                             new SpeedComponent(),
-                            new SymbolComponent {Value = '@'},
+                            new SymbolComponent
+                            {
+                                Value = '@', 
+                                Depth = Depth.Foreground,
+                                MainColor = ConsoleColor.White
+                            },
                             new MoveFrictionComponent {FrictionValue = 1},
                             new WaitCommandTokenComponent(1));
+                    
+                    _lightSourceFactory.Pools.Pool1.Set(ent) = new LightSourceComponent(){ Radius = 16};
+
                     result = _playerFactory.World.PackEntityWithWorld(ent);
                     break;
                 //enemy
@@ -131,7 +162,12 @@ namespace PavEcsGame.Systems
                         .Add(_enemyFactory.Pools,
                             new RandomGeneratorComponent {Rnd = rnd},
                             new SpeedComponent(),
-                            new SymbolComponent {Value = 'e'},
+                            new SymbolComponent
+                            {
+                                Value = 'e', 
+                                Depth = Depth.Foreground,
+                                MainColor = ConsoleColor.Red
+                            },
                             new MoveFrictionComponent {FrictionValue = 1},
                             new WaitCommandTokenComponent(1))
                         ;

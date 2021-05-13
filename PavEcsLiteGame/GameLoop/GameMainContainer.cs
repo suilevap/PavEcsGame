@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -7,6 +8,7 @@ using Leopotam.Ecs;
 using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
+using PavEcsGame.Components.Events;
 using PavEcsGame.Systems;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
@@ -25,6 +27,7 @@ namespace PavEcsGame.GameLoop
         {
             _world = new EcsWorld();
             var map = new MapData<EcsPackedEntityWithWorld>();
+            var lightMap = new MapData<float>();
             _systems = new EcsSystems(_world, "Root");
 
             _systems
@@ -53,14 +56,19 @@ namespace PavEcsGame.GameLoop
                 .Add(new VerifyMapSystem(universe, map))
 #endif
                 .Add(new DamageOnCollisionSystem(universe))
-                .Add(new DestroyEntitySystem(turnManager, universe));
+                .Add(new DestroyEntitySystem(turnManager, universe))
+                .Add(new LightSystem(universe, map, lightMap));
 
             _systems
-                .Add(new SymbolRenderSystem(map, universe));
+                .Add(new SymbolBufferRenderSystem(universe, map, lightMap))
+                //.Add(new SymbolRenderSystem(map, universe))
+                ;
 
             _systems
                 .UniDelHere<PreviousPositionComponent>(universe)
-                .UniDelHere<CollisionEventComponent<EcsPackedEntityWithWorld>>(universe);
+                .UniDelHere<CollisionEvent<EcsPackedEntityWithWorld>>(universe)
+                .UniDelHere<MapLoadedEvent>(universe)
+                ;
 
             _systems
                 .Init();

@@ -53,6 +53,11 @@ namespace PavEcsGame
         public void Set(in PositionComponent pos, in T item) => Set(in pos.Value, in item);
         public PositionComponent GetSafePos(in PositionComponent value) => new PositionComponent(GetSafePos(in value.Value));
         #endregion
+
+        public void Clear()
+        {
+            Array.Clear(_data, 0, _data.Length);
+        }
     }
 
 }

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using Leopotam.EcsLite;
 
 namespace PavEcsSpec.EcsLite
@@ -330,6 +331,19 @@ namespace PavEcsSpec.EcsLite
         {
             return ent.Unpack(out var world, out EcsUnsafeEntity _) 
                    && worldContainer.IsBelongToWorld(world);
+        }
+
+
+        public static string ToLogString(this EcsPackedEntityWithWorld ent)
+        {
+            if (ent.Unpack(out var world, out var id))
+            {
+                object[] components = null;
+
+                world.GetComponents(id,  ref components);
+                return $"Ent:{id} ->" + string.Join("|", components.Where(x=>x!= null).Select(x => x.ToString()));
+            }
+            return "Ent: -destroyed-";
         }
 
 

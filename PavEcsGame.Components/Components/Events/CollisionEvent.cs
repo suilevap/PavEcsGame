@@ -3,7 +3,7 @@ using System.Diagnostics;
 namespace PavEcsGame.Components
 {
     [DebuggerDisplay("{Source} -> {Target}")]
-    public struct CollisionEventComponent<T> where T : struct
+    public struct CollisionEvent<T> where T : struct
     {
         public T Source;
 

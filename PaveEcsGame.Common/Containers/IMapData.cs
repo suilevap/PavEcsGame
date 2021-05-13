@@ -20,6 +20,7 @@ namespace PavEcsGame
 
         ref TV GetRef(in TP pos);
         void Set(in TP pos, in TV item);
+        void Clear();
     }
 
     public static class MapDataExtensions

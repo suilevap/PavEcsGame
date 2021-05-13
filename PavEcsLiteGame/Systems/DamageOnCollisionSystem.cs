@@ -11,7 +11,7 @@ namespace PavEcsGame.Systems
 {
     internal class DamageOnCollisionSystem : IEcsRunSystem
     {
-        private EcsFilterSpec<EcsSpec<CollisionEventComponent<EcsPackedEntityWithWorld>>, EcsSpec, EcsSpec> _spec;
+        private EcsFilterSpec<EcsSpec<CollisionEvent<EcsPackedEntityWithWorld>>, EcsSpec, EcsSpec> _spec;
 
         private EcsEntityFactorySpec<EcsSpec<DestroyRequestTag, IsActiveTag>> _destroyFactorySpec;
 
@@ -19,7 +19,7 @@ namespace PavEcsGame.Systems
         {
             _spec = universe
                 .StartFilterSpec(
-                    EcsSpec<CollisionEventComponent<EcsPackedEntityWithWorld>>.Build())
+                    EcsSpec<CollisionEvent<EcsPackedEntityWithWorld>>.Build())
                 .End();
 
             _destroyFactorySpec = universe.CreateEntityFactorySpec(
