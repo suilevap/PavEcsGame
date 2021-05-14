@@ -1,4 +1,6 @@
-﻿using Leopotam.EcsLite;
+﻿using System;
+using System.Linq;
+using Leopotam.EcsLite;
 
 namespace PavEcsSpec.EcsLite
 {
@@ -41,16 +43,14 @@ namespace PavEcsSpec.EcsLite
         public bool IsBelongToWorld(EcsWorld world) => World == world;
 
         internal static EcsEntityFactorySpec<TPools> Create(
-            EcsUniverse universe,
+            EcsUniverseBuilder builder,
             IEcsSpecBuilder<TPools> pools
         )
         {
-            var setBuilder = universe.StartSet();
-            setBuilder = pools.Register(setBuilder);
-            setBuilder.End();
+            builder.RegisterSet(pools.GetArgTypes(), Enumerable.Empty<Type>());
             var initData = new InitData
             {
-                Universe = universe,
+                Universe = builder.Universe,
                 Pools = pools
             };
 
@@ -58,19 +58,21 @@ namespace PavEcsSpec.EcsLite
         }
 
         internal static EcsEntityFactorySpec<TPools> Create<TParentPools>(
-            EcsUniverse universe,
+            EcsUniverseBuilder builder,
             IEcsSpecBuilder<TPools> pools,
             EcsEntityFactorySpec<TParentPools> parentFactory
         )
             where TParentPools : struct
         {
-            var setBuilder = universe.StartSet();
-            setBuilder = pools.Register(setBuilder);
-            setBuilder = parentFactory._initData.Pools.Register(setBuilder);
-            setBuilder.End();
+            var required = 
+                Enumerable.Concat(
+                    pools.GetArgTypes(),
+                    parentFactory._initData.Pools.GetArgTypes());
+            builder.RegisterSet(required, Enumerable.Empty<Type>());
+
             var initData = new InitData
             {
-                Universe = universe,
+                Universe = builder.Universe,
                 Pools = pools
             };
 

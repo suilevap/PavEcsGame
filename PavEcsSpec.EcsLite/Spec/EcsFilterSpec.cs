@@ -1,4 +1,6 @@
-﻿using Leopotam.EcsLite;
+﻿using System;
+using System.Linq;
+using Leopotam.EcsLite;
 
 namespace PavEcsSpec.EcsLite
 {
@@ -42,20 +44,21 @@ namespace PavEcsSpec.EcsLite
         }
 
         internal static EcsFilterSpec<TIncl, TOptional, TExclude> Create(
-            EcsUniverse universe,
+            EcsUniverseBuilder builder,
             IEcsSpecBuilder<TIncl> include,
             IEcsSpecBuilder<TOptional> optional,
             IEcsSpecBuilder<TExclude> exclude
         )
         {
-            var setBuilder = universe.StartSet();
-            setBuilder = include.Register(setBuilder);
-            setBuilder = optional.Register(setBuilder);
-            setBuilder = exclude.Register(setBuilder);
-            setBuilder.End();
+            builder.RegisterSet(
+                include.GetArgTypes(), 
+            Enumerable.Concat(
+                    optional.GetArgTypes(),
+                    exclude.GetArgTypes()));
+
             var initData = new InitData
             {
-                Universe = universe,
+                Universe = builder.Universe,
                 Include = include,
                 Optional = optional,
                 Exclude = exclude

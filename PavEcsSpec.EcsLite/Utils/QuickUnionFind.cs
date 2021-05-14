@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace PavEcsSpec.EcsLite
@@ -12,6 +13,7 @@ namespace PavEcsSpec.EcsLite
         private readonly List<int> _size = new List<int>();
 
         private int _superSetCount = 0;
+        public int Count => _map.Count;
 
         private int GetId(T item)
         {
@@ -40,7 +42,7 @@ namespace PavEcsSpec.EcsLite
             return RootInternal(id);
         }
 
-        private int RootInternal(int id)
+        public int RootInternal(int id)
         {
             var parentId = _parentId[id];
 
@@ -95,6 +97,21 @@ namespace PavEcsSpec.EcsLite
             for (int i = 1; i < items.Count; i++)
             {
                 UnionInternal(id1, GetId(items[i]));
+            }
+        }
+        public void Union(IEnumerable<T> items)
+        {
+            int id1 = -1;
+            foreach (var item in items)
+            {
+                if (id1 >= 0)
+                {
+                    UnionInternal(id1, GetId(item));
+                }
+                else
+                {
+                    id1 = GetId(item);
+                }
             }
         }
 

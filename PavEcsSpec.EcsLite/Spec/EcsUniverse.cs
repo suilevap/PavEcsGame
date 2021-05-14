@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Leopotam.EcsLite;
 
@@ -8,17 +9,20 @@ namespace PavEcsSpec.EcsLite
     public class EcsUniverse : IEcsInitSystem
     {
         private readonly string _prefix;
-        private readonly QuickUnionFind<Type> _quickUnionFind = new QuickUnionFind<Type>();
-
         private readonly List<IInitSpec> _registeredSpec = new List<IInitSpec>();
+        private EcsUniverseBuilder _builder;
+        private Dictionary<Type, int> _requiredTypeToWorldId;
 
         public EcsUniverse(string prefix = "world_")
         {
             _prefix = prefix;
+            _builder = new EcsUniverseBuilder(this);
         }
 
         public void Init(EcsSystems systems)
         {
+            _requiredTypeToWorldId = _builder.GetMapping();
+            _builder = null;
             foreach (var initSpec in _registeredSpec)
             {
                 initSpec.Init(systems);
@@ -26,14 +30,9 @@ namespace PavEcsSpec.EcsLite
             _registeredSpec.Clear();
         }
 
-        internal Builder StartSet()
+        private int GetKey<T>()
         {
-            return new Builder(this);
-        }
-
-        public int GetKey<T>()
-        {
-            return _quickUnionFind.Root(typeof(T));
+            return _requiredTypeToWorldId[typeof(T)];
         }
 
         internal EcsWorld GetWorld<T>(EcsSystems systems)
@@ -52,14 +51,16 @@ namespace PavEcsSpec.EcsLite
 
         public IEnumerable<int> GetAllKeys()
         {
-            return _quickUnionFind.GetAllRoots();
+            return _requiredTypeToWorldId.Values;
+            //return _worldUnion.GetAllRoots();
         }
 
         public IEnumerable<IGrouping<EcsWorld, Type>> GetAllWorlds(EcsSystems systems)
         {
-            return _quickUnionFind
-                .GetAll()
-                .GroupBy(p => systems.GetWorld(GetName(p.key)), p => p.item);
+            return _requiredTypeToWorldId
+                .GroupBy(
+                    p => systems.GetWorld(GetName(p.Value)), 
+                    p => p.Key);
         }
 
         private string GetName(int key)
@@ -76,8 +77,9 @@ namespace PavEcsSpec.EcsLite
             where TOptional : struct
             where TExclude : struct
         {
+            Debug.Assert(_builder != null, "Creation filter after init is not supported");
             var result =
-                EcsFilterSpec<TIncl, TOptional, TExclude>.Create(this, include, optional, exclude);
+                EcsFilterSpec<TIncl, TOptional, TExclude>.Create(_builder, include, optional, exclude);
             _registeredSpec.Add(result);
             return result;
         }
@@ -87,8 +89,10 @@ namespace PavEcsSpec.EcsLite
         )
             where TPools : struct
         {
+            Debug.Assert(_builder != null, "Creation filter after init is not supported");
+
             var result = 
-                EcsEntityFactorySpec<TPools>.Create(this, pools);
+                EcsEntityFactorySpec<TPools>.Create(_builder, pools);
             _registeredSpec.Add(result);
             return result;
         }
@@ -100,32 +104,13 @@ namespace PavEcsSpec.EcsLite
             where TPools : struct
             where TParentPools : struct
         {
+            Debug.Assert(_builder != null, "Creation filter after init is not supported");
+
             var result =
-                EcsEntityFactorySpec<TPools>.Create(this, pools, parent); ;
+                EcsEntityFactorySpec<TPools>.Create(_builder, pools, parent); ;
             _registeredSpec.Add(result);
             return result;
         }
 
-        public class Builder
-        {
-            private readonly List<Type> _types = new List<Type>();
-            private readonly EcsUniverse _universe;
-
-            internal Builder(EcsUniverse universe)
-            {
-                _universe = universe;
-            }
-
-            public Builder Add<T>()
-            {
-                _types.Add(typeof(T));
-                return this;
-            }
-
-            public void End()
-            {
-                _universe._quickUnionFind.Union(_types);
-            }
-        }
     }
 }

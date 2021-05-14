@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Leopotam.EcsLite;
 
 namespace PavEcsSpec.EcsLite
@@ -10,7 +12,7 @@ namespace PavEcsSpec.EcsLite
         EcsFilter.Mask Include(EcsWorld world);
         EcsFilter.Mask Exclude(EcsFilter.Mask mask);
 
-        EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder);
+        IEnumerable<Type> GetArgTypes();
 
         EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems);
 
@@ -43,9 +45,9 @@ namespace PavEcsSpec.EcsLite
                 return mask;
             }
 
-            public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
+            public IEnumerable<Type> GetArgTypes()
             {
-                return setBuilder;
+                return Enumerable.Empty<Type>();
             }
 
             public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
@@ -103,10 +105,9 @@ namespace PavEcsSpec.EcsLite
                 return new EcsSpec<T1>(world);
             }
 
-            public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
+            public IEnumerable<Type> GetArgTypes()
             {
-                return setBuilder
-                    .Add<T1>();
+                yield return typeof(T1);
             }
 
             public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
@@ -179,11 +180,10 @@ namespace PavEcsSpec.EcsLite
                 return new EcsSpec<T1, T2>(world);
             }
 
-            public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
+            public IEnumerable<Type> GetArgTypes()
             {
-                return setBuilder
-                    .Add<T1>()
-                    .Add<T2>();
+                yield return typeof(T1);
+                yield return typeof(T2);
             }
 
             public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
@@ -256,14 +256,11 @@ namespace PavEcsSpec.EcsLite
             {
                 return new EcsSpec<T1, T2, T3>(world);
             }
-
-
-            public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
+            public IEnumerable<Type> GetArgTypes()
             {
-                return setBuilder
-                    .Add<T1>()
-                    .Add<T2>()
-                    .Add<T3>();
+                yield return typeof(T1);
+                yield return typeof(T2);
+                yield return typeof(T3);
             }
 
             public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
@@ -345,13 +342,12 @@ namespace PavEcsSpec.EcsLite
                 return new EcsSpec<T1, T2, T3, T4>(world);
             }
 
-            public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
+            public IEnumerable<Type> GetArgTypes()
             {
-                return setBuilder
-                    .Add<T1>()
-                    .Add<T2>()
-                    .Add<T3>()
-                    .Add<T4>();
+                yield return typeof(T1);
+                yield return typeof(T2);
+                yield return typeof(T3);
+                yield return typeof(T4);
             }
 
             public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
@@ -441,14 +437,13 @@ namespace PavEcsSpec.EcsLite
                 return new EcsSpec<T1, T2, T3, T4, T5>(world);
             }
 
-            public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
+            public IEnumerable<Type> GetArgTypes()
             {
-                return setBuilder
-                    .Add<T1>()
-                    .Add<T2>()
-                    .Add<T3>()
-                    .Add<T4>()
-                    .Add<T5>();
+                yield return typeof(T1);
+                yield return typeof(T2);
+                yield return typeof(T3);
+                yield return typeof(T4);
+                yield return typeof(T5);
             }
 
             public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
@@ -546,15 +541,14 @@ namespace PavEcsSpec.EcsLite
                 return new EcsSpec<T1, T2, T3, T4, T5, T6>(world);
             }
 
-            public EcsUniverse.Builder Register(EcsUniverse.Builder setBuilder)
+            public IEnumerable<Type> GetArgTypes()
             {
-                return setBuilder
-                    .Add<T1>()
-                    .Add<T2>()
-                    .Add<T3>()
-                    .Add<T4>()
-                    .Add<T5>()
-                    .Add<T6>();
+                yield return typeof(T1);
+                yield return typeof(T2);
+                yield return typeof(T3);
+                yield return typeof(T4);
+                yield return typeof(T5);
+                yield return typeof(T6);
             }
 
             public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
