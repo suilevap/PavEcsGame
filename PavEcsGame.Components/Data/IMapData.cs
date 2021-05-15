@@ -1,11 +1,10 @@
-﻿using Leopotam.Ecs.Types;
-using PavEcsGame.Components;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Leopotam.Ecs.Types;
 
-namespace PavEcsGame
+namespace PavEcsGame.Components
 {
-    public interface IReadOnlyMapData<TP, TV>
+    public interface IReadOnlyMapData<TP, out TV>
     {
         TP MinPos { get; }
         TP MaxPos { get; }
@@ -21,6 +20,7 @@ namespace PavEcsGame
         ref TV GetRef(in TP pos);
         void Set(in TP pos, in TV item);
         void Clear();
+        void Merge(IReadOnlyMapData<TP, TV> data2, Func<TP, TV, TV, TV> mergeFunc);
     }
 
     public static class MapDataExtensions
@@ -55,5 +55,6 @@ namespace PavEcsGame
                 }
             }
         }
+
     }
 }

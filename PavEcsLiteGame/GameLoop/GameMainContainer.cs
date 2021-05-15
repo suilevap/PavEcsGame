@@ -11,7 +11,9 @@ using PavEcsGame.Components;
 using PavEcsGame.Components.Events;
 using PavEcsGame.Systems;
 using PavEcsGame.Systems.Managers;
+using PavEcsGame.Systems.Renders;
 using PavEcsSpec.EcsLite;
+using PaveEcsGame;
 
 namespace PavEcsGame.GameLoop
 {
@@ -27,7 +29,6 @@ namespace PavEcsGame.GameLoop
         {
             _world = new EcsWorld();
             var map = new MapData<EcsPackedEntityWithWorld>();
-            var lightMap = new MapData<float>();
             _systems = new EcsSystems(_world, "Root");
 
             _systems
@@ -58,10 +59,12 @@ namespace PavEcsGame.GameLoop
 #endif
                 .Add(new DamageOnCollisionSystem(universe))
                 .Add(new DestroyEntitySystem(turnManager, universe))
-                .Add(new LightSystem(universe, map, lightMap));
+                .Add(new FieldOfViewSystem(universe, map));
+                //.Add(new LightSystem(universe, map));
 
             _systems
-                .Add(new SymbolBufferRenderSystem(universe, map, lightMap))
+                .Add(new PrepareForRenderSystem(universe, map))
+                .Add(new ConsoleRenderSystem(universe))
                 //.Add(new SymbolRenderSystem(map, universe))
                 ;
 

@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Leopotam.Ecs.Types;
 using PavEcsGame.Components;
 
-namespace PavEcsGame
+namespace PaveEcsGame
 {
     public class MapData<T> : IMapData<Int2, T>, IMapData<PositionComponent, T>
     {
@@ -57,6 +55,32 @@ namespace PavEcsGame
         public void Clear()
         {
             Array.Clear(_data, 0, _data.Length);
+        }
+
+        public void Merge(IReadOnlyMapData<PositionComponent, T> data2, Func<PositionComponent, T, T, T> mergeFunc)
+        {
+            PositionComponent pos = new PositionComponent();
+            for (pos.Value.Y = MinPos.Y; pos.Value.Y < MaxPos.Y; pos.Value.Y++)
+            {
+                for (pos.Value.X = MinPos.X; pos.Value.X < MaxPos.X; pos.Value.X++)
+                {
+                    ref var item = ref GetRef(pos);
+                    item = mergeFunc(pos, item, data2.Get(pos));
+                }
+            }
+        }
+
+        public void Merge(IReadOnlyMapData<Int2, T> data2, Func<Int2, T, T, T> mergeFunc)
+        {
+            Int2 pos = new Int2();
+            for (pos.Y = MinPos.Y; pos.Y < MaxPos.Y; pos.Y++)
+            {
+                for (pos.X = MinPos.X; pos.X < MaxPos.X; pos.X++)
+                {
+                    ref var item = ref GetRef(pos);
+                    item = mergeFunc(pos, item, data2.Get(pos));
+                }
+            }
         }
     }
 

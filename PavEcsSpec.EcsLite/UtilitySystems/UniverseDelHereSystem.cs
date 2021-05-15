@@ -18,7 +18,10 @@ namespace PavEcsSpec.EcsLite
 
         public void Run(EcsSystems systems)
         {
-            foreach (var entity in _spec.Filter) _spec.Include.Pool1.Del(entity);
+            foreach (var entity in _spec.Filter)
+            {
+                _spec.Include.Pool1.Del(entity);
+            }
         }
     }
 }

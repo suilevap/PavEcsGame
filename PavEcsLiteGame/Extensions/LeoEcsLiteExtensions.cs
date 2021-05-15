@@ -87,5 +87,16 @@ namespace PavEcsGame
             return ref pool.Add(ent);
         }
 
+        public static ref T GetOrAdd<T>(this EcsPool<T> pool, EcsUnsafeEntity ent, out bool exists)
+            where T : struct
+        {
+            if (pool.Has(ent))
+            {
+                exists = true;
+                return ref pool.Get(ent);
+            }
+            exists = false;
+            return ref pool.Add(ent);
+        }
     }
 }

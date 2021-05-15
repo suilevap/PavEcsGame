@@ -1,13 +1,13 @@
 ﻿using System;
-using PavEcsGame.Components;
 using Leopotam.EcsLite;
-using PavEcsGame.Components.SystemComponents;
+using PavEcsGame.Components;
 using PavEcsSpec.EcsLite;
 
-namespace PavEcsGame.Systems
+namespace PavEcsGame.Systems.Renders
 {
     public class SymbolRenderSystem : IEcsInitSystem, IEcsRunSystem
     {
+
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
         private readonly EcsFilterSpec<EcsSpec<PreviousPositionComponent>, EcsSpec<MarkAsRenderedTag>, EcsSpec> _clearPrevPosSpec;
@@ -33,7 +33,6 @@ namespace PavEcsGame.Systems
         }
         public void Init(EcsSystems systems)
         {
-
             Console.CursorVisible = false;
         }
 
