@@ -11,6 +11,34 @@ namespace PavEcsGame.Systems.Renders
 {
     public class PrepareForRenderSystem : IEcsRunSystem
     {
+        private const string _lightShade = "░▒▓";
+
+        private static RenderItem[] _lights = new[]
+        {
+            new RenderItem(_lightShade[0], ConsoleColor.DarkGray),
+            new RenderItem(_lightShade[0], ConsoleColor.Gray),
+            new RenderItem(_lightShade[0], ConsoleColor.White),
+
+            new RenderItem(_lightShade[1], ConsoleColor.DarkGray),
+            new RenderItem(_lightShade[1], ConsoleColor.Gray),
+            new RenderItem(_lightShade[1], ConsoleColor.White),
+
+            new RenderItem(_lightShade[2], ConsoleColor.DarkGray),
+            new RenderItem(_lightShade[2], ConsoleColor.Gray),
+            new RenderItem(_lightShade[2], ConsoleColor.White),
+        };
+
+        private static ConsoleColor[] _lightColors = new[]
+        {
+            ConsoleColor.DarkYellow,
+            ConsoleColor.Yellow,
+            ConsoleColor.White
+        };
+
+        private static float[] _dith = new[] {0.75f,0.8f, 1f, 1.1f, 1.25f};
+
+        private Random _rnd = new Random(41);
+
         private struct RenderItem
         {
             public SymbolComponent Symbol;
@@ -22,6 +50,12 @@ namespace PavEcsGame.Systems.Renders
                 BackgroundColor = back;
             }
 
+            internal RenderItem(char value, ConsoleColor color)
+                :this(new SymbolComponent(value){MainColor = color})
+            {
+
+            }
+
             public void Merge(in SymbolComponent symbol)
             {
                 if (Symbol.Depth <= symbol.Depth)
@@ -30,28 +64,6 @@ namespace PavEcsGame.Systems.Renders
                 }
             }
 
-
-            public void Light(in float lightValue)
-            {
-                if (lightValue < 0.01f)
-                {
-                    //Symbol = SymbolComponent.Empty;
-                    Symbol.MainColor = ConsoleColor.DarkGray;
-                }
-                else
-                {
-                    if (Symbol.Value == SymbolComponent.Empty.Value ||
-                        Symbol.Value == default)
-                    {
-                        Symbol.Value = '.';
-                        Symbol.MainColor = ConsoleColor.Gray;
-                    }
-                    else
-                    {
-                    }
-                }
-
-            }
 
             public static bool operator ==(RenderItem a, RenderItem b)
             {
@@ -125,22 +137,6 @@ namespace PavEcsGame.Systems.Renders
 
             CreateRenderCommands();
 
-            //static void RenderItem(in PositionComponent pos, in RenderItem item)
-            //{
-            //    Console.SetCursorPosition(pos.Value.X, pos.Value.Y);
-            //    if (item != default)
-            //    {
-            //        Console.ForegroundColor = item.Symbol.MainColor;
-            //        Console.BackgroundColor = item.BackgroundColor;
-            //        Console.Write(item.Symbol.Value);
-            //    }
-            //    else
-            //    {
-            //        Console.ResetColor();
-            //        Console.Write(SymbolComponent.Empty.Value);
-            //    }
-            //}
-
             void InitBuffers()
             {
                 foreach (var ent in _mapLoadedSpec.Filter)
@@ -181,16 +177,54 @@ namespace PavEcsGame.Systems.Renders
 
             void ApplyLightMap(IMapData<PositionComponent, float> mapData)
             {
+
                 foreach (var ( pos, lightValue) in mapData.GetAll())
                 {
                     ref var renderItem = ref _bufferCurrentFrame.GetRef(pos);
                     //get previous state
-                    if (lightValue <= 0.1)
+                    if (lightValue <= 0.1f)
                     {
                         renderItem = _bufferPreviousFrame.GetRef(pos);
                     }
-                    renderItem.Light(lightValue);
 
+                    //var dith = _dith[(pos.Value.X + pos.Value.Y) % _dith.Length];
+                    renderItem = Light(ref renderItem, lightValue);
+
+                }
+
+                RenderItem Light(ref RenderItem item, in float lightValue)
+                {
+                    if (lightValue <= 0.1f)
+                    {
+                        //Symbol = SymbolComponent.Empty;
+                        item.Symbol.MainColor = ConsoleColor.DarkGray;
+                    }
+                    else
+                    {
+
+                        var lightColor = GetLightColor(lightValue); 
+                        if (item.Symbol.Value == SymbolComponent.Empty.Value ||
+                            item.Symbol.Value == default)
+                        {
+                            item.Symbol.Value = '.';
+                            item.Symbol.MainColor = lightColor; //ConsoleColor.Gray;
+                            //return _lights[(int) (Math.Clamp(lightValue, 0, 1) * (_lights.Length-1))];
+                        }
+                        else
+                        {
+
+                            item.Symbol.MainColor = lightColor;
+                        }
+                    }
+
+                    return item;
+                }
+
+                ConsoleColor GetLightColor(float lightValue)
+                {
+                    var lightColor = _lightColors
+                        [(int)(Math.Clamp(lightValue, 0, 0.999) * (_lightColors.Length))];
+                    return lightColor;
                 }
             }
 
