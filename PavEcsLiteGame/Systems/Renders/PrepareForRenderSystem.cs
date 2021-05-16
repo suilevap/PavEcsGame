@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
@@ -13,32 +14,6 @@ namespace PavEcsGame.Systems.Renders
     {
         private const string _lightShade = "░▒▓";
 
-        private static RenderItem[] _lights = new[]
-        {
-            new RenderItem(_lightShade[0], ConsoleColor.DarkGray),
-            new RenderItem(_lightShade[0], ConsoleColor.Gray),
-            new RenderItem(_lightShade[0], ConsoleColor.White),
-
-            new RenderItem(_lightShade[1], ConsoleColor.DarkGray),
-            new RenderItem(_lightShade[1], ConsoleColor.Gray),
-            new RenderItem(_lightShade[1], ConsoleColor.White),
-
-            new RenderItem(_lightShade[2], ConsoleColor.DarkGray),
-            new RenderItem(_lightShade[2], ConsoleColor.Gray),
-            new RenderItem(_lightShade[2], ConsoleColor.White),
-        };
-
-        private static ConsoleColor[] _lightColors = new[]
-        {
-            ConsoleColor.DarkYellow,
-            ConsoleColor.Yellow,
-            ConsoleColor.White
-        };
-
-        private static float[] _dith = new[] {0.75f,0.8f, 1f, 1.1f, 1.25f};
-
-        private Random _rnd = new Random(41);
-
         private struct RenderItem
         {
             public SymbolComponent Symbol;
@@ -51,7 +26,7 @@ namespace PavEcsGame.Systems.Renders
             }
 
             internal RenderItem(char value, ConsoleColor color)
-                :this(new SymbolComponent(value){MainColor = color})
+                : this(new SymbolComponent(value) { MainColor = color })
             {
 
             }
@@ -88,16 +63,14 @@ namespace PavEcsGame.Systems.Renders
         private MapData<RenderItem> _bufferPreviousFrame;
 
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
-        private readonly MapData<float> _lightMap;
         private readonly EcsFilterSpec<EcsSpec<MapLoadedEvent>, EcsSpec, EcsSpec> _mapLoadedSpec;
         private readonly EcsFilterSpec<EcsSpec<PositionComponent, SymbolComponent>, EcsSpec<MarkAsRenderedTag>, EcsSpec> _itemsToRenderSpec;
-        private readonly EcsFilterSpec<EcsSpec<FieldOfViewResultComponent, LightSourceComponent>, EcsSpec, EcsSpec> _lightToRenderSpec;
+        private readonly EcsFilterSpec<EcsSpec<AreaResultComponent<LightValueComponent>>, EcsSpec, EcsSpec> _lightToRenderSpec;
         private readonly EcsEntityFactorySpec<EcsSpec<RenderItemCommand>> _renderCommandFactory;
 
         public PrepareForRenderSystem(EcsUniverse universe, MapData<EcsPackedEntityWithWorld> map)
         {
             _map = map;
-            _lightMap = new MapData<float>();
             _bufferCurrentFrame = new MapData<RenderItem>();
             _bufferPreviousFrame = new MapData<RenderItem>();
 
@@ -113,7 +86,7 @@ namespace PavEcsGame.Systems.Renders
                 .End();
             _lightToRenderSpec = universe
                 .StartFilterSpec(
-                    EcsSpec<FieldOfViewResultComponent, LightSourceComponent>.Build())
+                    EcsSpec<AreaResultComponent<LightValueComponent>>.Build())
                 .End();
 
             _renderCommandFactory = universe
@@ -127,13 +100,10 @@ namespace PavEcsGame.Systems.Renders
         {
             InitBuffers();
 
-            UpdateLightMap();
-
-
             Helper.Swap(ref _bufferCurrentFrame, ref _bufferPreviousFrame);
             ForwardRender();
 
-            ApplyLightMap(_lightMap);
+            ApplyLight();
 
             CreateRenderCommands();
 
@@ -144,71 +114,53 @@ namespace PavEcsGame.Systems.Renders
                     var size = _mapLoadedSpec.Include.Pool1.Get(ent).Size;
                     _bufferCurrentFrame.Init(size);
                     _bufferPreviousFrame.Init(size);
-                    _lightMap.Init(size);
                 }
             }
 
 
-            void UpdateLightMap()
+            void ApplyLight()
             {
-                _lightMap.Clear();
                 var lightDataPool = _lightToRenderSpec.Include.Pool1;
                 foreach (var ent in _lightToRenderSpec.Filter)
                 {
-                    ref var lightData = ref lightDataPool.Get(ent);
-                    int radiusSq = lightData.Radius * lightData.Radius;
-                    float invRadiusSq = 1.0f / radiusSq;
-                    var center = lightData.Center;
-                    _lightMap.Merge(lightData.Data, LightMerge);
-
-                    float LightMerge(Int2 pos, float sourceValue, float targetValue)
-                    {
-                        var sqD = pos.DistanceSquare(center);
-                        if (sqD <= radiusSq)
-                        {
-                            var lightValue = targetValue * (1 - sqD * invRadiusSq);
-                            sourceValue += lightValue;
-                        }
-
-                        return sourceValue;
-                    }
+                    var lightData = lightDataPool.Get(ent);
+                    ApplyLightMap(lightData.Data);
+                    //handle and delete this
+                    lightDataPool.Del(ent);
                 }
             }
 
-            void ApplyLightMap(IMapData<PositionComponent, float> mapData)
+            void ApplyLightMap(IMapData<PositionComponent, LightValueComponent> mapData)
             {
 
-                foreach (var ( pos, lightValue) in mapData.GetAll())
+                foreach (var (pos, lightValue) in mapData.GetAll())
                 {
                     ref var renderItem = ref _bufferCurrentFrame.GetRef(pos);
+                    var lightColor = ToConsoleColor(lightValue);
                     //get previous state
-                    if (lightValue <= 0.1f)
+                    if (lightColor == ConsoleColor.Black)
                     {
                         renderItem = _bufferPreviousFrame.GetRef(pos);
                     }
 
-                    //var dith = _dith[(pos.Value.X + pos.Value.Y) % _dith.Length];
-                    renderItem = Light(ref renderItem, lightValue);
+                    renderItem = Light(ref renderItem, lightColor);
 
                 }
 
-                RenderItem Light(ref RenderItem item, in float lightValue)
+                RenderItem Light(ref RenderItem item, in ConsoleColor lightColor)
                 {
-                    if (lightValue <= 0.1f)
+                    if (lightColor == ConsoleColor.Black)
                     {
-                        //Symbol = SymbolComponent.Empty;
                         item.Symbol.MainColor = ConsoleColor.DarkGray;
                     }
                     else
                     {
 
-                        var lightColor = GetLightColor(lightValue); 
                         if (item.Symbol.Value == SymbolComponent.Empty.Value ||
                             item.Symbol.Value == default)
                         {
                             item.Symbol.Value = '.';
-                            item.Symbol.MainColor = lightColor; //ConsoleColor.Gray;
-                            //return _lights[(int) (Math.Clamp(lightValue, 0, 1) * (_lights.Length-1))];
+                            item.Symbol.MainColor = lightColor;
                         }
                         else
                         {
@@ -218,13 +170,6 @@ namespace PavEcsGame.Systems.Renders
                     }
 
                     return item;
-                }
-
-                ConsoleColor GetLightColor(float lightValue)
-                {
-                    var lightColor = _lightColors
-                        [(int)(Math.Clamp(lightValue, 0, 0.999) * (_lightColors.Length))];
-                    return lightColor;
                 }
             }
 
@@ -265,7 +210,95 @@ namespace PavEcsGame.Systems.Renders
                         redraws++;
                     }
                 }
+
+                if (redraws > 0)
+                {
+                    Debug.Print("Render commands: {0}", redraws);
+                }
             }
+        }
+
+
+        //index Brgb
+        // 0   0000  dark black
+        // 1   0001  dark blue
+        // 2   0010  dark green
+        // 3   0011  dark cyan
+        // 4   0100  dark red
+        // 5   0101  dark purple
+        // 6   0110  dark yellow(brown)
+        // 7   0111  dark white(light grey)
+        // 8   1000  bright black(dark grey)
+        // 9   1001  bright blue
+        //10   1010  bright green
+        //11   1011  bright cyan    
+        //12   1100  bright red
+        //13   1101  bright purple
+        //14   1110  bright yellow
+        //15   1111  bright white
+
+        private static readonly ConsoleColor[] _fireColors = new[]
+        {
+            ConsoleColor.DarkYellow,
+            ConsoleColor.DarkYellow,
+            ConsoleColor.DarkYellow,
+            ConsoleColor.DarkYellow,
+            ConsoleColor.DarkYellow,
+            ConsoleColor.DarkYellow,
+            ConsoleColor.DarkYellow,
+            ConsoleColor.Yellow,
+            ConsoleColor.Yellow,
+            ConsoleColor.Yellow,
+            ConsoleColor.Yellow,
+            ConsoleColor.Yellow,
+            ConsoleColor.Yellow,
+            ConsoleColor.Yellow,
+            ConsoleColor.Yellow,
+            ConsoleColor.White
+        };
+
+        private static readonly ConsoleColor[] _electroColors = new[]
+        {
+            ConsoleColor.DarkBlue,
+            ConsoleColor.DarkCyan,
+            ConsoleColor.Blue,
+            ConsoleColor.Cyan,
+        };
+
+        private static readonly ConsoleColor[] _acidColors = new[]
+        {
+            ConsoleColor.DarkGreen,
+            ConsoleColor.Green,
+        };
+        public ConsoleColor ToConsoleColor(LightValueComponent lightValue)
+        {
+            if (lightValue.Value == 0)
+                return ConsoleColor.Black;
+
+            int color = 0;
+            if (lightValue.LightType.HasFlag(LightType.Fire))
+            {
+                color |= (int)_fireColors.GetByRate(lightValue.Value);
+            }
+            if (lightValue.LightType.HasFlag(LightType.Electricity))
+            {
+                color |= (int)_electroColors.GetByRate(lightValue.Value);
+            }
+            if (lightValue.LightType.HasFlag(LightType.Acid))
+            {
+                color |= (int)_acidColors.GetByRate(lightValue.Value);
+            }
+
+            return (ConsoleColor)color;
+        }
+
+        public static System.ConsoleColor FromColor(System.Drawing.Color c)
+        {
+            int index = (c.R > 128 | c.G > 128 | c.B > 128) ? 8 : 0; // Bright bit
+            index |= (c.R > 64) ? 4 : 0; // Red bit
+            index |= (c.G > 64) ? 2 : 0; // Green bit
+            index |= (c.B > 64) ? 1 : 0; // Blue bit
+            return (System.ConsoleColor)index;
         }
     }
 }

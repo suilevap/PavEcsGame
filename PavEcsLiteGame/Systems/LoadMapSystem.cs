@@ -6,6 +6,7 @@ using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
+using PaveEcsGame;
 
 namespace PavEcsGame.Systems
 {
@@ -26,6 +27,7 @@ namespace PavEcsGame.Systems
         private readonly EcsEntityFactorySpec<EcsSpec<SymbolComponent, TileComponent>> _wallFactory;
         private readonly EcsEntityFactorySpec<EcsSpec<MapLoadedEvent>> _mapChangedEventFactory;
         private readonly EcsEntityFactorySpec<EcsSpec<LightSourceComponent, PositionComponent>> _lightSourceFactory;
+        private readonly EcsEntityFactorySpec<EcsSpec<VisualSensorComponent>> _actorFactory;
 
 
         public LoadMapSystem(string fileName, EcsUniverse universe, IMapData<PositionComponent, EcsPackedEntityWithWorld> map)
@@ -39,8 +41,13 @@ namespace PavEcsGame.Systems
                     IsActiveTag>.Build()
             );
 
-            _playerFactory = universe.CreateEntityFactorySpec(
+            _actorFactory = universe.CreateEntityFactorySpec(
                 _commonFactory,
+                EcsSpec<VisualSensorComponent>.Build());
+
+
+            _playerFactory = universe.CreateEntityFactorySpec(
+                _actorFactory,
                 EcsSpec<
                     PlayerIndexComponent,
                     SpeedComponent,
@@ -53,7 +60,7 @@ namespace PavEcsGame.Systems
                 EcsSpec<LightSourceComponent, PositionComponent>.Build());
 
             _enemyFactory = universe.CreateEntityFactorySpec(
-                _commonFactory,
+                _actorFactory,
                 EcsSpec<
                     RandomGeneratorComponent,
                     SpeedComponent,
@@ -152,9 +159,20 @@ namespace PavEcsGame.Systems
                                 MainColor = ConsoleColor.White
                             },
                             new MoveFrictionComponent {FrictionValue = 1},
-                            new WaitCommandTokenComponent(1));
+                            new WaitCommandTokenComponent(1))
+                        .Add(_actorFactory.Pools,
+                            new VisualSensorComponent(){Radius = 32});
                     
-                    _lightSourceFactory.Pools.Pool1.Set(ent) = new LightSourceComponent(){ Radius = 16};
+
+                    _lightSourceFactory.Pools.Pool1.Set(ent) = new LightSourceComponent()
+                    {
+                        Radius = 16, 
+                        BasicParameters = new LightValueComponent()
+                        {
+                            LightType = LightType.Fire,
+                            Value = 255
+                        }
+                    };
 
                     result = _playerFactory.World.PackEntityWithWorld(ent);
                     break;
@@ -174,7 +192,62 @@ namespace PavEcsGame.Systems
                             new MoveFrictionComponent {FrictionValue = 1},
                             new WaitCommandTokenComponent(1))
                         ;
+                    //_lightSourceFactory.Pools.Pool1.Set(ent) = new LightSourceComponent(){ Radius = 8};
+
+                    //_lightSourceFactory.Pools.Pool1.Set(ent) = new LightSourceComponent()
+                    //{
+                    //    Radius = 8,
+                    //    Color = System.Drawing.Color.Blue.ToColor()
+                    //};
                     result = _enemyFactory.World.PackEntityWithWorld(ent);
+                    break;
+
+                case '~':
+                    ent = _lightSourceFactory.NewUnsafeEntity();
+
+                    _lightSourceFactory.Pools.Pool1.Set(ent) = new LightSourceComponent()
+                    {
+                        Radius = 3,
+                        BasicParameters = new LightValueComponent()
+                        {
+                            LightType = LightType.Electricity,
+                            Value = 32
+                        }
+                    };
+                    _wallFactory.Pools.Pool1.Set(ent) = new SymbolComponent('Ω');
+
+                    result = _playerFactory.World.PackEntityWithWorld(ent);
+                    break;
+                //case 'i':
+                //    ent = _lightSourceFactory.NewUnsafeEntity();
+
+                //    _lightSourceFactory.Pools.Pool1.Set(ent) = new LightSourceComponent()
+                //    {
+                //        Radius = 8,
+                //        BasicParameters = new LightValueComponent()
+                //        {
+                //            LightType = LightType.Fire,
+                //            Value = 16
+                //        }
+                //    };
+
+                //    result = _playerFactory.World.PackEntityWithWorld(ent);
+                //    break;
+                case '%':
+                    ent = _lightSourceFactory.NewUnsafeEntity();
+
+                    _lightSourceFactory.Pools.Pool1.Set(ent) = new LightSourceComponent()
+                    {
+                        Radius = 4,
+                        BasicParameters = new LightValueComponent()
+                        {
+                            LightType = LightType.Acid,
+                            Value = 32
+                        }
+                    };
+                    _wallFactory.Pools.Pool1.Set(ent) = new SymbolComponent('▒');
+
+                    result = _playerFactory.World.PackEntityWithWorld(ent);
                     break;
             }
 

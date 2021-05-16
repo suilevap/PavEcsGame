@@ -7,15 +7,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using Leopotam.EcsLite;
+using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
     class VerifyMapSystem : IEcsRunSystem
     {
-        private IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
+        private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
         private readonly EcsFilterSpec<EcsSpec<PositionComponent>, EcsSpec, EcsSpec> _spec;
+        private readonly EcsFilterSpec<EcsSpec<MapLoadedEvent>, EcsSpec, EcsSpec> _mapLoadedEventSpec;
 
         public VerifyMapSystem(EcsUniverse universe, IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> map)
         {
@@ -24,10 +26,19 @@ namespace PavEcsGame.Systems
                 .StartFilterSpec(
                     EcsSpec<PositionComponent>.Build())
                 .End();
+
+            _mapLoadedEventSpec = universe
+                .StartFilterSpec(
+                    EcsSpec<MapLoadedEvent>.Build())
+                .End();
         }
 
         public void Run(EcsSystems systems)
         {
+            Debug.Assert(_mapLoadedEventSpec.Filter.GetEntitiesCount() <= 1, 
+                $"{nameof(MapLoadedEvent)} is expected to be no more than one per cycle");
+
+
             var posPool = _spec.Include.Pool1;
             foreach(EcsUnsafeEntity ent in _spec.Filter)
             {

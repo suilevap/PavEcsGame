@@ -20,8 +20,12 @@ namespace PavEcsGame.Components
         ref TV GetRef(in TP pos);
         void Set(in TP pos, in TV item);
         void Clear();
-        void Merge(IReadOnlyMapData<TP, TV> data2, Func<TP, TV, TV, TV> mergeFunc);
+        //void Merge<TV2>(IReadOnlyMapData<TP, TV2> data2, Func<TP, TV, TV2, TV> mergeFunc);
+        void Merge<TV2>(IReadOnlyMapData<TP, TV2> data2, MergeDelegate<TP, TV, TV2> mergeFunc);
+
     }
+    public delegate void MergeDelegate<TP, TV1, TV2>(in TP pos, ref TV1 v1, in TV2 v2);
+
 
     public static class MapDataExtensions
     {

@@ -13,15 +13,15 @@ namespace PavEcsGame.Systems
 {
     class FieldOfViewSystem : IEcsRunSystem
     {
-        private readonly IReadOnlyMapData<Int2, EcsPackedEntityWithWorld> _map;
+        private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
-        private readonly EcsFilterSpec<EcsSpec<PositionComponent, LightSourceComponent>, EcsSpec<FieldOfViewResultComponent>, EcsSpec> _lightSourceSpec;
+        private readonly EcsFilterSpec<EcsSpec<PositionComponent, LightSourceComponent>, EcsSpec<AreaResultComponent<float>>, EcsSpec> _lightSourceSpec;
         private readonly FieldOfViewComputationInt2 _fieldOfView;
         //private readonly EcsFilterSpec<EcsSpec<MapLoadedEvent>, EcsSpec, EcsSpec> _mapLoadedSpec;
 
         public FieldOfViewSystem(
             EcsUniverse universe,
-            IReadOnlyMapData<Int2, EcsPackedEntityWithWorld> map)
+            IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> map)
         {
             _map = map;
 
@@ -30,7 +30,7 @@ namespace PavEcsGame.Systems
                 .StartFilterSpec(
                     EcsSpec<PositionComponent, LightSourceComponent>.Build())
                 .Optional(
-                    EcsSpec<FieldOfViewResultComponent>.Build())
+                    EcsSpec<AreaResultComponent<float>>.Build())
                 .End();
 
             //_mapLoadedSpec = universe
@@ -75,8 +75,6 @@ namespace PavEcsGame.Systems
                 {
                     result.Data.Clear();
                 }
-                result.Center = pos.Value;
-                result.Radius = radius;
 
                 var radiusSq = radius * radius;
                 var lights = _fieldOfView.Compute(pos.Value, radius, HasObstacle);
@@ -86,7 +84,7 @@ namespace PavEcsGame.Systems
                     if (sqD <= radiusSq)
                     {
                         var lightValue = value;// * (1 - sqD / radiusSq);
-                        ref var v = ref result.Data.GetRef(result.Data.GetSafePos(in p));
+                        ref var v = ref result.Data.GetRef(result.Data.GetSafePos(new PositionComponent(p)));
                         v += lightValue;
                     }
                 }

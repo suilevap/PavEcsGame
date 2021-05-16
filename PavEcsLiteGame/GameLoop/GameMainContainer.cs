@@ -63,6 +63,7 @@ namespace PavEcsGame.GameLoop
                 //.Add(new LightSystem(universe, map));
 
             _systems
+                .Add(new LightRenderSystem(universe))
                 .Add(new PrepareForRenderSystem(universe, map))
                 .Add(new ConsoleRenderSystem(universe))
                 //.Add(new SymbolRenderSystem(map, universe))
