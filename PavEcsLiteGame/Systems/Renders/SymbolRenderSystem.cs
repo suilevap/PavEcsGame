@@ -10,27 +10,24 @@ namespace PavEcsGame.Systems.Renders
 
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
-        private readonly EcsFilterSpec<EcsSpec<PreviousPositionComponent>, EcsSpec<MarkAsRenderedTag>, EcsSpec> _clearPrevPosSpec;
-        private readonly EcsFilterSpec<EcsSpec<PositionComponent, SymbolComponent>, EcsSpec, EcsSpec<MarkAsRenderedTag>> _updateCurrentPosSpec;
+        private readonly EcsFilterSpec<
+            EcsSpec<PreviousPositionComponent>, 
+            EcsSpec<MarkAsRenderedTag>,
+            EcsSpec> _clearPrevPosSpec;
+        
+        private readonly EcsFilterSpec<
+            EcsSpec<PositionComponent, SymbolComponent>,
+            EcsSpec,
+            EcsSpec<MarkAsRenderedTag>> _updateCurrentPosSpec;
 
         public SymbolRenderSystem(IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> map, EcsUniverse universe)
         {
             _map = map;
-
-            _clearPrevPosSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<PreviousPositionComponent>.Build())
-                .Optional(
-                    EcsSpec<MarkAsRenderedTag>.Build())
-                .End();
-
-            _updateCurrentPosSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<PositionComponent, SymbolComponent>.Build())
-                .Exclude(
-                    EcsSpec<MarkAsRenderedTag>.Build())
-                .End();
+            universe
+                .Build(ref _clearPrevPosSpec)
+                .Build(ref _updateCurrentPosSpec);
         }
+
         public void Init(EcsSystems systems)
         {
             Console.CursorVisible = false;

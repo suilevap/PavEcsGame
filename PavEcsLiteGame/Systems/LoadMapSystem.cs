@@ -12,17 +12,26 @@ namespace PavEcsGame.Systems
 {
     internal class LoadMapSystem : IEcsInitSystem
     {
-        private readonly EcsEntityFactorySpec<EcsSpec<NewPositionComponent, IsActiveTag>>
-            _commonFactory;
+        private readonly EcsEntityFactorySpec<
+                EcsSpec<NewPositionComponent, IsActiveTag>> _commonFactory;
 
         private readonly string _fileName;
         private readonly IMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
-        private readonly EcsEntityFactorySpec<EcsSpec<RandomGeneratorComponent, SpeedComponent, SymbolComponent,
-            MoveFrictionComponent, WaitCommandTokenComponent>> _enemyFactory;
+        private readonly EcsEntityFactorySpec<
+            EcsSpec<
+                RandomGeneratorComponent, 
+                SpeedComponent, 
+                SymbolComponent,
+                MoveFrictionComponent,
+                WaitCommandTokenComponent>> _enemyFactory;
 
-        private readonly EcsEntityFactorySpec<EcsSpec<PlayerIndexComponent, SpeedComponent, SymbolComponent,
-            MoveFrictionComponent, WaitCommandTokenComponent>> _playerFactory;
+        private readonly EcsEntityFactorySpec<
+            EcsSpec<PlayerIndexComponent,
+                SpeedComponent, 
+                SymbolComponent,
+                MoveFrictionComponent, 
+                WaitCommandTokenComponent>> _playerFactory;
 
         private readonly EcsEntityFactorySpec<EcsSpec<SymbolComponent, TileComponent>> _wallFactory;
         private readonly EcsEntityFactorySpec<EcsSpec<MapLoadedEvent>> _mapChangedEventFactory;
@@ -35,51 +44,14 @@ namespace PavEcsGame.Systems
             _fileName = fileName;
             _map = map;
 
-            _commonFactory = universe.CreateEntityFactorySpec(
-                EcsSpec<
-                    NewPositionComponent,
-                    IsActiveTag>.Build()
-            );
-
-            _actorFactory = universe.CreateEntityFactorySpec(
-                _commonFactory,
-                EcsSpec<VisualSensorComponent>.Build());
-
-
-            _playerFactory = universe.CreateEntityFactorySpec(
-                _actorFactory,
-                EcsSpec<
-                    PlayerIndexComponent,
-                    SpeedComponent,
-                    SymbolComponent,
-                    MoveFrictionComponent,
-                    WaitCommandTokenComponent>.Build()
-            );
-
-            _lightSourceFactory = universe.CreateEntityFactorySpec(
-                EcsSpec<LightSourceComponent, PositionComponent>.Build());
-
-            _enemyFactory = universe.CreateEntityFactorySpec(
-                _actorFactory,
-                EcsSpec<
-                    RandomGeneratorComponent,
-                    SpeedComponent,
-                    SymbolComponent,
-                    MoveFrictionComponent,
-                    WaitCommandTokenComponent>.Build()
-            );
-
-
-            _wallFactory = universe.CreateEntityFactorySpec(
-                _commonFactory,
-                EcsSpec<
-                    SymbolComponent,
-                    TileComponent>.Build()
-            );
-
-            _mapChangedEventFactory = universe.CreateEntityFactorySpec(
-                EcsSpec<MapLoadedEvent>.Build()
-            );
+            universe
+                .Build(ref _commonFactory)
+                .Build(_commonFactory, ref _actorFactory)
+                .Build(_actorFactory, ref _playerFactory)
+                .Build(_commonFactory, ref _lightSourceFactory)
+                .Build(_actorFactory, ref _enemyFactory)
+                .Build(_commonFactory, ref _wallFactory)
+                .Build(ref _mapChangedEventFactory);
         }
 
         public async void Init(EcsSystems systems)
@@ -164,7 +136,7 @@ namespace PavEcsGame.Systems
                             new VisualSensorComponent(){Radius = 32});
                     
 
-                    _lightSourceFactory.Pools.Pool1.Set(ent) = new LightSourceComponent()
+                    _lightSourceFactory.Pools.Pool1.SetObsolete(ent) = new LightSourceComponent()
                     {
                         Radius = 16, 
                         BasicParameters = new LightValueComponent()
@@ -205,7 +177,7 @@ namespace PavEcsGame.Systems
                 case '~':
                     ent = _lightSourceFactory.NewUnsafeEntity();
 
-                    _lightSourceFactory.Pools.Pool1.Set(ent) = new LightSourceComponent()
+                    _lightSourceFactory.Pools.Pool1.SetObsolete(ent) = new LightSourceComponent()
                     {
                         Radius = 3,
                         BasicParameters = new LightValueComponent()
@@ -214,7 +186,7 @@ namespace PavEcsGame.Systems
                             Value = 32
                         }
                     };
-                    _wallFactory.Pools.Pool1.Set(ent) = new SymbolComponent('Ω');
+                    _wallFactory.Pools.Pool1.SetObsolete(ent) = new SymbolComponent('Ω');
 
                     result = _playerFactory.World.PackEntityWithWorld(ent);
                     break;
@@ -236,7 +208,7 @@ namespace PavEcsGame.Systems
                 case '%':
                     ent = _lightSourceFactory.NewUnsafeEntity();
 
-                    _lightSourceFactory.Pools.Pool1.Set(ent) = new LightSourceComponent()
+                    _lightSourceFactory.Pools.Pool1.SetObsolete(ent) = new LightSourceComponent()
                     {
                         Radius = 4,
                         BasicParameters = new LightValueComponent()
@@ -245,7 +217,7 @@ namespace PavEcsGame.Systems
                             Value = 32
                         }
                     };
-                    _wallFactory.Pools.Pool1.Set(ent) = new SymbolComponent('▒');
+                    _wallFactory.Pools.Pool1.SetObsolete(ent) = new SymbolComponent('▒');
 
                     result = _playerFactory.World.PackEntityWithWorld(ent);
                     break;

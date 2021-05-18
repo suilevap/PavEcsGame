@@ -24,7 +24,14 @@ namespace PavEcsSpec.EcsLite
         bool IsBelongToWorld(EcsWorld world);
     }
 
-    public readonly struct EcsSpec : IEcsLinkedToWorld
+    public interface IHasBuilder<out T>
+        where T : struct
+    {
+        IEcsSpecBuilder<T> GetBuilder();
+    }
+
+    public readonly struct EcsSpec : IEcsLinkedToWorld, 
+        IHasBuilder<EcsSpec>
     {
         public bool IsBelongToWorld(EcsWorld world)
         {
@@ -32,6 +39,8 @@ namespace PavEcsSpec.EcsLite
         }
 
         public static Builder Empty() => new Builder();
+
+        public IEcsSpecBuilder<EcsSpec> GetBuilder() => new Builder();
 
         public struct Builder : IEcsSpecBuilder<EcsSpec>
         {
@@ -60,9 +69,10 @@ namespace PavEcsSpec.EcsLite
                 return new EcsSpec();
             }
         }
+
     }
 
-    public readonly struct EcsSpec<T1> : IEcsLinkedToWorld
+    public readonly struct EcsSpec<T1> : IEcsLinkedToWorld, IHasBuilder<EcsSpec<T1>>
         where T1 : struct
     {
         private readonly EcsWorld _world;
@@ -86,6 +96,8 @@ namespace PavEcsSpec.EcsLite
         }
 
         public static Builder Build() => Builder.Instance;
+        public IEcsSpecBuilder<EcsSpec<T1>> GetBuilder() => Builder.Instance;
+
 
         public class Builder : IEcsSpecBuilder<EcsSpec<T1>>
         {
@@ -117,7 +129,7 @@ namespace PavEcsSpec.EcsLite
         }
     }
 
-    public readonly struct EcsSpec<T1, T2> : IEcsLinkedToWorld
+    public readonly struct EcsSpec<T1, T2> : IEcsLinkedToWorld, IHasBuilder<EcsSpec<T1,T2>>
         where T1 : struct
         where T2 : struct
     {
@@ -156,6 +168,7 @@ namespace PavEcsSpec.EcsLite
         }
 
         public static Builder Build() => Builder.Instance;
+        public IEcsSpecBuilder<EcsSpec<T1, T2>> GetBuilder() => Builder.Instance;
 
         public class Builder : IEcsSpecBuilder<EcsSpec<T1, T2>>
         {
@@ -193,7 +206,7 @@ namespace PavEcsSpec.EcsLite
         }
     }
 
-    public readonly struct EcsSpec<T1, T2, T3> : IEcsLinkedToWorld
+    public readonly struct EcsSpec<T1, T2, T3> : IEcsLinkedToWorld, IHasBuilder<EcsSpec<T1,T2,T3>>
         where T1 : struct
         where T2 : struct
         where T3 : struct
@@ -231,6 +244,7 @@ namespace PavEcsSpec.EcsLite
         }
 
         public static Builder Build() => Builder.Instance;
+        public IEcsSpecBuilder<EcsSpec<T1, T2, T3>> GetBuilder() => Builder.Instance;
 
         public class Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3>>
         {
@@ -270,7 +284,7 @@ namespace PavEcsSpec.EcsLite
         }
     }
 
-    public readonly struct EcsSpec<T1, T2, T3, T4> : IEcsLinkedToWorld
+    public readonly struct EcsSpec<T1, T2, T3, T4> : IEcsLinkedToWorld, IHasBuilder<EcsSpec<T1,T2,T3,T4>>
         where T1 : struct
         where T2 : struct
         where T3 : struct
@@ -314,6 +328,7 @@ namespace PavEcsSpec.EcsLite
         }
 
         public static Builder Build() => Builder.Instance;
+        public IEcsSpecBuilder<EcsSpec<T1, T2, T3, T4>> GetBuilder() => Builder.Instance;
 
         public class Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3, T4>>
         {
@@ -357,7 +372,7 @@ namespace PavEcsSpec.EcsLite
         }
     }
 
-    public readonly struct EcsSpec<T1, T2, T3, T4, T5> : IEcsLinkedToWorld
+    public readonly struct EcsSpec<T1, T2, T3, T4, T5> : IEcsLinkedToWorld, IHasBuilder<EcsSpec<T1,T2,T3,T4,T5>>
         where T1 : struct
         where T2 : struct
         where T3 : struct
@@ -407,6 +422,7 @@ namespace PavEcsSpec.EcsLite
         }
 
         public static Builder Build() =>  Builder.Instance;
+        public IEcsSpecBuilder<EcsSpec<T1, T2, T3, T4, T5>> GetBuilder() => Builder.Instance;
 
         public class Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3, T4, T5>>
         {
@@ -453,7 +469,7 @@ namespace PavEcsSpec.EcsLite
         }
     }
 
-    public readonly struct EcsSpec<T1, T2, T3, T4, T5, T6> : IEcsLinkedToWorld
+    public readonly struct EcsSpec<T1, T2, T3, T4, T5, T6> : IEcsLinkedToWorld, IHasBuilder<EcsSpec<T1,T2,T3,T4,T5,T6>>
         where T1 : struct
         where T2 : struct
         where T3 : struct
@@ -509,6 +525,8 @@ namespace PavEcsSpec.EcsLite
         }
 
         public static Builder Build() => Builder.Instance;
+        public IEcsSpecBuilder<EcsSpec<T1, T2, T3, T4, T5, T6>> GetBuilder() => Builder.Instance;
+
 
         public class Builder : IEcsSpecBuilder<EcsSpec<T1, T2, T3, T4, T5, T6>>
         {

@@ -12,14 +12,16 @@ namespace PavEcsGame.Systems
     {
         private readonly TurnManager _turnManager;
         private TurnManager.SimSystemRegistration _reg;
-        private readonly EcsFilterSpec<EcsSpec<SpeedComponent, MoveFrictionComponent>, EcsSpec, EcsSpec> _spec;
+        private readonly EcsFilterSpec<
+            EcsSpec<SpeedComponent, MoveFrictionComponent>, 
+            EcsSpec, 
+            EcsSpec> _spec;
 
         public FrictionSystem(TurnManager turnManager, EcsUniverse universe)
         {
             _turnManager = turnManager;
-            _spec = universe.StartFilterSpec(
-                    EcsSpec<SpeedComponent, MoveFrictionComponent>.Build())
-                .End();
+            universe
+                .Build(ref _spec);
         }
         public void Init(EcsSystems systems)
         {

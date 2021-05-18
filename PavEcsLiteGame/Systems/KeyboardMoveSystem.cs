@@ -18,16 +18,17 @@ namespace PavEcsGame.Systems
         private readonly TurnManager _turnManager;
 
         private Dictionary<ConsoleKey, SpeedComponent>[] _configs;
-        private readonly EcsFilterSpec<EcsSpec<PlayerIndexComponent, SpeedComponent, CommandTokenComponent, IsActiveTag>, EcsSpec, EcsSpec> _spec;
+        private readonly EcsFilterSpec<
+            EcsSpec<PlayerIndexComponent, SpeedComponent, CommandTokenComponent, IsActiveTag>, 
+            EcsSpec, 
+            EcsSpec> _spec;
 
         public KeyboardMoveSystem(bool waitKey, TurnManager turnManager, EcsUniverse universe)
         {
             _waitKey = waitKey;
             _turnManager = turnManager;
-            _spec = universe
-                .StartFilterSpec(
-                    EcsSpec<PlayerIndexComponent, SpeedComponent, CommandTokenComponent, IsActiveTag>.Build())
-                .End();
+            universe
+                .Build(ref _spec);
         }
         public void Init(EcsSystems systems)
         {

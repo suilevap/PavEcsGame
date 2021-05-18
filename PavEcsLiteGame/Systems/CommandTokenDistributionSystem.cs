@@ -11,23 +11,22 @@ namespace PavEcsGame.Systems
     {
         private readonly TimeSpan _autoRechargeTime;
         private DateTime _previousRecharge;
-        private readonly EcsFilterSpec<EcsSpec<WaitCommandTokenComponent>, EcsSpec<CommandTokenComponent>, EcsSpec> _waitTokenSpec;
-        private readonly EcsFilterSpec<EcsSpec<CommandTokenComponent>, EcsSpec, EcsSpec> _withTokenSpec;
+        private readonly EcsFilterSpec<
+            EcsSpec<WaitCommandTokenComponent>,
+            EcsSpec<CommandTokenComponent>, 
+            EcsSpec> _waitTokenSpec;
+
+        private readonly EcsFilterSpec<
+            EcsSpec<CommandTokenComponent>,
+            EcsSpec, 
+            EcsSpec> _withTokenSpec;
 
         public CommandTokenDistributionSystem(TimeSpan autoRechargeTime, EcsUniverse universe)
         {
             _autoRechargeTime = autoRechargeTime;
-            _waitTokenSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<WaitCommandTokenComponent>.Build())
-                .Optional(
-                    EcsSpec<CommandTokenComponent>.Build())
-                .End();
-
-            _withTokenSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<CommandTokenComponent>.Build())
-                .End();
+            universe
+                .Build(ref _waitTokenSpec)
+                .Build(ref _withTokenSpec);
         }
         public void Init(EcsSystems systems)
         {
@@ -62,7 +61,7 @@ namespace PavEcsGame.Systems
 
                 foreach (EcsUnsafeEntity ent in _waitTokenSpec.Filter)
                 {
-                    tokenPool.Set(ent) = waitTokenPool.Get(ent).RechargeValue;
+                    tokenPool.SetObsolete(ent) = waitTokenPool.Get(ent).RechargeValue;
                 }
             }
         }

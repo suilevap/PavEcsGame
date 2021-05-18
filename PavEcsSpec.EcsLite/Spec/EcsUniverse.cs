@@ -68,7 +68,7 @@ namespace PavEcsSpec.EcsLite
             return _prefix + key;
         }
 
-        public EcsFilterSpec<TIncl, TOptional, TExclude> CreateFilterSpec<TIncl, TOptional, TExclude>(
+        internal EcsFilterSpecBuilder<TIncl, TOptional, TExclude> CreateFilterSpec<TIncl, TOptional, TExclude>(
             IEcsSpecBuilder<TIncl> include,
             IEcsSpecBuilder<TOptional> optional,
             IEcsSpecBuilder<TExclude> exclude
@@ -79,12 +79,12 @@ namespace PavEcsSpec.EcsLite
         {
             Debug.Assert(_builder != null, "Creation filter after init is not supported");
             var result =
-                EcsFilterSpec<TIncl, TOptional, TExclude>.Create(_builder, include, optional, exclude);
+                EcsFilterSpecBuilder<TIncl, TOptional, TExclude>.Create(_builder, include, optional, exclude);
             _registeredSpec.Add(result);
             return result;
         }
 
-        public EcsEntityFactorySpec<TPools> CreateEntityFactorySpec<TPools>(
+        internal EcsEntityFactorySpecBuilder<TPools> CreateEntityFactorySpec<TPools>(
             IEcsSpecBuilder<TPools> pools
         )
             where TPools : struct
@@ -92,14 +92,14 @@ namespace PavEcsSpec.EcsLite
             Debug.Assert(_builder != null, "Creation filter after init is not supported");
 
             var result = 
-                EcsEntityFactorySpec<TPools>.Create(_builder, pools);
+                EcsEntityFactorySpecBuilder<TPools>.Create(_builder, pools);
             _registeredSpec.Add(result);
             return result;
         }
 
-        public EcsEntityFactorySpec<TPools> CreateEntityFactorySpec<TPools, TParentPools>(
-            EcsEntityFactorySpec<TParentPools> parent,
-            IEcsSpecBuilder<TPools> pools
+        internal EcsEntityFactorySpecBuilder<TPools> CreateEntityFactorySpec<TPools, TParentPools>(
+            IEcsSpecBuilder<TPools> pools,
+            IEcsSpecBuilder<TParentPools> parentPools
         )
             where TPools : struct
             where TParentPools : struct
@@ -107,7 +107,7 @@ namespace PavEcsSpec.EcsLite
             Debug.Assert(_builder != null, "Creation filter after init is not supported");
 
             var result =
-                EcsEntityFactorySpec<TPools>.Create(_builder, pools, parent); ;
+                EcsEntityFactorySpecBuilder<TPools>.Create(_builder, pools, parentPools);
             _registeredSpec.Add(result);
             return result;
         }

@@ -15,11 +15,8 @@ namespace PavEcsGame.Systems.Renders
 
         public ConsoleRenderSystem(EcsUniverse universe)
         {
-
-            _renderCommandSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<RenderItemCommand>.Build())
-                .End();
+            universe
+                .Build(ref _renderCommandSpec);
         }
 
         public void Init(EcsSystems systems)

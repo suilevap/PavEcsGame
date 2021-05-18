@@ -9,18 +9,17 @@ namespace PavEcsSpec.EcsLite
 
         public UniverseDelHereSystem(EcsUniverse universe)
         {
-            _spec = universe.CreateFilterSpec(
-                EcsSpec<T>.Build(),
-                EcsSpec.Empty(),
-                EcsSpec.Empty());
+            universe
+                .Build(ref _spec);
         }
 
 
         public void Run(EcsSystems systems)
         {
+            var pool = _spec.Include.Pool1;
             foreach (var entity in _spec.Filter)
             {
-                _spec.Include.Pool1.Del(entity);
+                pool.Del(entity);
             }
         }
     }

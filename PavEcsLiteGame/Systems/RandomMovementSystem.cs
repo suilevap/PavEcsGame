@@ -14,16 +14,17 @@ namespace PavEcsGame.Systems
     internal class RandomMovementSystem : IEcsRunSystem
     {
         private readonly TurnManager _turnManager;
-        private readonly EcsFilterSpec<EcsSpec<SpeedComponent, RandomGeneratorComponent, CommandTokenComponent, IsActiveTag>, EcsSpec, EcsSpec> _spec;
+        private readonly EcsFilterSpec<
+            EcsSpec<SpeedComponent, RandomGeneratorComponent, CommandTokenComponent, IsActiveTag>, 
+            EcsSpec, 
+            EcsSpec> _spec;
 
 
         public RandomMovementSystem(TurnManager turnManager, EcsUniverse universe)
         {
             _turnManager = turnManager;
-            _spec = universe
-                .StartFilterSpec(
-                    EcsSpec<SpeedComponent, RandomGeneratorComponent, CommandTokenComponent, IsActiveTag>.Build())
-                .End();
+            universe
+                .Build(ref _spec);
         }
 
         public void Run(EcsSystems systems)

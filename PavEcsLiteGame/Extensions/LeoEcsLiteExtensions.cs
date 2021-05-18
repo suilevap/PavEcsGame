@@ -79,23 +79,40 @@ namespace PavEcsGame
             return packed.Unpack(out _, out int _);
         }
 
-        public static ref T Set<T>(this EcsPool<T> pool, EcsUnsafeEntity ent)
-            where T : struct
-        {
-            if (pool.Has(ent))
-                return ref pool.Get(ent);
-            return ref pool.Add(ent);
-        }
-
-        public static ref T GetOrAdd<T>(this EcsPool<T> pool, EcsUnsafeEntity ent, out bool exists)
+        public static void Set<T>(this EcsPool<T> pool, EcsUnsafeEntity ent, in T component)
             where T : struct
         {
             if (pool.Has(ent))
             {
-                exists = true;
+                 pool.Get(ent) = component;
+            }
+            else
+            {
+                pool.Add(ent) = component;
+            }
+        }
+        public static ref T SetObsolete<T>(this EcsPool<T> pool, EcsUnsafeEntity ent)
+            where T : struct
+        {
+            if (pool.Has(ent))
+            {
                 return ref pool.Get(ent);
             }
-            exists = false;
+            else
+            {
+                return ref pool.Add(ent);
+            }
+        }
+
+        public static ref T Ensure<T>(this EcsPool<T> pool, EcsUnsafeEntity ent, out bool isNew)
+            where T : struct
+        {
+            if (pool.Has(ent))
+            {
+                isNew = false;
+                return ref pool.Get(ent);
+            }
+            isNew = true;
             return ref pool.Add(ent);
         }
     }

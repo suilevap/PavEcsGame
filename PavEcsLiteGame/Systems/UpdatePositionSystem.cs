@@ -18,8 +18,14 @@ namespace PavEcsGame.Systems
             EcsSpec<PositionComponent, NewPositionComponent>, 
             EcsSpec<PreviousPositionComponent>,
             EcsSpec> _movePosSpec;
-        private readonly EcsFilterSpec<EcsSpec<NewPositionComponent>, EcsSpec<PositionComponent>, EcsSpec> _newPosSpec;
-        private readonly EcsEntityFactorySpec<EcsSpec<CollisionEvent<EcsPackedEntityWithWorld>>> _collEvenFactorySpec;
+
+        private readonly EcsFilterSpec<
+            EcsSpec<NewPositionComponent>, 
+            EcsSpec<PositionComponent>, 
+            EcsSpec> _newPosSpec;
+        
+        private readonly EcsEntityFactorySpec<
+            EcsSpec<CollisionEvent<EcsPackedEntityWithWorld>>> _collEvenFactorySpec;
 
         public UpdatePositionSystem(
             TurnManager turnManager, 
@@ -29,25 +35,10 @@ namespace PavEcsGame.Systems
             _turnManager = turnManager;
             _map = mapData;
 
-            _collEvenFactorySpec = universe.CreateEntityFactorySpec(
-                EcsSpec<CollisionEvent<EcsPackedEntityWithWorld>>.Build()
-            );
-
-            _movePosSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<
-                        PositionComponent,
-                        NewPositionComponent>.Build())
-                .Optional(
-                    EcsSpec<PreviousPositionComponent>.Build())
-                .End();
-
-            _newPosSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<NewPositionComponent>.Build())
-                .Optional(
-                    EcsSpec<PositionComponent>.Build())
-                .End();
+            universe
+                .Build(ref _collEvenFactorySpec)
+                .Build(ref _movePosSpec)
+                .Build(ref _newPosSpec);
         }
 
         public void Init(EcsSystems systems)
@@ -116,7 +107,7 @@ namespace PavEcsGame.Systems
 
                     _map.Set(pos, default);
 
-                    prevPool.Set(ent).Value = pos;
+                    prevPool.SetObsolete(ent).Value = pos;
                 }
             }
 
@@ -131,7 +122,7 @@ namespace PavEcsGame.Systems
 
                     if (newPosComponent.Value.TryGet(out var nextPos))
                     {
-                        posPool.Set(ent) = nextPos;
+                        posPool.SetObsolete(ent) = nextPos;
                     }
                     else
                     {

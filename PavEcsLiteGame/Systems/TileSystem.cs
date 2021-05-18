@@ -12,17 +12,18 @@ namespace PavEcsGame.Systems
     class TileSystem : IEcsRunSystem, IEcsInitSystem
     {
         private readonly IReadOnlyMapData<Int2, EcsPackedEntityWithWorld> _map;
-        private readonly EcsFilterSpec<EcsSpec<TileComponent, PositionComponent, SymbolComponent>, EcsSpec, EcsSpec> _spec;
+        private readonly EcsFilterSpec<
+            EcsSpec<TileComponent, PositionComponent, SymbolComponent>, 
+            EcsSpec, 
+            EcsSpec> _spec;
 
         private readonly Dictionary<string, TileRule> _rules = new Dictionary<string, TileRule>();
 
         public TileSystem(EcsUniverse universe, IReadOnlyMapData<Int2, EcsPackedEntityWithWorld> map)
         {
             _map = map;
-            _spec = universe
-                .StartFilterSpec(
-                    EcsSpec<TileComponent, PositionComponent, SymbolComponent>.Build())
-                .End();
+            universe
+                .Build(ref _spec);
         }
 
         public void Init(EcsSystems systems)

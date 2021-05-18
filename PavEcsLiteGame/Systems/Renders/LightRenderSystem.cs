@@ -12,7 +12,10 @@ namespace PavEcsGame.Systems.Renders
 {
     class LightRenderSystem : IEcsRunSystem
     {
-        private readonly EcsFilterSpec<EcsSpec<PositionComponent, LightSourceComponent, AreaResultComponent<float>>, EcsSpec, EcsSpec> _lightToRenderSpec;
+        private readonly EcsFilterSpec<
+            EcsSpec<PositionComponent, LightSourceComponent, AreaResultComponent<float>>, 
+            EcsSpec,
+            EcsSpec> _lightToRenderSpec;
         private readonly EcsEntityFactorySpec<EcsSpec<AreaResultComponent<LightValueComponent>>> _lightLayerFactory;
 
         private readonly MapData<LightValueComponent> _lightMap;
@@ -21,18 +24,10 @@ namespace PavEcsGame.Systems.Renders
         public LightRenderSystem(EcsUniverse universe)
         {
             _lightMap = new MapData<LightValueComponent>();
-            _lightToRenderSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<PositionComponent, LightSourceComponent, AreaResultComponent<float>>.Build())
-                .End();
-
-            _lightLayerFactory = universe.CreateEntityFactorySpec(
-                EcsSpec<AreaResultComponent<LightValueComponent>>.Build());
-
-            _mapLoadedSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<MapLoadedEvent>.Build())
-                .End();
+            universe
+                .Build(ref _lightToRenderSpec)
+                .Build(ref _lightLayerFactory)
+                .Build(ref _mapLoadedSpec);
         }
 
         public void Run(EcsSystems systems)

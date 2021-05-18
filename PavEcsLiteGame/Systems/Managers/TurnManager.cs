@@ -12,7 +12,11 @@ namespace PavEcsGame.Systems.Managers
     {
 
         private long _tick;
-        private readonly EcsFilterSpec<EcsSpec<SystemHasMoreWorkTag, SystemRefComponent<IEcsSystem>>, EcsSpec<WaitCommandTokenComponent, CommandTokenComponent>, EcsSpec> _tokenSpec;
+        private readonly EcsFilterSpec<
+            EcsSpec<SystemHasMoreWorkTag, SystemRefComponent<IEcsSystem>>, 
+            EcsSpec<WaitCommandTokenComponent, CommandTokenComponent>,
+            EcsSpec> _tokenSpec;
+
         private readonly EcsEntityFactorySpec<EcsSpec<SystemRefComponent<IEcsSystem>>> _systemEntityFactorySpec;
 
         public enum Phase
@@ -23,16 +27,9 @@ namespace PavEcsGame.Systems.Managers
 
         public TurnManager(EcsUniverse universe)
         {
-            _tokenSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<SystemHasMoreWorkTag, SystemRefComponent<IEcsSystem>>.Build())
-                .Optional(
-                    EcsSpec<WaitCommandTokenComponent, CommandTokenComponent>.Build())
-                .End();
-
-            _systemEntityFactorySpec = universe.CreateEntityFactorySpec(
-                EcsSpec<SystemRefComponent<IEcsSystem>>.Build());
-            //_world = world;
+            universe
+                .Build(ref _tokenSpec)
+                .Build(ref _systemEntityFactorySpec);
         }
 
         public Phase CurrentPhase => _tokenSpec.Filter.IsEmpty() ? Phase.TickUpdate : Phase.Simulation;

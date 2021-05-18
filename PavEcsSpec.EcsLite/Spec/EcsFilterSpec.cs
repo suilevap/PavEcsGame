@@ -1,80 +1,27 @@
-﻿using System;
-using System.Linq;
-using Leopotam.EcsLite;
+﻿using Leopotam.EcsLite;
 
 namespace PavEcsSpec.EcsLite
 {
-    public class EcsFilterSpec<TIncl, TOptional, TExclude> : IInitSpec, IEcsLinkedToWorld
-        where TIncl : struct
-        where TOptional : struct
-        where TExclude : struct
+    public readonly struct EcsFilterSpec<TIncl, TOptional, TExclude> : IEcsLinkedToWorld
+        where TIncl : struct, IHasBuilder<TIncl>
+        where TOptional : struct, IHasBuilder<TOptional>
+        where TExclude : struct, IHasBuilder<TExclude>
     {
-        private InitData _initData;
+        private readonly EcsFilterSpecBuilder<TIncl, TOptional, TExclude> _main;
 
-        private EcsFilterSpec(InitData initData)
+        public EcsWorld World => _main.World;
+        public TIncl Include => _main.Include;
+        public TOptional Optional => _main.Optional;
+        public TExclude Exclude => _main.Exclude;
+
+        public EcsFilter Filter => _main.Filter;
+
+        public bool IsBelongToWorld(EcsWorld world) => _main.IsBelongToWorld(world);
+
+        internal EcsFilterSpec(EcsFilterSpecBuilder<TIncl, TOptional, TExclude> main)
         {
-            _initData = initData;
+            _main = main;
         }
 
-        public EcsWorld World { get; private set; }
-        public TIncl Include { get; private set; }
-        public TOptional Optional { get; private set; }
-        public TExclude Exclude { get; private set; }
-
-        public EcsFilter Filter { get; private set; }
-
-        void IInitSpec.Init(EcsSystems systems)
-        {
-            var universe = _initData.Universe;
-            var include = _initData.Include;
-            var optional = _initData.Optional;
-            var exclude = _initData.Exclude;
-
-            var world = include.GetWorld(universe, systems);
-            var mask = include.Include(world);
-            var filter = exclude.Exclude(mask).End();
-
-            World = world;
-            Filter = filter;
-            Include = include.Create(world);
-            Optional = optional.Create(world);
-            Exclude = exclude.Create(world);
-
-            _initData = null;
-        }
-
-        internal static EcsFilterSpec<TIncl, TOptional, TExclude> Create(
-            EcsUniverseBuilder builder,
-            IEcsSpecBuilder<TIncl> include,
-            IEcsSpecBuilder<TOptional> optional,
-            IEcsSpecBuilder<TExclude> exclude
-        )
-        {
-            builder.RegisterSet(
-                include.GetArgTypes(), 
-            Enumerable.Concat(
-                    optional.GetArgTypes(),
-                    exclude.GetArgTypes()));
-
-            var initData = new InitData
-            {
-                Universe = builder.Universe,
-                Include = include,
-                Optional = optional,
-                Exclude = exclude
-            };
-
-            return new EcsFilterSpec<TIncl, TOptional, TExclude>(initData);
-        }
-
-        private class InitData
-        {
-            public IEcsSpecBuilder<TExclude> Exclude;
-            public IEcsSpecBuilder<TIncl> Include;
-            public IEcsSpecBuilder<TOptional> Optional;
-            public EcsUniverse Universe;
-        }
-
-        public bool IsBelongToWorld(EcsWorld world) => World == world;
     }
 }

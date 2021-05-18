@@ -14,26 +14,22 @@ namespace PavEcsGame.Systems
         //private EcsFilter<DestroyRequestTag>.Exclude<PositionComponent,MarkAsRenderedTag> _destroyFilter;
         //private EcsFilter<PositionComponent, DestroyRequestTag> _removeFromMapFilter;
         private TurnManager.SimSystemRegistration _registration;
-        private readonly EcsFilterSpec<EcsSpec<DestroyRequestTag>, EcsSpec, EcsSpec<PositionComponent, MarkAsRenderedTag>> _destroySpec;
-        private readonly EcsFilterSpec<EcsSpec<PositionComponent, DestroyRequestTag>, EcsSpec<NewPositionComponent>, EcsSpec> _removeFormMapSpec;
+        private readonly EcsFilterSpec<
+            EcsSpec<DestroyRequestTag>, 
+            EcsSpec,
+            EcsSpec<PositionComponent, MarkAsRenderedTag>> _destroySpec;
+        
+        private readonly EcsFilterSpec<
+            EcsSpec<PositionComponent, DestroyRequestTag>, 
+            EcsSpec<NewPositionComponent>, 
+            EcsSpec> _removeFormMapSpec;
 
         public DestroyEntitySystem(TurnManager turnManager, EcsUniverse universe)
         {
             _turnManager = turnManager;
-
-            _destroySpec = universe
-                .StartFilterSpec(
-                    EcsSpec<DestroyRequestTag>.Build())
-                .Exclude(
-                    EcsSpec<PositionComponent, MarkAsRenderedTag>.Build())
-                .End();
-
-            _removeFormMapSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<PositionComponent, DestroyRequestTag>.Build())
-                .Optional(
-                    EcsSpec<NewPositionComponent>.Build())
-                .End();
+            universe
+                .Build(ref _destroySpec)
+                .Build(ref _removeFormMapSpec);
         }
         public void Init(EcsSystems systems)
         {
@@ -48,7 +44,7 @@ namespace PavEcsGame.Systems
 
             foreach (EcsUnsafeEntity ent in _removeFormMapSpec.Filter)
             {
-                newPosPool.Set(ent).Value = default;
+                newPosPool.SetObsolete(ent).Value = default;
             }
 
             foreach (var ent in _destroySpec.Filter)

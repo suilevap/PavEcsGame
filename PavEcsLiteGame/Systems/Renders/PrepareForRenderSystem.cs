@@ -63,9 +63,18 @@ namespace PavEcsGame.Systems.Renders
         private MapData<RenderItem> _bufferPreviousFrame;
 
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
-        private readonly EcsFilterSpec<EcsSpec<MapLoadedEvent>, EcsSpec, EcsSpec> _mapLoadedSpec;
-        private readonly EcsFilterSpec<EcsSpec<PositionComponent, SymbolComponent>, EcsSpec<MarkAsRenderedTag>, EcsSpec> _itemsToRenderSpec;
-        private readonly EcsFilterSpec<EcsSpec<AreaResultComponent<LightValueComponent>>, EcsSpec, EcsSpec> _lightToRenderSpec;
+        private readonly EcsFilterSpec<
+            EcsSpec<MapLoadedEvent>,
+            EcsSpec, 
+            EcsSpec> _mapLoadedSpec;
+        private readonly EcsFilterSpec<
+            EcsSpec<PositionComponent, SymbolComponent>,
+            EcsSpec<MarkAsRenderedTag>, 
+            EcsSpec> _itemsToRenderSpec;
+        private readonly EcsFilterSpec<
+            EcsSpec<AreaResultComponent<LightValueComponent>>,
+            EcsSpec, 
+            EcsSpec> _lightToRenderSpec;
         private readonly EcsEntityFactorySpec<EcsSpec<RenderItemCommand>> _renderCommandFactory;
 
         public PrepareForRenderSystem(EcsUniverse universe, MapData<EcsPackedEntityWithWorld> map)
@@ -74,26 +83,11 @@ namespace PavEcsGame.Systems.Renders
             _bufferCurrentFrame = new MapData<RenderItem>();
             _bufferPreviousFrame = new MapData<RenderItem>();
 
-            _mapLoadedSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<MapLoadedEvent>.Build())
-                .End();
-            _itemsToRenderSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<PositionComponent, SymbolComponent>.Build())
-                .Optional(
-                    EcsSpec<MarkAsRenderedTag>.Build())
-                .End();
-            _lightToRenderSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<AreaResultComponent<LightValueComponent>>.Build())
-                .End();
-
-            _renderCommandFactory = universe
-                .CreateEntityFactorySpec(
-                    EcsSpec<RenderItemCommand>.Build());
-
-
+            universe
+                .Build(ref _mapLoadedSpec)
+                .Build(ref _itemsToRenderSpec)
+                .Build(ref _lightToRenderSpec)
+                .Build(ref _renderCommandFactory);
         }
 
         public void Run(EcsSystems systems)

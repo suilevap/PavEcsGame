@@ -15,7 +15,11 @@ namespace PavEcsGame.Systems
     {
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
-        private readonly EcsFilterSpec<EcsSpec<PositionComponent, LightSourceComponent>, EcsSpec<AreaResultComponent<float>>, EcsSpec> _lightSourceSpec;
+        private readonly EcsFilterSpec<
+            EcsSpec<PositionComponent, LightSourceComponent>, 
+            EcsSpec<AreaResultComponent<float>>, 
+            EcsSpec> _lightSourceSpec;
+        
         private readonly FieldOfViewComputationInt2 _fieldOfView;
         //private readonly EcsFilterSpec<EcsSpec<MapLoadedEvent>, EcsSpec, EcsSpec> _mapLoadedSpec;
 
@@ -24,19 +28,8 @@ namespace PavEcsGame.Systems
             IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> map)
         {
             _map = map;
-
-
-            _lightSourceSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<PositionComponent, LightSourceComponent>.Build())
-                .Optional(
-                    EcsSpec<AreaResultComponent<float>>.Build())
-                .End();
-
-            //_mapLoadedSpec = universe
-            //    .StartFilterSpec(
-            //        EcsSpec<MapLoadedEvent>.Build())
-            //    .End();
+            universe
+                .Build(ref _lightSourceSpec);
 
             _fieldOfView = new FieldOfViewComputationInt2();
         }
@@ -65,8 +58,8 @@ namespace PavEcsGame.Systems
 
             void UpdateFieldOfViewData(EcsUnsafeEntity ent, PositionComponent pos, int radius)
             {
-                ref var result = ref resultPool.GetOrAdd(ent, out var exists);
-                if (!exists)
+                ref var result = ref resultPool.Ensure(ent, out var isNew);
+                if (isNew)
                 {
                     result.Data = new MapData<float>();
                     result.Data.Init(_map.MaxPos - _map.MinPos);

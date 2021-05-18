@@ -16,18 +16,17 @@ namespace PavEcsGame.Systems
 
         private readonly TurnManager _turnManager;
         private TurnManager.SimSystemRegistration _reg;
-        private readonly EcsFilterSpec<EcsSpec<PositionComponent, SpeedComponent, IsActiveTag>, EcsSpec<NewPositionComponent>, EcsSpec> _spec;
+        private readonly EcsFilterSpec<
+            EcsSpec<PositionComponent, SpeedComponent, IsActiveTag>,
+            EcsSpec<NewPositionComponent>, 
+            EcsSpec> _spec;
 
 
         public MovementSystem(TurnManager turnManager, EcsUniverse universe)
         {
             _turnManager = turnManager;
-            _spec = universe
-                .StartFilterSpec(
-                    EcsSpec<PositionComponent, SpeedComponent, IsActiveTag>.Build())
-                .Optional(
-                    EcsSpec<NewPositionComponent>.Build())
-                .End();
+            universe
+                .Build(ref _spec);
         }
         public void Init(EcsSystems systems)
         {
@@ -38,6 +37,7 @@ namespace PavEcsGame.Systems
         {
             bool hasWorkToDo = false;
             var (posPool, speedPool, _) = _spec.Include;
+            var newPosPool = _spec.Optional.Pool1;
             foreach (EcsUnsafeEntity ent in _spec.Filter)
             {
                 ref SpeedComponent speed = ref speedPool.Get(ent);
@@ -46,12 +46,13 @@ namespace PavEcsGame.Systems
                     hasWorkToDo = true;
                     ref PositionComponent pos = ref posPool.Get(ent);
 
-                    _spec.Optional.Pool1.Set(ent) = new NewPositionComponent()
-                    {
-                        Value = new PositionComponent(pos.Value + speed.Speed)
-                    };
+                    newPosPool.Set(
+                        ent, 
+                        new NewPositionComponent()
+                        {
+                            Value = new PositionComponent(pos.Value + speed.Speed)
+                        });
                 }
-                //pos.Value += speed.Speed;
             }
             _reg.UpdateState(hasWorkToDo);
         }

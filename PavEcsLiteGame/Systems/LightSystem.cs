@@ -16,9 +16,17 @@ namespace PavEcsGame.Systems
         private readonly IReadOnlyMapData<Int2, EcsPackedEntityWithWorld> _map;
         private readonly IMapData<Int2, float> _lightMap;
 
-        private readonly EcsFilterSpec<EcsSpec<PositionComponent, LightSourceComponent>, EcsSpec, EcsSpec> _lightSourceSpec;
+        private readonly EcsFilterSpec<
+            EcsSpec<PositionComponent, LightSourceComponent>, 
+            EcsSpec,
+            EcsSpec> _lightSourceSpec;
+        
         private readonly FieldOfViewComputationInt2 _fieldOfView;
-        private readonly EcsFilterSpec<EcsSpec<MapLoadedEvent>, EcsSpec, EcsSpec> _mapLoadedSpec;
+        
+        private readonly EcsFilterSpec<
+            EcsSpec<MapLoadedEvent>, 
+            EcsSpec, 
+            EcsSpec> _mapLoadedSpec;
 
         public LightSystem(
             EcsUniverse universe,
@@ -28,16 +36,9 @@ namespace PavEcsGame.Systems
             _map = map;
             _lightMap = lightMap;
 
-
-            _lightSourceSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<PositionComponent, LightSourceComponent>.Build())
-                .End();
-
-            _mapLoadedSpec = universe
-                .StartFilterSpec(
-                    EcsSpec<MapLoadedEvent>.Build())
-                .End();
+            universe
+                .Build(ref _lightSourceSpec)
+                .Build(ref _mapLoadedSpec);
 
             _fieldOfView = new FieldOfViewComputationInt2();
         }
