@@ -108,6 +108,11 @@ namespace PaveEcsGame
                 }
             }
         }
+
+        public void CopyFrom(MapData<T> fromData)
+        {
+            Array.Copy(fromData._data, _data, _data.Length);
+        }
     }
 
 }

@@ -13,13 +13,20 @@ namespace PavEcsGame.Systems
 {
     class FieldOfViewSystem : IEcsRunSystem
     {
+        private struct FieldOfViewCalculated : ITag {}
+
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
         private readonly EcsFilterSpec<
             EcsSpec<PositionComponent, LightSourceComponent>, 
             EcsSpec<AreaResultComponent<float>>, 
-            EcsSpec> _lightSourceSpec;
-        
+            EcsSpec<FieldOfViewCalculated>> _lightSourceSpec;
+
+        private readonly EcsFilterSpec<
+            EcsSpec<FieldOfViewCalculated, PositionComponent, PreviousPositionComponent, LightSourceComponent, AreaResultComponent<float>>,
+            EcsSpec,
+            EcsSpec> _lightSourceOutdated;
+
         private readonly FieldOfViewComputationInt2 _fieldOfView;
         //private readonly EcsFilterSpec<EcsSpec<MapLoadedEvent>, EcsSpec, EcsSpec> _mapLoadedSpec;
 
@@ -29,7 +36,8 @@ namespace PavEcsGame.Systems
         {
             _map = map;
             universe
-                .Build(ref _lightSourceSpec);
+                .Build(ref _lightSourceSpec)
+                .Build(ref _lightSourceOutdated);
 
             _fieldOfView = new FieldOfViewComputationInt2();
         }
@@ -42,6 +50,11 @@ namespace PavEcsGame.Systems
             //}
 
             //_lightMap.Clear();
+            var fieldOfViewCalculatedPool = _lightSourceOutdated.Include.Pool1;
+            foreach (var ent in _lightSourceOutdated.Filter)
+            {
+                fieldOfViewCalculatedPool.Del(ent);
+            }
 
             //add new one
             var posPool = _lightSourceSpec.Include.Pool1;
@@ -54,6 +67,8 @@ namespace PavEcsGame.Systems
                 var radius = lightData.Radius;
 
                 UpdateFieldOfViewData(ent, pos, radius);
+                
+                fieldOfViewCalculatedPool.Add(ent);
             }
 
             void UpdateFieldOfViewData(EcsUnsafeEntity ent, PositionComponent pos, int radius)
@@ -67,6 +82,7 @@ namespace PavEcsGame.Systems
                 else
                 {
                     result.Data.Clear();
+                    result.Revision++;
                 }
 
                 var radiusSq = radius * radius;

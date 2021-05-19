@@ -190,21 +190,21 @@ namespace PavEcsGame.Systems
 
                     result = _playerFactory.World.PackEntityWithWorld(ent);
                     break;
-                //case 'i':
-                //    ent = _lightSourceFactory.NewUnsafeEntity();
+                case 'i':
+                    ent = _lightSourceFactory.NewUnsafeEntity();
 
-                //    _lightSourceFactory.Pools.Pool1.Set(ent) = new LightSourceComponent()
-                //    {
-                //        Radius = 8,
-                //        BasicParameters = new LightValueComponent()
-                //        {
-                //            LightType = LightType.Fire,
-                //            Value = 16
-                //        }
-                //    };
+                    _lightSourceFactory.Pools.Pool1.Set(ent, new LightSourceComponent()
+                    {
+                        Radius = 16,
+                        BasicParameters = new LightValueComponent()
+                        {
+                            LightType = LightType.Fire,
+                            Value = 196
+                        }
+                    });
 
-                //    result = _playerFactory.World.PackEntityWithWorld(ent);
-                //    break;
+                    result = _playerFactory.World.PackEntityWithWorld(ent);
+                    break;
                 case '%':
                     ent = _lightSourceFactory.NewUnsafeEntity();
 
