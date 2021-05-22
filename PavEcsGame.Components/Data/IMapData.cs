@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Leopotam.Ecs.Types;
 
 namespace PavEcsGame.Components
@@ -21,10 +22,10 @@ namespace PavEcsGame.Components
         void Set(in TP pos, in TV item);
         void Clear();
         //void Merge<TV2>(IReadOnlyMapData<TP, TV2> data2, Func<TP, TV, TV2, TV> mergeFunc);
-        void Merge<TV2>(IReadOnlyMapData<TP, TV2> data2, MergeDelegate<TP, TV, TV2> mergeFunc);
+        void Merge<TC, TV2>(IReadOnlyMapData<TP, TV2> data2, in TC context, MergeDelegate<TC, TP, TV, TV2> mergeFunc);
 
     }
-    public delegate void MergeDelegate<TP, TV1, TV2>(in TP pos, ref TV1 v1, in TV2 v2);
+    public delegate void MergeDelegate<TC, TP, TV1, TV2>(in TC context, in TP pos, ref TV1 v1, in TV2 v2);
 
 
     public static class MapDataExtensions
@@ -44,7 +45,7 @@ namespace PavEcsGame.Components
         //        }
         //    }
         //}
-        public static IEnumerable<(PositionComponent pos, TV item)> GetAll<TV>(this IReadOnlyMapData<PositionComponent, TV> data)
+        public static IEnumerable<(PositionComponent pos, TV item)> GetAllOld<TV>(this IReadOnlyMapData<PositionComponent, TV> data)
         {
             PositionComponent pos = new PositionComponent();
             for (pos.Value.Y = data.MinPos.Value.Y; pos.Value.Y < data.MaxPos.Value.Y; pos.Value.Y++)
@@ -60,5 +61,43 @@ namespace PavEcsGame.Components
             }
         }
 
+        public static MapPosEnumerator<TV> GetAll<TV>(
+            this IReadOnlyMapData<PositionComponent, TV> data)
+        {
+            return new MapPosEnumerator<TV>(data);
+        }
+        public struct MapPosEnumerator<TV> 
+        {
+            readonly IReadOnlyMapData<PositionComponent, TV> _data;
+            readonly int _w;
+            readonly int _h;
+            PositionComponent _pos;
+
+            public MapPosEnumerator(IReadOnlyMapData<PositionComponent, TV> data)
+            {
+                _data = data;
+                _pos = new PositionComponent(new Int2(-1,0));
+                _w = data.MaxPos.Value.X;
+                _h = data.MaxPos.Value.Y;
+            }
+
+            public MapPosEnumerator<TV> GetEnumerator() => this;
+
+            public (PositionComponent, TV) Current
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => (_pos,_data.Get(_pos));
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                var x = _pos.Value.X + 1;
+                _pos.Value.X = x % _w;
+                _pos.Value.Y += x / _w;
+                return _pos.Value.Y < _h;
+            }
+
+        }
     }
 }

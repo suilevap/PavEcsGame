@@ -40,6 +40,7 @@ namespace PavEcsGame.GameLoop
             _systems
                 .Add(turnManager)
                 .Add(new LoadMapSystem("Data/map1.txt", universe, map))
+                //.Add(new LoadMapSystem("Data/lightTest.txt", universe, map))
                 .Add(new TileSystem(universe, map))
                 ;//.Add(new SpawnSystem());
 
@@ -71,14 +72,24 @@ namespace PavEcsGame.GameLoop
 
             _systems
                 .UniDelHere<PreviousPositionComponent>(universe)
+                //.UniDelHere<NewPositionComponent>(universe)
                 .UniDelHere<CollisionEvent<EcsPackedEntityWithWorld>>(universe)
                 .UniDelHere<MapLoadedEvent>(universe)
                 ;
 
             _systems
+                .Add(new ActionSystem(universe, DebugInfo, TimeSpan.FromSeconds(2)));
+
+            _systems
                 .Init();
 
             PrintUniverseInfo(universe);
+        }
+
+        private void DebugInfo(EcsUniverse universe, EcsSystems systems)
+        {
+            var bytes = GC.GetTotalMemory(false);
+            Debug.Print("Memory: {0} kb", bytes / 1024);
         }
 
         private void PrintUniverseInfo(EcsUniverse universe)
@@ -120,6 +131,31 @@ namespace PavEcsGame.GameLoop
                 _universe = null;
             }
 
+        }
+
+        private class ActionSystem : IEcsRunSystem
+        {
+            private readonly EcsUniverse _universe;
+            private readonly Action<EcsUniverse, EcsSystems> _action;
+            private readonly TimeSpan _delayBetweenRuns;
+            private DateTime _previousCheck = default;
+
+            public ActionSystem(EcsUniverse universe, Action<EcsUniverse, EcsSystems> action, TimeSpan delayBetweenRuns)
+            {
+                _universe = universe;
+                _action = action;
+                _delayBetweenRuns = delayBetweenRuns;
+            }
+
+            public void Run(EcsSystems systems)
+            {
+                var now = DateTime.UtcNow;
+                if (now - _previousCheck > _delayBetweenRuns)
+                {
+                    _previousCheck = now;
+                    _action(_universe, systems);
+                }
+            }
         }
     }
 }

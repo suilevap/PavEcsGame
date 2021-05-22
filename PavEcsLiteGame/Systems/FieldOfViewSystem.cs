@@ -29,6 +29,8 @@ namespace PavEcsGame.Systems
 
         private readonly FieldOfViewComputationInt2 _fieldOfView;
         //private readonly EcsFilterSpec<EcsSpec<MapLoadedEvent>, EcsSpec, EcsSpec> _mapLoadedSpec;
+        private readonly Func<Int2, Int2, bool> _hasObstacles;
+        private (Int2 delta, float value)[] _fieldOfViewResult;
 
         public FieldOfViewSystem(
             EcsUniverse universe,
@@ -40,6 +42,7 @@ namespace PavEcsGame.Systems
                 .Build(ref _lightSourceOutdated);
 
             _fieldOfView = new FieldOfViewComputationInt2();
+            _hasObstacles = HasObstacle;
         }
         public void Run(EcsSystems systems)
         {
@@ -86,13 +89,16 @@ namespace PavEcsGame.Systems
                 }
 
                 var radiusSq = radius * radius;
-                var lights = _fieldOfView.Compute(pos.Value, radius, HasObstacle);
-                foreach (var (p, value) in lights)
+                _fieldOfView.Compute(pos.Value, radius, _hasObstacles, ref _fieldOfViewResult, out var count);
+                //foreach (var (d, value) in lights)
+                for (int i = 0; i < count; i++)
                 {
+                    ref var item = ref _fieldOfViewResult[i]; 
+                    var p = pos.Value + item.delta;
                     var sqD = pos.Value.DistanceSquare(in p);
                     if (sqD <= radiusSq)
                     {
-                        var lightValue = value;// * (1 - sqD / radiusSq);
+                        var lightValue = item.value;// * (1 - sqD / radiusSq);
                         ref var v = ref result.Data.GetRef(result.Data.GetSafePos(new PositionComponent(p)));
                         v += lightValue;
                     }
@@ -100,9 +106,9 @@ namespace PavEcsGame.Systems
             }
         }
 
-        private bool HasObstacle(Int2 pos)
+        private bool HasObstacle(Int2 pos, Int2 delta)
         {
-            if (_map.Get(_map.GetSafePos(pos)).Unpack(out _, out EcsUnsafeEntity rawEnt))
+            if (_map.Get(_map.GetSafePos(pos + delta)).Unpack(out _, out EcsUnsafeEntity rawEnt))
             {
                 //TODO: check if it solid
                 return true;

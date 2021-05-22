@@ -22,5 +22,13 @@ namespace PaveEcsGame.Utils
         {
             return data[(data.Length * rate / 256)];
         }
+
+        public static void EnsureSize<T>(ref T[] result, int totalSize) where T : struct
+        {
+            if (result == null || result.Length < totalSize)
+            {
+                Array.Resize(ref result, totalSize);
+            }
+        }
     }
 }

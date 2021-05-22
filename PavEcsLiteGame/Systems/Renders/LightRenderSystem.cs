@@ -80,42 +80,63 @@ namespace PavEcsGame.Systems.Renders
                     {
                         Data = _lightMap
                     });
+           
+        }
+        private void CalculateLightMap(EcsFilter ecsFilter, MapData<LightValueComponent> lightMap)
+        {
+            var (posPool, lightDataPool, lightResultPool, _) = _lightToRenderDynamicSpec.Include;
 
-            void CalculateLightMap(EcsFilter ecsFilter, MapData<LightValueComponent> lightMap)
+            foreach (var ent in ecsFilter)
             {
-                foreach (var ent in ecsFilter)
-                {
-                    var lightData = lightDataPool.Get(ent);
-                    var center = posPool.Get(ent);
-                    ref var lightResult = ref lightResultPool.Get(ent);
+                var lightData = lightDataPool.Get(ent);
+                var center = posPool.Get(ent);
+                ref var lightResult = ref lightResultPool.Get(ent);
 
-                    int radiusSq = (lightData.Radius + 1) * (lightData.Radius + 1);
-                    float invRadiusSq = 1.0f / radiusSq;
-                    lightMap.Merge(lightResult.Data, LightMerge);
-
-                    void LightMerge(in PositionComponent pos, ref LightValueComponent sourceValue, in float targetValue)
-                    {
-                        var sqD = pos.Value.DistanceSquare(center);
-                        if (sqD <= radiusSq)
-                        {
-                            var lightValue = (byte) (targetValue * (1 - sqD * invRadiusSq) * lightData.BasicParameters.Value);
-
-                            if (sourceValue.LightType.HasFlag(lightData.BasicParameters.LightType))
-                            {
-                                sourceValue.Value = Math.Min((byte) (sourceValue.Value + lightValue), (byte) 255);
-                            }
-                            else if (lightValue > sourceValue.Value)
-                            {
-                                sourceValue.Value = lightValue;
-                                sourceValue.LightType = lightData.BasicParameters.LightType;
-                            }
-                        }
-                    }
-                }
-
+                //int radiusSq = (lightData.Radius + 1) * (lightData.Radius + 1);
+                //float invRadiusSq = 1.0f / radiusSq;
+                var context = new LightDataContext(ref lightData, center);
+                IMapData<PositionComponent, LightValueComponent> m = lightMap; 
+                m.Merge(lightResult.Data, context, _lightMergeDelegate);
             }
         }
 
+        private  readonly MergeDelegate<LightDataContext, PositionComponent, LightValueComponent, float>
+            _lightMergeDelegate = LightMerge;
+        private static void LightMerge(in LightDataContext c, in PositionComponent pos, ref LightValueComponent sourceValue, in float targetValue)
+        {
+            var sqD = pos.Value.DistanceSquare(c.Center);
+            if (sqD <= c.RadiusSq)
+            {
+                var lightValue = (byte)(targetValue * (1 - sqD * c.InvRadiusSq) * c.BasicParameters.Value);
+
+                if (sourceValue.LightType.HasFlag(c.BasicParameters.LightType))
+                {
+                    sourceValue.Value = Math.Min((byte)(sourceValue.Value + lightValue), (byte)255);
+                }
+                else if (lightValue > sourceValue.Value)
+                {
+                    sourceValue.Value = lightValue;
+                    sourceValue.LightType = c.BasicParameters.LightType;
+                }
+            }
+        }
+
+        private readonly struct LightDataContext
+        {
+            public readonly PositionComponent Center;
+            public readonly  LightValueComponent BasicParameters;
+            public readonly int RadiusSq;
+            public readonly float InvRadiusSq;
+
+            public LightDataContext(ref LightSourceComponent lightData, PositionComponent center)
+            {
+                Center = center;
+                BasicParameters = lightData.BasicParameters;
+                RadiusSq = (lightData.Radius + 1) * (lightData.Radius + 1);
+                InvRadiusSq = 1.0f / RadiusSq;
+            }
+
+        }
     }
 
 }

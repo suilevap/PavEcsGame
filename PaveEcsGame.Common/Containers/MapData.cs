@@ -58,27 +58,27 @@ namespace PaveEcsGame
         }
 
 
-        public void Merge<TV2>(IReadOnlyMapData<Int2, TV2> data2, MergeDelegate<Int2, T, TV2> mergeFunc)
+        public void Merge<TC, TV2>(IReadOnlyMapData<Int2, TV2> data2, in TC context, MergeDelegate<TC, Int2, T, TV2> mergeFunc)
         {
             Int2 pos = new Int2();
             for (pos.Y = MinPos.Y; pos.Y < MaxPos.Y; pos.Y++)
             {
                 for (pos.X = MinPos.X; pos.X < MaxPos.X; pos.X++)
                 {
-                    mergeFunc(pos, ref GetRef(pos), data2.Get(pos));
+                    mergeFunc(in context, pos, ref GetRef(pos), data2.Get(pos));
                 }
             }
         }
 
 
-        public void Merge<T2>(IReadOnlyMapData<PositionComponent, T2> data2, MergeDelegate<PositionComponent, T, T2> mergeFunc)
+        public void Merge<TC, T2>(IReadOnlyMapData<PositionComponent, T2> data2, in TC context, MergeDelegate<TC, PositionComponent, T, T2> mergeFunc)
         {
             PositionComponent pos = new PositionComponent();
             for (pos.Value.Y = MinPos.Y; pos.Value.Y < MaxPos.Y; pos.Value.Y++)
             {
                 for (pos.Value.X = MinPos.X; pos.Value.X < MaxPos.X; pos.Value.X++)
                 {
-                     mergeFunc(pos, ref GetRef(pos), data2.Get(pos));
+                     mergeFunc(in context, pos, ref GetRef(pos), data2.Get(pos));
                 }
             }
         }
