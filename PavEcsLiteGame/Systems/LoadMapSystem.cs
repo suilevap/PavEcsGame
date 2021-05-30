@@ -133,12 +133,11 @@ namespace PavEcsGame.Systems
                             new MoveFrictionComponent {FrictionValue = 1},
                             new WaitCommandTokenComponent(1))
                         .Add(_actorFactory.Pools,
-                            new VisualSensorComponent(){Radius = 32});
-                    
+                            new VisualSensorComponent(){Radius = 16});
 
-                    _lightSourceFactory.Pools.Pool1.SetObsolete(ent) = new LightSourceComponent()
+                    _lightSourceFactory.Pools.Pool1.Add(ent) = new LightSourceComponent()
                     {
-                        Radius = 16, 
+                        Radius = 16,
                         BasicParameters = new LightValueComponent()
                         {
                             LightType = LightType.Fire,
@@ -157,27 +156,31 @@ namespace PavEcsGame.Systems
                             new SpeedComponent(),
                             new SymbolComponent
                             {
-                                Value = 'e', 
+                                Value = '☺', 
                                 Depth = Depth.Foreground,
                                 MainColor = ConsoleColor.Red
                             },
                             new MoveFrictionComponent {FrictionValue = 1},
                             new WaitCommandTokenComponent(1))
                         ;
-                    //_lightSourceFactory.Pools.Pool1.Set(ent) = new LightSourceComponent(){ Radius = 8};
 
-                    //_lightSourceFactory.Pools.Pool1.Set(ent) = new LightSourceComponent()
+                    //_lightSourceFactory.Pools.Pool1.Add(ent) = new LightSourceComponent()
                     //{
-                    //    Radius = 8,
-                    //    Color = System.Drawing.Color.Blue.ToColor()
+                    //    Radius = 16,
+                    //    BasicParameters = new LightValueComponent()
+                    //    {
+                    //        LightType = LightType.Fire,
+                    //        Value = 255
+                    //    }
                     //};
+
                     result = _enemyFactory.World.PackEntityWithWorld(ent);
                     break;
 
                 case '~':
                     ent = _lightSourceFactory.NewUnsafeEntity();
 
-                    _lightSourceFactory.Pools.Pool1.SetObsolete(ent) = new LightSourceComponent()
+                    _lightSourceFactory.Pools.Pool1.Add(ent) = new LightSourceComponent()
                     {
                         Radius = 3,
                         BasicParameters = new LightValueComponent()
@@ -186,7 +189,7 @@ namespace PavEcsGame.Systems
                             Value = 32
                         }
                     };
-                    _wallFactory.Pools.Pool1.SetObsolete(ent) = new SymbolComponent('Ω');
+                    _wallFactory.Pools.Pool1.Add(ent) = new SymbolComponent('Ω');
 
                     result = _playerFactory.World.PackEntityWithWorld(ent);
                     break;
@@ -202,6 +205,8 @@ namespace PavEcsGame.Systems
                             Value = 196
                         }
                     });
+                    _wallFactory.Pools.Pool1.Add(ent) = new SymbolComponent('i');
+
 
                     result = _playerFactory.World.PackEntityWithWorld(ent);
                     break;

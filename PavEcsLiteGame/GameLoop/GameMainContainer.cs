@@ -59,7 +59,7 @@ namespace PavEcsGame.GameLoop
 #if DEBUG
                 .Add(new VerifyMapSystem(universe, map))
 #endif
-                .Add(new DamageOnCollisionSystem(universe))
+                //.Add(new DamageOnCollisionSystem(universe))
                 .Add(new DestroyEntitySystem(turnManager, universe))
                 .Add(new LightSourceSystems(universe))
                 .Add(new FieldOfViewSystem(universe, map));
@@ -67,6 +67,7 @@ namespace PavEcsGame.GameLoop
 
             _systems
                 .Add(new LightRenderSystem(universe))
+                .Add(new PlayerFieldOfViewSystem(universe))
                 .Add(new PrepareForRenderSystem(universe, map))
                 .Add(new ConsoleRenderSystem(universe))
                 //.Add(new SymbolRenderSystem(map, universe))

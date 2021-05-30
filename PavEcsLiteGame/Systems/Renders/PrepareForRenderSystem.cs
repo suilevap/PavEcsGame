@@ -59,6 +59,8 @@ namespace PavEcsGame.Systems.Renders
         }
 
 
+
+
         private MapData<RenderItem> _bufferCurrentFrame;
         private MapData<RenderItem> _bufferPreviousFrame;
 
@@ -69,12 +71,19 @@ namespace PavEcsGame.Systems.Renders
             EcsSpec> _mapLoadedSpec;
         private readonly EcsFilterSpec<
             EcsSpec<PositionComponent, SymbolComponent>,
-            EcsSpec<MarkAsRenderedTag>, 
+            EcsSpec<MarkAsRenderedTag, SpeedComponent>, 
             EcsSpec> _itemsToRenderSpec;
         private readonly EcsFilterSpec<
             EcsSpec<AreaResultComponent<LightValueComponent>>,
             EcsSpec, 
             EcsSpec> _lightToRenderSpec;
+
+
+        private readonly EcsFilterSpec<
+            EcsSpec<AreaResultComponent<VisibilityType>>,
+            EcsSpec,
+            EcsSpec> _playerFieldOfViewSpec;
+
         private readonly EcsEntityFactorySpec<EcsSpec<RenderItemCommand>> _renderCommandFactory;
 
         public PrepareForRenderSystem(EcsUniverse universe, MapData<EcsPackedEntityWithWorld> map)
@@ -87,6 +96,7 @@ namespace PavEcsGame.Systems.Renders
                 .Build(ref _mapLoadedSpec)
                 .Build(ref _itemsToRenderSpec)
                 .Build(ref _lightToRenderSpec)
+                .Build(ref _playerFieldOfViewSpec)
                 .Build(ref _renderCommandFactory);
         }
 
@@ -94,10 +104,14 @@ namespace PavEcsGame.Systems.Renders
         {
             InitBuffers();
 
+            var visibilityMap = TryGetVisibilityMap();
+            if (visibilityMap == null)
+                return;
             Helper.Swap(ref _bufferCurrentFrame, ref _bufferPreviousFrame);
-            ForwardRender();
 
-            ApplyLight();
+            ForwardRender(visibilityMap);
+
+            PostEffects(visibilityMap);
 
             CreateRenderCommands();
 
@@ -108,78 +122,122 @@ namespace PavEcsGame.Systems.Renders
                     var size = _mapLoadedSpec.Include.Pool1.Get(ent).Size;
                     _bufferCurrentFrame.Init(size);
                     _bufferPreviousFrame.Init(size);
+
+                    //_bufferCurrentFrame.Fill(new RenderItem(_lightShade[0], ConsoleColor.Red));
+                    //_bufferPreviousFrame.Fill(new RenderItem(_lightShade[0], ConsoleColor.DarkGray));
                 }
             }
 
 
-            void ApplyLight()
+            void PostEffects(IReadOnlyMapData<PositionComponent, VisibilityType> visibilityMap)
             {
                 var lightDataPool = _lightToRenderSpec.Include.Pool1;
+                Debug.Assert(_lightToRenderSpec.Filter.GetEntitiesCount() <= 1, "Only one light map is supported");
+
                 foreach (var ent in _lightToRenderSpec.Filter)
                 {
-                    var lightData = lightDataPool.Get(ent);
-                    ApplyLightMap(lightData.Data);
+                    ref var lightData = ref lightDataPool.Get(ent);
+                    ApplyPostEffect(lightData.Data, visibilityMap);
                     //handle and delete this
                     lightDataPool.Del(ent);
                 }
             }
 
-            void ApplyLightMap(IMapData<PositionComponent, LightValueComponent> mapData)
+            IReadOnlyMapData<PositionComponent,VisibilityType> TryGetVisibilityMap()
+            {
+                var visibilityDataPool = _playerFieldOfViewSpec.Include.Pool1;
+                Debug.Assert(_playerFieldOfViewSpec.Filter.GetEntitiesCount() <= 1, "Only one visibility map is supported");
+                foreach (var ent in _playerFieldOfViewSpec.Filter)
+                {
+                    ref var visibilityComponent = ref visibilityDataPool.Get(ent);
+                    return visibilityComponent.Data;
+                }
+                return null;
+            }
+
+            void ApplyPostEffect(IMapData<PositionComponent, LightValueComponent> lightMap, IReadOnlyMapData<PositionComponent, VisibilityType> visibilityMap)
             {
 
-                foreach (var (pos, lightValue) in mapData.GetAll())
+                foreach (var ( pos,  lightValue) in lightMap.GetAll())
                 {
                     ref var renderItem = ref _bufferCurrentFrame.GetRef(pos);
-                    var lightColor = ToConsoleColor(lightValue);
-                    //get previous state
-                    if (lightColor == ConsoleColor.Black)
+                    var visibility = visibilityMap.Get(pos);
+                    var light = lightValue;
+                    //if (!visibility.HasFlag(VisibilityType.Visible))
+                    //{
+                    //    light.LightType = LightType.None;
+                    //}
+                    var lightColor = ToConsoleColor(light);
+
+                    if (visibility.HasFlag(VisibilityType.Known))
                     {
-                        renderItem = _bufferPreviousFrame.GetRef(pos);
-                    }
-
-                    renderItem = Light(ref renderItem, lightColor);
-
-                }
-
-                RenderItem Light(ref RenderItem item, in ConsoleColor lightColor)
-                {
-                    if (lightColor == ConsoleColor.Black)
-                    {
-                        item.Symbol.MainColor = ConsoleColor.DarkGray;
+                        renderItem = Light(ref renderItem, lightColor, visibility, light.Value);
                     }
                     else
                     {
-
-                        if (item.Symbol.Value == SymbolComponent.Empty.Value ||
-                            item.Symbol.Value == default)
+                        if (visibilityMap.CheckNeighbours(
+                            false,
+                            pos,
+                            (r, p, v) => r || (v.HasFlag(VisibilityType.Known) && _bufferCurrentFrame.GetRef(p).Symbol.Depth == Depth.Back)))
                         {
-                            item.Symbol.Value = '.';
+                            renderItem = new RenderItem('?', ConsoleColor.DarkRed);
+                        }
+                        //renderItem = new RenderItem(_lightShade[2], ConsoleColor.DarkGray);
+                    }
+
+                }
+
+                RenderItem Light(ref RenderItem item, ConsoleColor lightColor, VisibilityType visibility, byte ligthValue)
+                {
+                    //if (lightColor == ConsoleColor.Black)
+                    //{
+                    //    item.Symbol = SymbolComponent.Empty;
+                    //}
+                    //else
+                    {
+                        if (item.Symbol.IsEmpty)
+                        {
+                            item.Symbol.Value = visibility.HasFlag(VisibilityType.Visible)
+                                ? '.'
+                                : '.'; _lightShade.GetByRate(ligthValue);
                             item.Symbol.MainColor = lightColor;
                         }
                         else
                         {
-
+                            if (lightColor == ConsoleColor.Black 
+                                && visibility.HasFlag(VisibilityType.Known))
+                            {
+                                lightColor = ConsoleColor.DarkGray;
+                            }
                             item.Symbol.MainColor = lightColor;
                         }
                     }
+                    //item.BackgroundColor = visibility.HasFlag(VisibilityType.Visible) 
+                    //    ? ConsoleColor.Blue 
+                    //    : ConsoleColor.DarkBlue;
 
                     return item;
                 }
             }
 
-            void ForwardRender()
+            void ForwardRender(IReadOnlyMapData<PositionComponent, VisibilityType> visibilityMap)
             {
                 _bufferCurrentFrame.Clear();
 
-                var posPool = _itemsToRenderSpec.Include.Pool1;
-                var symbolPool = _itemsToRenderSpec.Include.Pool2;
+                var (posPool, symbolPool) = _itemsToRenderSpec.Include;
+                var speedPool = _itemsToRenderSpec.Optional.Pool2;
                 foreach (var ent in _itemsToRenderSpec.Filter)
                 {
                     ref var pos = ref posPool.Get(ent);
-                    ref var symbol = ref symbolPool.Get(ent);
+                    var visibility = visibilityMap.Get(pos);
+                    if (visibility.HasFlag(VisibilityType.Visible)
+                       || (!speedPool.Has(ent) && visibility.HasFlag(VisibilityType.Known))) 
+                    {
+                        ref var symbol = ref symbolPool.Get(ent);
 
-                    ref var renderItem = ref _bufferCurrentFrame.GetRef(pos);
-                    renderItem.Merge(symbol);
+                        ref var renderItem = ref _bufferCurrentFrame.GetRef(pos);
+                        renderItem.Merge(symbol);
+                    }
                 }
             }
 
@@ -264,6 +322,21 @@ namespace PavEcsGame.Systems.Renders
             ConsoleColor.DarkGreen,
             ConsoleColor.Green,
         };
+
+        private static readonly ConsoleColor[] _noneColors = new[]
+        {
+            ConsoleColor.Gray,
+        };
+
+        private static readonly ConsoleColor[] _brightColors = new[]
+        {
+            ConsoleColor.Black,
+            ConsoleColor.DarkGray,
+            //ConsoleColor.Gray,
+            //ConsoleColor.White,
+        };
+
+
         public ConsoleColor ToConsoleColor(LightValueComponent lightValue)
         {
             if (lightValue.Value == 0)
@@ -281,6 +354,11 @@ namespace PavEcsGame.Systems.Renders
             if (lightValue.LightType.HasFlag(LightType.Acid))
             {
                 color |= (int)_acidColors.GetByRate(lightValue.Value);
+            }
+
+            if (lightValue.LightType == LightType.None)
+            {
+                color = (int)_noneColors.GetByRate(lightValue.Value);
             }
 
             return (ConsoleColor)color;

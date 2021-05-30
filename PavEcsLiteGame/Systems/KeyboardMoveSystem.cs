@@ -46,13 +46,20 @@ namespace PavEcsGame.Systems
 
         public void Run(EcsSystems systems)
         {
+            ConsoleKey key = default;
+            if (!_waitKey && Console.KeyAvailable)
+            {
+                key = Console.ReadKey(true).Key;
+            }
             if (_turnManager.CurrentPhase != TurnManager.Phase.TickUpdate)
                 return;
             if (_spec.Filter.IsEmpty())
                 return;
-            var key = (_waitKey || Console.KeyAvailable ) 
-                ? Console.ReadKey(true).Key 
-                : default;
+            
+            if (_waitKey)
+            {
+                key = Console.ReadKey(true).Key;
+            }
 
             var (playerIdPool, speedPool, commandTokenPool, _) = _spec.Include;
             foreach (var ent in _spec.Filter)

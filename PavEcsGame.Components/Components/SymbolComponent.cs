@@ -22,6 +22,8 @@ namespace PavEcsGame.Components
             MainColor = ConsoleColor.White;
         }
 
+        public bool IsEmpty => Value == SymbolComponent.Empty.Value || Value == default;
+
         public override string ToString() =>$"Symbol:{Value}";
     }
 

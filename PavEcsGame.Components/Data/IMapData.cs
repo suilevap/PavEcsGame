@@ -111,5 +111,39 @@ namespace PavEcsGame.Components
         {
             return (pos.X >= 0 && pos.Y >= 0 && pos.X < data.MaxPos.X && pos.Y < data.MaxPos.Y);
         }
+
+        public static TR CheckNeighbours<TV,TR>(
+            this IReadOnlyMapData<PositionComponent, TV> data, 
+            in TR initValue, 
+            PositionComponent pos, 
+            Func<TR, PositionComponent, TV, TR> mergeFunc)
+        {
+            PositionComponent p = pos;
+            TR result = initValue;
+            p = pos + new PositionComponent(0, -1);
+            if (data.IsValid(p))
+            {
+                result = mergeFunc(result, p, data.Get(p));
+            }
+            p = pos + new PositionComponent(-1, 0);
+            if (data.IsValid(p))
+            {
+                result = mergeFunc(result, p, data.Get(p));
+            }
+
+            p = pos + new PositionComponent(1, 0);
+            if (data.IsValid(p))
+            {
+                result = mergeFunc(result, p, data.Get(p));
+            }
+            p = pos + new PositionComponent(0, 1);
+            if (data.IsValid(p))
+            {
+                result = mergeFunc(result, p, data.Get(p));
+            }
+
+            return result;
+        }
+
     }
 }

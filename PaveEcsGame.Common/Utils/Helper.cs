@@ -22,6 +22,10 @@ namespace PaveEcsGame.Utils
         {
             return data[(data.Length * rate / 256)];
         }
+        public static char GetByRate(this string data, byte rate)
+        {
+            return data[(data.Length * rate / 256)];
+        }
 
         public static void EnsureSize<T>(ref T[] result, int totalSize) where T : struct
         {

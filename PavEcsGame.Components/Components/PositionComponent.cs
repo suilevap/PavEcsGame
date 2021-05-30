@@ -15,6 +15,10 @@ namespace PavEcsGame.Components
         {
             Value = value;
         }
+        public PositionComponent(int x, int y)
+        {
+            Value = new Int2(x,y);
+        }
 
         public override string ToString() => $"Pos:{Value}";
 
