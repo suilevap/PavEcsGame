@@ -17,7 +17,7 @@ using PaveEcsGame;
 
 namespace PavEcsGame.GameLoop
 {
-    class GameMainContainer
+    internal class GameMainContainer
     {
         private EcsWorld _world;
         private EcsUniverse _universe;
@@ -38,6 +38,7 @@ namespace PavEcsGame.GameLoop
             var turnManager = new TurnManager(universe);
 
             _systems
+                .MarkPerf(universe, "start")
                 .Add(turnManager)
                 .Add(new LoadMapSystem("Data/map1.txt", universe, map))
                 //.Add(new LoadMapSystem("Data/lightTest.txt", universe, map))
@@ -134,29 +135,5 @@ namespace PavEcsGame.GameLoop
 
         }
 
-        private class ActionSystem : IEcsRunSystem
-        {
-            private readonly EcsUniverse _universe;
-            private readonly Action<EcsUniverse, EcsSystems> _action;
-            private readonly TimeSpan _delayBetweenRuns;
-            private DateTime _previousCheck = default;
-
-            public ActionSystem(EcsUniverse universe, Action<EcsUniverse, EcsSystems> action, TimeSpan delayBetweenRuns)
-            {
-                _universe = universe;
-                _action = action;
-                _delayBetweenRuns = delayBetweenRuns;
-            }
-
-            public void Run(EcsSystems systems)
-            {
-                var now = DateTime.UtcNow;
-                if (now - _previousCheck > _delayBetweenRuns)
-                {
-                    _previousCheck = now;
-                    _action(_universe, systems);
-                }
-            }
-        }
     }
 }
