@@ -99,5 +99,17 @@ namespace PavEcsGame.Components
             }
 
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsValid<TV>(this IReadOnlyMapData<PositionComponent, TV> data, in PositionComponent pos)
+        {
+            return (pos.Value.X >= 0 && pos.Value.Y >= 0 && pos.Value.X < data.MaxPos.Value.X && pos.Value.Y < data.MaxPos.Value.Y);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsValid<TV>(this IReadOnlyMapData<Int2, TV> data, in Int2 pos)
+        {
+            return (pos.X >= 0 && pos.Y >= 0 && pos.X < data.MaxPos.X && pos.Y < data.MaxPos.Y);
+        }
     }
 }

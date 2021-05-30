@@ -60,6 +60,7 @@ namespace PavEcsGame.GameLoop
 #endif
                 .Add(new DamageOnCollisionSystem(universe))
                 .Add(new DestroyEntitySystem(turnManager, universe))
+                .Add(new LightSourceSystems(universe))
                 .Add(new FieldOfViewSystem(universe, map));
                 //.Add(new LightSystem(universe, map));
 

@@ -13,22 +13,23 @@ namespace PavEcsGame.Systems
 {
     class FieldOfViewSystem : IEcsRunSystem
     {
-        private struct FieldOfViewCalculated : ITag {}
+        private struct FieldOfViewCalculated 
+        {
+            public PositionComponent Position;
+            public FieldOfViewRequestEvent Request;
+        }
 
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
         private readonly EcsFilterSpec<
-            EcsSpec<PositionComponent, LightSourceComponent>, 
-            EcsSpec<AreaResultComponent<float>>, 
-            EcsSpec<FieldOfViewCalculated>> _lightSourceSpec;
+            EcsSpec<PositionComponent, FieldOfViewRequestEvent>, 
+            EcsSpec<AreaResultComponent<float>, FieldOfViewCalculated>, 
+            EcsSpec> _filedOfViewSourcesSpec;
 
-        private readonly EcsFilterSpec<
-            EcsSpec<FieldOfViewCalculated, PositionComponent, PreviousPositionComponent, LightSourceComponent, AreaResultComponent<float>>,
-            EcsSpec,
-            EcsSpec> _lightSourceOutdated;
+        private readonly EcsEntityFactorySpec<
+            EcsSpec<PositionComponent, SpeedComponent>> _obstacleSpec;
 
         private readonly FieldOfViewComputationInt2 _fieldOfView;
-        //private readonly EcsFilterSpec<EcsSpec<MapLoadedEvent>, EcsSpec, EcsSpec> _mapLoadedSpec;
         private readonly Func<Int2, Int2, bool> _hasObstacles;
         private (Int2 delta, float value)[] _fieldOfViewResult;
 
@@ -38,40 +39,35 @@ namespace PavEcsGame.Systems
         {
             _map = map;
             universe
-                .Build(ref _lightSourceSpec)
-                .Build(ref _lightSourceOutdated);
+                .Build(ref _filedOfViewSourcesSpec)
+                .Build(ref _obstacleSpec);
 
             _fieldOfView = new FieldOfViewComputationInt2();
             _hasObstacles = HasObstacle;
         }
+
         public void Run(EcsSystems systems)
         {
-            //foreach (var ent in _mapLoadedSpec.Filter)
-            //{
-            //    var size = _mapLoadedSpec.Include.Pool1.Get(ent).Size;
-            //    _lightMap.Init(size);
-            //}
 
-            //_lightMap.Clear();
-            var fieldOfViewCalculatedPool = _lightSourceOutdated.Include.Pool1;
-            foreach (var ent in _lightSourceOutdated.Filter)
+            var (posPool, requestPool) = _filedOfViewSourcesSpec.Include;
+            var (resultPool, previousInputPool) = _filedOfViewSourcesSpec.Optional;
+            foreach (EcsUnsafeEntity ent in _filedOfViewSourcesSpec.Filter)
             {
-                fieldOfViewCalculatedPool.Del(ent);
-            }
+                ref var pos = ref posPool.Get(ent);
+                ref var request = ref requestPool.Get(ent);
 
-            //add new one
-            var posPool = _lightSourceSpec.Include.Pool1;
-            var lightDataPool = _lightSourceSpec.Include.Pool2;
-            var resultPool = _lightSourceSpec.Optional.Pool1;
-            foreach (EcsUnsafeEntity ent in _lightSourceSpec.Filter)
-            {
-                var pos = posPool.Get(ent);
-                var lightData = lightDataPool.Get(ent);
-                var radius = lightData.Radius;
+                ref var prevInput = ref previousInputPool.Ensure(ent, out var isNew);
 
-                UpdateFieldOfViewData(ent, pos, radius);
-                
-                fieldOfViewCalculatedPool.Add(ent);
+                if (isNew || prevInput.Position != pos || prevInput.Request != request)
+                {
+                    var radius = request.Radius;
+                    prevInput.Position = pos;
+                    prevInput.Request = request;
+                    
+                    UpdateFieldOfViewData(ent, pos, radius);
+                }
+
+                requestPool.Del(ent);
             }
 
             void UpdateFieldOfViewData(EcsUnsafeEntity ent, PositionComponent pos, int radius)
@@ -90,17 +86,19 @@ namespace PavEcsGame.Systems
 
                 var radiusSq = radius * radius;
                 _fieldOfView.Compute(pos.Value, radius, _hasObstacles, ref _fieldOfViewResult, out var count);
-                //foreach (var (d, value) in lights)
                 for (int i = 0; i < count; i++)
                 {
                     ref var item = ref _fieldOfViewResult[i]; 
                     var p = pos.Value + item.delta;
-                    var sqD = pos.Value.DistanceSquare(in p);
-                    if (sqD <= radiusSq)
+                    if (_map.IsValid(p))
                     {
-                        var lightValue = item.value;// * (1 - sqD / radiusSq);
-                        ref var v = ref result.Data.GetRef(result.Data.GetSafePos(new PositionComponent(p)));
-                        v += lightValue;
+                        var sqD = pos.Value.DistanceSquare(in p);
+                        if (sqD <= radiusSq)
+                        {
+                            var lightValue = item.value;// * (1 - sqD / radiusSq);
+                            ref var v = ref result.Data.GetRef(result.Data.GetSafePos(new PositionComponent(p)));
+                            v += lightValue;
+                        }
                     }
                 }
             }
@@ -108,10 +106,13 @@ namespace PavEcsGame.Systems
 
         private bool HasObstacle(Int2 pos, Int2 delta)
         {
-            if (_map.Get(_map.GetSafePos(pos + delta)).Unpack(out _, out EcsUnsafeEntity rawEnt))
+            var p = pos + delta;
+            if (!_map.IsValid(p))
+                return true;
+            if (_map.Get(p).Unpack(out _, out EcsUnsafeEntity rawEnt))
             {
                 //TODO: check if it solid
-                return true;
+                return !_obstacleSpec.Pools.Pool2.Has(rawEnt);
             }
             return false;
         }
