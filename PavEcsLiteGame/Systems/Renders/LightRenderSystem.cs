@@ -31,6 +31,8 @@ namespace PavEcsGame.Systems.Renders
         private readonly MapData<LightValueComponent> _lightMapStatic;
         private readonly EcsFilterSpec<EcsSpec<MapLoadedEvent>, EcsSpec, EcsSpec> _mapLoadedSpec;
 
+        private readonly LightValueComponent _ambient = default;
+
         public LightRenderSystem(EcsUniverse universe)
         {
             _lightMap = new MapData<LightValueComponent>();
@@ -40,6 +42,11 @@ namespace PavEcsGame.Systems.Renders
                 .Build(ref _lightToRenderStaticSpec)
                 .Build(ref _lightLayerFactory)
                 .Build(ref _mapLoadedSpec);
+
+            _ambient = new LightValueComponent()
+            {
+                Value = 1
+            };
         }
 
         public void Run(EcsSystems systems)
@@ -65,7 +72,8 @@ namespace PavEcsGame.Systems.Renders
             if (currentVersion != _staticLightVersion)
             {
                 _staticLightVersion = currentVersion;
-                _lightMapStatic.Clear();
+                _lightMapStatic.Fill(_ambient);
+
                 CalculateLightMap(_lightToRenderStaticSpec.Filter, _lightMapStatic);
                 Debug.Print("Re-render static light");
             }
@@ -111,7 +119,7 @@ namespace PavEcsGame.Systems.Renders
 
                 if (sourceValue.LightType.HasFlag(c.BasicParameters.LightType))
                 {
-                    sourceValue.Value = Math.Min((byte)(sourceValue.Value + lightValue), (byte)255);
+                    sourceValue.Value = (byte)Math.Min((sourceValue.Value + lightValue), 255);
                 }
                 else if (lightValue > sourceValue.Value)
                 {
