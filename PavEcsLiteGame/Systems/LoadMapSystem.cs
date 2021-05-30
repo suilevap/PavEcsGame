@@ -140,8 +140,8 @@ namespace PavEcsGame.Systems
                         Radius = 16,
                         BasicParameters = new LightValueComponent()
                         {
-                            LightType = LightType.Fire,
-                            Value = 255
+                            LightType = LightType.None,
+                            Value = 32
                         }
                     };
 

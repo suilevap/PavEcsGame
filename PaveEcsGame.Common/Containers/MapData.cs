@@ -67,7 +67,17 @@ namespace PaveEcsGame
                 }
             }
         }
-
+        public void Fill(in T value1, in T value2)
+        {
+            Int2 pos = new Int2();
+            for (pos.Y = MinPos.Y; pos.Y < MaxPos.Y; pos.Y++)
+            {
+                for (pos.X = MinPos.X; pos.X < MaxPos.X; pos.X++)
+                {
+                    GetRef(pos) = pos.IsHexPos() ? value1: value2;
+                }
+            }
+        }
 
         public void Merge<TC, TV2>(IReadOnlyMapData<Int2, TV2> data2, in TC context, MergeDelegate<TC, Int2, T, TV2> mergeFunc)
         {

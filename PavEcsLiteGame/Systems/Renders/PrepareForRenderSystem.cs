@@ -122,9 +122,6 @@ namespace PavEcsGame.Systems.Renders
                     var size = _mapLoadedSpec.Include.Pool1.Get(ent).Size;
                     _bufferCurrentFrame.Init(size);
                     _bufferPreviousFrame.Init(size);
-
-                    //_bufferCurrentFrame.Fill(new RenderItem(_lightShade[0], ConsoleColor.Red));
-                    //_bufferPreviousFrame.Fill(new RenderItem(_lightShade[0], ConsoleColor.DarkGray));
                 }
             }
 
@@ -163,15 +160,10 @@ namespace PavEcsGame.Systems.Renders
                     ref var renderItem = ref _bufferCurrentFrame.GetRef(pos);
                     var visibility = visibilityMap.Get(pos);
                     var light = lightValue;
-                    //if (!visibility.HasFlag(VisibilityType.Visible))
-                    //{
-                    //    light.LightType = LightType.None;
-                    //}
-                    var lightColor = ToConsoleColor(light);
 
                     if (visibility.HasFlag(VisibilityType.Known))
                     {
-                        renderItem = Light(ref renderItem, lightColor, visibility, light.Value);
+                        renderItem = Light(ref renderItem, ref light, visibility, in pos);
                     }
                     else
                     {
@@ -182,36 +174,28 @@ namespace PavEcsGame.Systems.Renders
                         {
                             renderItem = new RenderItem('?', ConsoleColor.DarkRed);
                         }
-                        //renderItem = new RenderItem(_lightShade[2], ConsoleColor.DarkGray);
                     }
 
                 }
 
-                RenderItem Light(ref RenderItem item, ConsoleColor lightColor, VisibilityType visibility, byte ligthValue)
+                RenderItem Light(ref RenderItem item, ref LightValueComponent light, VisibilityType visibility, in PositionComponent pos)
                 {
-                    //if (lightColor == ConsoleColor.Black)
-                    //{
-                    //    item.Symbol = SymbolComponent.Empty;
-                    //}
-                    //else
+                    byte ligthValue = light.Value;
+                    var lightColor = ToConsoleColor(light);
+
+                    if (item.Symbol.IsEmpty)
                     {
-                        if (item.Symbol.IsEmpty)
+                        if (visibility.HasFlag(VisibilityType.Visible) || pos.Value.IsHexPos())
                         {
-                            item.Symbol.Value = visibility.HasFlag(VisibilityType.Visible)
-                                ? '.'
-                                : '.'; _lightShade.GetByRate(ligthValue);
-                            item.Symbol.MainColor = lightColor;
-                        }
-                        else
-                        {
-                            if (lightColor == ConsoleColor.Black 
-                                && visibility.HasFlag(VisibilityType.Known))
-                            {
-                                lightColor = ConsoleColor.DarkGray;
-                            }
+                            item.Symbol.Value = '.';
                             item.Symbol.MainColor = lightColor;
                         }
                     }
+                    else
+                    {
+                        item.Symbol.MainColor = lightColor;
+                    }
+
                     //item.BackgroundColor = visibility.HasFlag(VisibilityType.Visible) 
                     //    ? ConsoleColor.Blue 
                     //    : ConsoleColor.DarkBlue;
@@ -325,7 +309,21 @@ namespace PavEcsGame.Systems.Renders
 
         private static readonly ConsoleColor[] _noneColors = new[]
         {
+            ConsoleColor.DarkGray,
             ConsoleColor.Gray,
+            ConsoleColor.Gray,
+            ConsoleColor.Gray,
+            ConsoleColor.Gray,
+            ConsoleColor.Gray,
+            ConsoleColor.Gray,
+            ConsoleColor.Gray,
+            ConsoleColor.Gray,
+            ConsoleColor.Gray,
+            ConsoleColor.Gray,
+            ConsoleColor.Gray,
+            ConsoleColor.Gray,
+            ConsoleColor.Gray,
+            ConsoleColor.White,
         };
 
         private static readonly ConsoleColor[] _brightColors = new[]

@@ -112,6 +112,12 @@ namespace PavEcsGame.Components
             return (pos.X >= 0 && pos.Y >= 0 && pos.X < data.MaxPos.X && pos.Y < data.MaxPos.Y);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsHexPos(this in Int2 pos)
+        {
+            return (pos.X + pos.Y % 2) % 2 == 0;
+        }
+
         public static TR CheckNeighbours<TV,TR>(
             this IReadOnlyMapData<PositionComponent, TV> data, 
             in TR initValue, 
