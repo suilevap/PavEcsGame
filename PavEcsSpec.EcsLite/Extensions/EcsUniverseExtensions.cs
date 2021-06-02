@@ -2,7 +2,6 @@
 {
     public static class EcsUniverseExtensions
     {
-
         public static EcsUniverse Build<TInclude, TOptional, TExclude>(
             this EcsUniverse universe,
             ref EcsFilterSpec<TInclude, TOptional, TExclude> spec)
@@ -11,11 +10,65 @@
             where TOptional : struct, IHasBuilder<TOptional>
             where TExclude : struct, IHasBuilder<TExclude>
         {
+            var main = GetFilterBuilder<TInclude, TOptional, TExclude>(universe);
+            spec = new EcsFilterSpec<TInclude, TOptional, TExclude>(main);
+            return universe;
+        }
+
+        private static EcsFilterSpecBuilder<TInclude, TOptional, TExclude> GetFilterBuilder
+            <TInclude, TOptional, TExclude>(EcsUniverse universe)
+            where TInclude : struct, IHasBuilder<TInclude>
+            where TOptional : struct, IHasBuilder<TOptional>
+            where TExclude : struct, IHasBuilder<TExclude>
+        {
             var includeBuilder = (new TInclude()).GetBuilder();
             var optionalBuilder = (new TOptional()).GetBuilder();
             var excludeBuilder = (new TExclude()).GetBuilder();
             var main = universe.CreateFilterSpec(includeBuilder, optionalBuilder, excludeBuilder);
-            spec = new EcsFilterSpec<TInclude, TOptional, TExclude>(main);
+            return main;
+        }
+
+        public static EcsUniverse Build<TInclude>(
+            this EcsUniverse universe,
+            ref EcsFilterSpec.Inc<TInclude> spec)
+            where TInclude : struct, IHasBuilder<TInclude>
+        {
+            var main = GetFilterBuilder<TInclude, EcsSpec, EcsSpec>(universe);
+            spec = new EcsFilterSpec.Inc<TInclude>(main);
+            return universe;
+        }
+
+        public static EcsUniverse Build<TInclude, TOptional>(
+            this EcsUniverse universe,
+            ref EcsFilterSpec.Inc<TInclude>.Opt<TOptional> spec)
+            where TInclude : struct, IHasBuilder<TInclude>
+            where TOptional : struct, IHasBuilder<TOptional>
+        {
+            var main = GetFilterBuilder<TInclude, TOptional, EcsSpec>(universe);
+            spec = new EcsFilterSpec.Inc<TInclude>.Opt<TOptional>(main);
+            return universe;
+        }
+
+        public static EcsUniverse Build<TInclude, TOptional, TExclude>(
+            this EcsUniverse universe,
+            ref EcsFilterSpec.Inc<TInclude>.Opt<TOptional>.Exc<TExclude> spec)
+            where TInclude : struct, IHasBuilder<TInclude>
+            where TOptional : struct, IHasBuilder<TOptional>
+            where TExclude : struct, IHasBuilder<TExclude>
+        {
+            var main = GetFilterBuilder<TInclude, TOptional, TExclude>(universe);
+            spec = new EcsFilterSpec.Inc<TInclude>.Opt<TOptional>.Exc<TExclude>(main);
+            return universe;
+        }
+
+        public static EcsUniverse Build<TInclude, TExclude>(
+            this EcsUniverse universe,
+            ref EcsFilterSpec.Inc<TInclude>.Exc<TExclude> spec)
+            where TInclude : struct, IHasBuilder<TInclude>
+            where TExclude : struct, IHasBuilder<TExclude>
+        {
+            var main = GetFilterBuilder<TInclude, EcsSpec, TExclude>(universe);
+            spec = new EcsFilterSpec.Inc<TInclude>.Exc<TExclude>(main);
             return universe;
         }
 

@@ -11,15 +11,12 @@ namespace PavEcsGame.Systems
     {
         private readonly TimeSpan _autoRechargeTime;
         private DateTime _previousRecharge;
-        private readonly EcsFilterSpec<
-            EcsSpec<WaitCommandTokenComponent>,
-            EcsSpec<CommandTokenComponent>, 
-            EcsSpec> _waitTokenSpec;
+        private readonly EcsFilterSpec
+            .Inc<EcsSpec<WaitCommandTokenComponent>>
+            .Opt<EcsSpec<CommandTokenComponent>> _waitTokenSpec;
 
-        private readonly EcsFilterSpec<
-            EcsSpec<CommandTokenComponent>,
-            EcsSpec, 
-            EcsSpec> _withTokenSpec;
+        private readonly EcsFilterSpec
+            .Inc<EcsSpec<CommandTokenComponent>> _withTokenSpec;
 
         public CommandTokenDistributionSystem(TimeSpan autoRechargeTime, EcsUniverse universe)
         {

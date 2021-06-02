@@ -20,6 +20,10 @@ namespace PavEcsGame.Systems
             EcsSpec<PositionComponent, SpeedComponent, IsActiveTag>,
             EcsSpec<NewPositionComponent>, 
             EcsSpec> _spec;
+        private readonly EcsFilterSpec
+            .Inc<EcsSpec<PositionComponent, SpeedComponent, IsActiveTag, SpeedComponent>>
+            .Opt<EcsSpec<NewPositionComponent>>
+            .Exc<EcsSpec> _spec2;
 
 
         public MovementSystem(TurnManager turnManager, EcsUniverse universe)
@@ -40,11 +44,11 @@ namespace PavEcsGame.Systems
             var newPosPool = _spec.Optional.Pool1;
             foreach (EcsUnsafeEntity ent in _spec.Filter)
             {
-                ref SpeedComponent speed = ref speedPool.Get(ent);
+                ref readonly SpeedComponent speed = ref speedPool.Get(ent);
                 if (speed.Speed != Int2.Zero)
                 {
                     hasWorkToDo = true;
-                    ref PositionComponent pos = ref posPool.Get(ent);
+                    ref readonly PositionComponent pos = ref posPool.Get(ent);
 
                     newPosPool.Set(
                         ent, 
