@@ -12,11 +12,9 @@ namespace PavEcsGame.Systems
     class TileSystem : IEcsRunSystem, IEcsInitSystem
     {
         private readonly IReadOnlyMapData<Int2, EcsPackedEntityWithWorld> _map;
-        private readonly EcsFilterSpec<
-            EcsSpec<TileComponent, PositionComponent, SymbolComponent>, 
-            EcsSpec, 
-            EcsSpec> _spec;
-
+        private readonly EcsFilterSpec
+            .Inc<EcsReadonlySpec<PositionComponent>, EcsSpec<TileComponent, SymbolComponent>> _spec;
+        
         private readonly Dictionary<string, TileRule> _rules = new Dictionary<string, TileRule>();
 
         public TileSystem(EcsUniverse universe, IReadOnlyMapData<Int2, EcsPackedEntityWithWorld> map)
@@ -34,13 +32,12 @@ namespace PavEcsGame.Systems
 
         public void Run(EcsSystems systems)
         {
-            var tilePool = _spec.Include.Pool1;
-            var posPool = _spec.Include.Pool2;
-            var symbolPool = _spec.Include.Pool3;
+            var posPool = _spec.IncludeReadonly.Pool1;
+            var (tilePool, symbolPool) = _spec.Include;
             foreach (EcsUnsafeEntity ent in _spec.Filter)
             {
                 ref var tile = ref tilePool.Get(ent);
-                ref var pos = ref posPool.Get(ent);
+                ref readonly var pos = ref posPool.Get(ent);
 
                 UpdateMask(ent, ref tile, pos.Value + new Int2(1, 0), 0);
                 UpdateMask(ent, ref tile, pos.Value + new Int2(0, 1), 1);

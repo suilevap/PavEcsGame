@@ -16,14 +16,10 @@ namespace PavEcsGame.Systems
 
         private readonly TurnManager _turnManager;
         private TurnManager.SimSystemRegistration _reg;
-        private readonly EcsFilterSpec<
-            EcsSpec<PositionComponent, SpeedComponent, IsActiveTag>,
-            EcsSpec<NewPositionComponent>, 
-            EcsSpec> _spec;
+
         private readonly EcsFilterSpec
-            .Inc<EcsSpec<PositionComponent, SpeedComponent, IsActiveTag, SpeedComponent>>
-            .Opt<EcsSpec<NewPositionComponent>>
-            .Exc<EcsSpec> _spec2;
+            .Inc<EcsReadonlySpec<PositionComponent, SpeedComponent, IsActiveTag>>
+            .Opt<EcsSpec<NewPositionComponent>> _spec;
 
 
         public MovementSystem(TurnManager turnManager, EcsUniverse universe)
