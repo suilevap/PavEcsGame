@@ -48,7 +48,14 @@ namespace PavEcsSpec.EcsLite
             IEcsSpecBuilder<TPools> pools
         )
         {
-            builder.RegisterSet(pools.GetArgTypes(), Enumerable.Empty<Type>());
+            var args = pools.GetArgTypes()
+                .Select(x => 
+                    (x.type, 
+                    x.permission.HasFlag(SpecPermissions.Write) 
+                        ? SpecPermissions.CreateOrAlter
+                        : SpecPermissions.Read));
+            builder.RegisterSet(system, args);
+
             var initData = new InitData
             {
                 Universe = builder.Universe,
@@ -66,11 +73,13 @@ namespace PavEcsSpec.EcsLite
         )
             where TParentPools : struct
         {
-            var required = 
+            var args =
                 Enumerable.Concat(
                     pools.GetArgTypes(),
-                    parentPools.GetArgTypes());
-            builder.RegisterSet(required, Enumerable.Empty<Type>());
+                    parentPools.GetArgTypes()
+                )
+                .Select(x => (x.type, SpecPermissions.CreateOrAlter));
+            builder.RegisterSet(system, args);
 
             var initData = new InitData
             {

@@ -51,11 +51,39 @@ namespace PavEcsSpec.EcsLite
             IEcsSpecBuilder<TExclude> exclude
         )
         {
-            builder.RegisterSet(
-                include.GetArgTypes(), 
-            Enumerable.Concat(
-                    optional.GetArgTypes(),
-                    exclude.GetArgTypes()));
+
+            var args =
+                include.GetArgTypes()
+                    .Select(x => (x.type, GetPermissionForInclude(x.permission)))
+                .Concat(
+                    optional.GetArgTypes()
+                        .Select(x => (x.type, GetPermissionForOptional(x.permission)))
+                    )
+                .Concat(
+                    exclude.GetArgTypes()
+                        .Select(x => (x.type, GetPermissionForExclude(x.permission)))
+                );
+
+            SpecPermissions GetPermissionForInclude(SpecPermissions p)
+            {
+                //include can not create new components
+                return p & (SpecPermissions.Read | SpecPermissions.Write);
+            }
+
+            SpecPermissions GetPermissionForOptional(SpecPermissions p)
+            {
+                //optional
+                return p.HasFlag(SpecPermissions.Write) 
+                    ? p // can do anything
+                    : p & SpecPermissions.Read;
+
+            }
+            SpecPermissions GetPermissionForExclude(SpecPermissions p)
+            {
+                //exclude can only create new one
+                return p & SpecPermissions.Create;
+            }
+            builder.RegisterSet(system, args);
 
             var initData = new InitData
             {

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace PavEcsSpec.EcsLite
 {
     internal static class NullableExtensions
@@ -15,5 +17,17 @@ namespace PavEcsSpec.EcsLite
                 return false;
             }
         } 
+
+        internal static TV GetOrCreate<TK,TV>(this IDictionary<TK,TV> dict, TK key)
+            where TV : new()
+        {
+            TV value;
+            if (!dict.TryGetValue(key, out value))
+            {
+                value = new TV();
+                dict.Add(key, value);
+            }
+            return value;
+        }
     }
 }

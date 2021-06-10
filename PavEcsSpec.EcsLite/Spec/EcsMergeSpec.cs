@@ -67,9 +67,9 @@ namespace PavEcsSpec.EcsLite
                 return new EcsMergeSpec<TReadOnlySpec, TSpec>(
                     _readBuilder.Create(world), 
                     _writeBuilder.Create(world));
-            }
+            }            
 
-            public IEnumerable<Type> GetArgTypes()
+            public IEnumerable<(Type type, SpecPermissions permission)> GetArgTypes()
             {
                 foreach(var t in _readBuilder.GetArgTypes())
                 {

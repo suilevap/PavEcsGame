@@ -37,9 +37,9 @@ namespace PavEcsSpec.EcsLite
                 return mask;
             }
 
-            public IEnumerable<Type> GetArgTypes()
+            public IEnumerable<(Type type, SpecPermissions permission)> GetArgTypes()
             {
-                return Enumerable.Empty<Type>();
+                return Enumerable.Empty<(Type type, SpecPermissions permission)>();
             }
 
             public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
@@ -111,15 +111,17 @@ namespace PavEcsSpec.EcsLite
                 return new EcsReadonlySpec<T1>(world);
             }
 
-            public IEnumerable<Type> GetArgTypes()
+            public IEnumerable<(Type type, SpecPermissions permission)> GetArgTypes()
             {
-                yield return typeof(T1);
+                yield return (typeof(T1), SpecPermissions.Read);
             }
 
             public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
             {
                 return universe.GetWorld<T1>(systems);
             }
+            public SpecPermissions GetPermissions() => SpecPermissions.Read;
+
         }
     }
 
@@ -194,10 +196,10 @@ namespace PavEcsSpec.EcsLite
                 return new EcsReadonlySpec<T1, T2>(world);
             }
 
-            public IEnumerable<Type> GetArgTypes()
+            public IEnumerable<(Type type, SpecPermissions permission)> GetArgTypes()
             {
-                yield return typeof(T1);
-                yield return typeof(T2);
+                yield return (typeof(T1), SpecPermissions.Read);
+                yield return (typeof(T2), SpecPermissions.Read);
             }
 
             public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
@@ -279,11 +281,11 @@ namespace PavEcsSpec.EcsLite
             {
                 return new EcsReadonlySpec<T1, T2, T3>(world);
             }
-            public IEnumerable<Type> GetArgTypes()
+            public IEnumerable<(Type type, SpecPermissions permission)> GetArgTypes()
             {
-                yield return typeof(T1);
-                yield return typeof(T2);
-                yield return typeof(T3);
+                yield return (typeof(T1), SpecPermissions.Read);
+                yield return (typeof(T2), SpecPermissions.Read);
+                yield return (typeof(T3), SpecPermissions.Read);
             }
 
             public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
@@ -375,12 +377,12 @@ namespace PavEcsSpec.EcsLite
                 return new EcsReadonlySpec<T1, T2, T3, T4>(world);
             }
 
-            public IEnumerable<Type> GetArgTypes()
+            public IEnumerable<(Type type, SpecPermissions permission)> GetArgTypes()
             {
-                yield return typeof(T1);
-                yield return typeof(T2);
-                yield return typeof(T3);
-                yield return typeof(T4);
+                yield return (typeof(T1), SpecPermissions.Read);
+                yield return (typeof(T2), SpecPermissions.Read);
+                yield return (typeof(T3), SpecPermissions.Read);
+                yield return (typeof(T4), SpecPermissions.Read);
             }
 
             public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
@@ -481,13 +483,13 @@ namespace PavEcsSpec.EcsLite
                 return new EcsReadonlySpec<T1, T2, T3, T4, T5>(world);
             }
 
-            public IEnumerable<Type> GetArgTypes()
+            public IEnumerable<(Type type, SpecPermissions permission)> GetArgTypes()
             {
-                yield return typeof(T1);
-                yield return typeof(T2);
-                yield return typeof(T3);
-                yield return typeof(T4);
-                yield return typeof(T5);
+                yield return (typeof(T1), SpecPermissions.Read);
+                yield return (typeof(T2), SpecPermissions.Read);
+                yield return (typeof(T3), SpecPermissions.Read);
+                yield return (typeof(T4), SpecPermissions.Read);
+                yield return (typeof(T5), SpecPermissions.Read);
             }
 
             public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
@@ -598,14 +600,14 @@ namespace PavEcsSpec.EcsLite
                 return new EcsReadonlySpec<T1, T2, T3, T4, T5, T6>(world);
             }
 
-            public IEnumerable<Type> GetArgTypes()
+            public IEnumerable<(Type type, SpecPermissions permission)> GetArgTypes()
             {
-                yield return typeof(T1);
-                yield return typeof(T2);
-                yield return typeof(T3);
-                yield return typeof(T4);
-                yield return typeof(T5);
-                yield return typeof(T6);
+                yield return (typeof(T1), SpecPermissions.Read);
+                yield return (typeof(T2), SpecPermissions.Read);
+                yield return (typeof(T3), SpecPermissions.Read);
+                yield return (typeof(T4), SpecPermissions.Read);
+                yield return (typeof(T5), SpecPermissions.Read);
+                yield return (typeof(T6), SpecPermissions.Read);
             }
 
             public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)

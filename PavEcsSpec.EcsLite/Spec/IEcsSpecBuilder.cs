@@ -4,6 +4,16 @@ using Leopotam.EcsLite;
 
 namespace PavEcsSpec.EcsLite
 {
+    [Flags]
+    public enum SpecPermissions
+    {
+        None = 0,
+        Read = 1,
+        Write = 2,
+        Create = 4, 
+        CreateOrAlter = Create | Write,
+        Full = Read | Write | CreateOrAlter
+    }
     public interface IEcsSpecBuilder<out T>
         where T : struct
     {
@@ -11,7 +21,7 @@ namespace PavEcsSpec.EcsLite
         EcsFilter.Mask Include(EcsFilter.Mask mask);
         EcsFilter.Mask Exclude(EcsFilter.Mask mask);
 
-        IEnumerable<Type> GetArgTypes();
+        IEnumerable<(Type type, SpecPermissions permission)> GetArgTypes();
 
         EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems);
 

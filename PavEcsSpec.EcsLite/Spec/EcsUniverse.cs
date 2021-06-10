@@ -23,12 +23,53 @@ namespace PavEcsSpec.EcsLite
         public void Init(EcsSystems systems)
         {
             _requiredTypeToWorldId = _builder.GetMapping();
+            VerifySystemsOrder(systems);
             _builder = null;
             foreach (var initSpec in _registeredSpec)
             {
                 initSpec.Init(systems);
             }
             _registeredSpec.Clear();
+        }
+
+
+        private string GetDebugDebInfo(IEcsSystemSpec system)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(system);
+            sb.Append(" ");
+
+            var deps = GetComponentsPermissions(system);
+            foreach (var gr in deps.GroupBy(x => x.permission))
+            {
+                sb.AppendFormat("{0}:({1})", gr.Key, string.Join(",", gr.Select(x => x.type.Name)));
+            }
+            return sb.ToString();
+        }
+        private IEnumerable<(Type type, SpecPermissions permission)> GetComponentsPermissions(IEcsSystemSpec system)
+        {
+            if (_builder == null)
+                return Enumerable.Empty<(Type type, SpecPermissions permission)>();
+            return _builder.GetComponentsPermissions(system);
+        }
+
+        private void VerifySystemsOrder(EcsSystems systems)
+        {
+            var allSystems = _builder.GetSystemsSorted(out var cycles);
+            var result = string.Join(",", allSystems.Select(x => $"{x.Key}:{x.Value}"));
+
+            Debug.WriteLine(result);
+            Debug.WriteLine($"Potential max even length:{cycles}");
+
+            //IEcsSystem[] registeredSystems = null;
+            //var count = systems.GetAllSystems(ref registeredSystems);
+            //for (int i = 0; i < count; i++)
+            //{
+            //    if (registeredSystems[i] is IEcsSystemSpec system)
+            //    {
+
+            //    }
+            //}
         }
 
         private int GetKey<T>()
@@ -60,7 +101,7 @@ namespace PavEcsSpec.EcsLite
         {
             return _requiredTypeToWorldId
                 .GroupBy(
-                    p => systems.GetWorld(GetName(p.Value)), 
+                    p => systems.GetWorld(GetName(p.Value)),
                     p => p.Key);
         }
 
