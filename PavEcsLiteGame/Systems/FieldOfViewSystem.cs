@@ -11,7 +11,7 @@ using PaveEcsGame.Area;
 
 namespace PavEcsGame.Systems
 {
-    class FieldOfViewSystem : IEcsRunSystem
+    class FieldOfViewSystem : IEcsRunSystem, IEcsSystemSpec
     {
         private struct FieldOfViewCalculated 
         {
@@ -21,13 +21,16 @@ namespace PavEcsGame.Systems
 
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
-        private readonly EcsFilterSpec<
-            EcsSpec<PositionComponent, FieldOfViewRequestEvent>, 
-            EcsSpec<AreaResultComponent<float>, FieldOfViewCalculated>, 
-            EcsSpec> _filedOfViewSourcesSpec;
+        //private readonly EcsFilterSpec<
+        //    EcsReadonlySpec<PositionComponent, FieldOfViewRequestEvent>, 
+        //    EcsSpec<AreaResultComponent<float>, FieldOfViewCalculated>, 
+        //    EcsSpec> _filedOfViewSourcesSpec;
+        private readonly EcsFilterSpec
+            .Inc<EcsReadonlySpec<PositionComponent>, EcsSpec<FieldOfViewRequestEvent>>
+            .Opt<EcsSpec<AreaResultComponent<float>, FieldOfViewCalculated>> _filedOfViewSourcesSpec;
 
         private readonly EcsEntityFactorySpec<
-            EcsSpec<PositionComponent, SpeedComponent>> _obstacleSpec;
+            EcsReadonlySpec<PositionComponent, SpeedComponent>> _obstacleSpec;
 
         private readonly FieldOfViewComputationInt2 _fieldOfView;
         private readonly Func<Int2, Int2, bool> _hasObstacles;
@@ -39,6 +42,7 @@ namespace PavEcsGame.Systems
         {
             _map = map;
             universe
+                .Register(this)
                 .Build(ref _filedOfViewSourcesSpec)
                 .Build(ref _obstacleSpec);
 
@@ -49,11 +53,13 @@ namespace PavEcsGame.Systems
         public void Run(EcsSystems systems)
         {
 
-            var (posPool, requestPool) = _filedOfViewSourcesSpec.Include;
+            var posPool = _filedOfViewSourcesSpec.IncludeReadonly.Pool1;
+            var requestPool = _filedOfViewSourcesSpec.Include.Pool1;
+
             var (resultPool, previousInputPool) = _filedOfViewSourcesSpec.Optional;
             foreach (EcsUnsafeEntity ent in _filedOfViewSourcesSpec.Filter)
             {
-                ref var pos = ref posPool.Get(ent);
+                ref readonly var pos = ref posPool.Get(ent);
                 ref var request = ref requestPool.Get(ent);
 
                 ref var prevInput = ref previousInputPool.Ensure(ent, out var isNew);

@@ -8,7 +8,7 @@ using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
-    public class FrictionSystem : IEcsRunSystem, IEcsInitSystem
+    public class FrictionSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
         private readonly TurnManager _turnManager;
         private TurnManager.SimSystemRegistration _reg;
@@ -21,6 +21,7 @@ namespace PavEcsGame.Systems
         {
             _turnManager = turnManager;
             universe
+                .Register(this)
                 .Build(ref _spec);
         }
         public void Init(EcsSystems systems)

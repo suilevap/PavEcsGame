@@ -9,7 +9,7 @@ using PaveEcsGame.Tiles;
 
 namespace PavEcsGame.Systems
 {
-    class TileSystem : IEcsRunSystem, IEcsInitSystem
+    class TileSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
         private readonly IReadOnlyMapData<Int2, EcsPackedEntityWithWorld> _map;
         private readonly EcsFilterSpec
@@ -21,6 +21,7 @@ namespace PavEcsGame.Systems
         {
             _map = map;
             universe
+                .Register(this)
                 .Build(ref _spec);
         }
 

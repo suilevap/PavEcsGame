@@ -9,10 +9,10 @@ using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
-    internal class DamageOnCollisionSystem : IEcsRunSystem
+    internal class DamageOnCollisionSystem : IEcsRunSystem, IEcsSystemSpec
     {
         private EcsFilterSpec<
-            EcsSpec<CollisionEvent<EcsPackedEntityWithWorld>>,
+            EcsReadonlySpec<CollisionEvent<EcsPackedEntityWithWorld>>,
             EcsSpec, 
             EcsSpec> _spec;
 
@@ -22,6 +22,7 @@ namespace PavEcsGame.Systems
         public DamageOnCollisionSystem(EcsUniverse universe)
         {
             universe
+                .Register(this)
                 .Build(ref _spec)
                 .Build(ref _playerFactorySpec)
                 .Build(ref _destroyFactorySpec);
@@ -31,7 +32,7 @@ namespace PavEcsGame.Systems
         {
             var (destroyReqPool, isActivePool) = _destroyFactorySpec.Pools;
             var collEventPool = _spec.Include.Pool1;
-            foreach (var ent in _spec.Filter)
+            foreach (EcsUnsafeEntity ent in _spec.Filter)
             {
                 var otherEnt = collEventPool.Get(ent).Target;
                 if (otherEnt.Unpack(out _, out EcsUnsafeEntity otherId)

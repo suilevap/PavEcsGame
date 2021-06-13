@@ -7,22 +7,20 @@ using System.Diagnostics;
 
 namespace PavEcsGame.Systems
 {
-    class UpdatePositionSystem : IEcsRunSystem, IEcsInitSystem
+    class UpdatePositionSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
         private readonly TurnManager _turnManager;
                  
         private readonly IMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
                  
         private TurnManager.SimSystemRegistration _registration;
-        private readonly EcsFilterSpec<
-            EcsSpec<PositionComponent, NewPositionComponent>, 
-            EcsSpec<PreviousPositionComponent>,
-            EcsSpec> _movePosSpec;
+        private readonly EcsFilterSpec
+            .Inc<EcsReadonlySpec<PositionComponent, NewPositionComponent>>
+            .Opt<EcsSpec<PreviousPositionComponent>> _movePosSpec;
 
-        private readonly EcsFilterSpec<
-            EcsSpec<NewPositionComponent>, 
-            EcsSpec<PositionComponent>, 
-            EcsSpec> _newPosSpec;
+        private readonly EcsFilterSpec
+            .Inc<EcsSpec<NewPositionComponent>>
+            .Opt<EcsSpec<PositionComponent>> _newPosSpec;
         
         private readonly EcsEntityFactorySpec<
             EcsSpec<CollisionEvent<EcsPackedEntityWithWorld>>> _collEvenFactorySpec;
@@ -36,6 +34,7 @@ namespace PavEcsGame.Systems
             _map = mapData;
 
             universe
+                .Register(this)
                 .Build(ref _collEvenFactorySpec)
                 .Build(ref _movePosSpec)
                 .Build(ref _newPosSpec);
@@ -99,7 +98,7 @@ namespace PavEcsGame.Systems
                 foreach (EcsUnsafeEntity ent in _movePosSpec.Filter)
                 {
 
-                    ref var pos = ref posPool.Get(ent);
+                    ref readonly var pos = ref posPool.Get(ent);
                     ref var mapEnt = ref _map.GetRef(pos);
                     Debug.Assert(mapEnt.IsSame(ent), $"Unexpected ent in previous pos.\n" +
                                                      $" Exp :{_movePosSpec.World.PackEntityWithWorld(ent).ToLogString()}.\n" +

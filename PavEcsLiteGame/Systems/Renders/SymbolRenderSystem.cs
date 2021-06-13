@@ -5,7 +5,7 @@ using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems.Renders
 {
-    public class SymbolRenderSystem : IEcsInitSystem, IEcsRunSystem
+    public class SymbolRenderSystem : IEcsInitSystem, IEcsRunSystem, IEcsSystemSpec
     {
 
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
@@ -24,6 +24,7 @@ namespace PavEcsGame.Systems.Renders
         {
             _map = map;
             universe
+                .Register(this)
                 .Build(ref _clearPrevPosSpec)
                 .Build(ref _updateCurrentPosSpec);
         }

@@ -7,12 +7,12 @@ using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
-    public class CommandTokenDistributionSystem : IEcsRunSystem, IEcsInitSystem
+    public class CommandTokenDistributionSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
         private readonly TimeSpan _autoRechargeTime;
         private DateTime _previousRecharge;
         private readonly EcsFilterSpec
-            .Inc<EcsSpec<WaitCommandTokenComponent>>
+            .Inc<EcsReadonlySpec<WaitCommandTokenComponent>>
             .Opt<EcsSpec<CommandTokenComponent>> _waitTokenSpec;
 
         private readonly EcsFilterSpec
@@ -22,6 +22,7 @@ namespace PavEcsGame.Systems
         {
             _autoRechargeTime = autoRechargeTime;
             universe
+                .Register(this)
                 .Build(ref _waitTokenSpec)
                 .Build(ref _withTokenSpec);
         }
@@ -54,11 +55,11 @@ namespace PavEcsGame.Systems
             {
                 _previousRecharge = DateTime.UtcNow;
                 EcsPool<CommandTokenComponent> tokenPool = _waitTokenSpec.Optional.Pool1;
-                EcsPool<WaitCommandTokenComponent> waitTokenPool = _waitTokenSpec.Include.Pool1;
+                EcsReadonlyPool<WaitCommandTokenComponent> waitTokenPool = _waitTokenSpec.Include.Pool1;
 
                 foreach (EcsUnsafeEntity ent in _waitTokenSpec.Filter)
                 {
-                    tokenPool.SetObsolete(ent) = waitTokenPool.Get(ent).RechargeValue;
+                    tokenPool.Ensure(ent, out _) = waitTokenPool.Get(ent).RechargeValue;
                 }
             }
         }

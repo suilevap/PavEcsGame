@@ -9,14 +9,18 @@ using PaveEcsGame.Utils;
 
 namespace PavEcsGame.Systems.Renders
 {
-    public class ConsoleRenderSystem : IEcsInitSystem, IEcsRunSystem
+    public class ConsoleRenderSystem : IEcsInitSystem, IEcsRunSystem, IEcsSystemSpec
     {
 
-        private readonly EcsFilterSpec<EcsSpec<RenderItemCommand>, EcsSpec, EcsSpec> _renderCommandSpec;
+        private readonly EcsFilterSpec
+            .Inc<EcsSpec<RenderItemCommand>> _renderCommandSpec;
+
+
         private List<EcsUnsafeEntity>[] _groupedbyColor = new List<EcsUnsafeEntity>[16];
         public ConsoleRenderSystem(EcsUniverse universe)
         {
             universe
+                .Register(this)
                 .Build(ref _renderCommandSpec);
 
             for (int i = 0; i < _groupedbyColor.Length; i++)

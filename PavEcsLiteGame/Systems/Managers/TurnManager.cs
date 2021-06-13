@@ -8,16 +8,18 @@ using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems.Managers
 {
-    public class TurnManager : IEcsRunSystem
+    public class TurnManager : IEcsRunSystem, IEcsSystemSpec
     {
 
         private long _tick;
-        private readonly EcsFilterSpec<
-            EcsSpec<SystemHasMoreWorkTag, SystemRefComponent<IEcsSystem>>, 
-            EcsSpec<WaitCommandTokenComponent, CommandTokenComponent>,
-            EcsSpec> _tokenSpec;
+        private readonly EcsFilterSpec
+            .Inc<EcsReadonlySpec<SystemRefComponent<IEcsSystem>>, EcsSpec<SystemHasMoreWorkTag>>
+            /*.Opt<EcsSpec<WaitCommandTokenComponent, CommandTokenComponent>>*/ _tokenSpec;
 
         private readonly EcsEntityFactorySpec<EcsSpec<SystemRefComponent<IEcsSystem>>> _systemEntityFactorySpec;
+
+        private readonly EcsEntityFactorySpec<EcsSpec<WaitCommandTokenComponent>> _systemEntityFactoryTickSpec;
+
 
         public enum Phase
         {
@@ -28,8 +30,11 @@ namespace PavEcsGame.Systems.Managers
         public TurnManager(EcsUniverse universe)
         {
             universe
+                .Register(this)
                 .Build(ref _tokenSpec)
-                .Build(ref _systemEntityFactorySpec);
+                .Build(ref _systemEntityFactorySpec)
+                .Build(_systemEntityFactorySpec, ref _systemEntityFactoryTickSpec)
+                ;
         }
 
         public Phase CurrentPhase => _tokenSpec.Filter.IsEmpty() ? Phase.TickUpdate : Phase.Simulation;
@@ -65,7 +70,7 @@ namespace PavEcsGame.Systems.Managers
         {
             Debug.Assert(entity.Unpack(out var world, out EcsUnsafeEntity unsafeEnt), $"entity: {entity} should be alive");
             Debug.Assert(_tokenSpec.Include.IsBelongToWorld(world), $"entity doesn't belong to expected world. Actual:{world}, expected:{_tokenSpec.Include}");
-            Debug.Assert(_tokenSpec.Include.Pool2.Has(unsafeEnt), $"entity doesn't have expected system component.");
+            Debug.Assert(_tokenSpec.IncludeReadonly.Pool1.Has(unsafeEnt), $"entity doesn't have expected system component.");
         }
 
         public readonly struct TickSystemRegistration
@@ -75,33 +80,33 @@ namespace PavEcsGame.Systems.Managers
 
             public TickSystemRegistration(EcsUnsafeEntity systemEntity, TurnManager manager)
             {
-                Debug.Assert(manager._tokenSpec.Include.Pool2.Has(systemEntity), $"entity doesn't have expected system component.");
+                Debug.Assert(manager._tokenSpec.IncludeReadonly.Pool1.Has(systemEntity), $"entity doesn't have expected system component.");
 
                 _systemEntity = systemEntity;
                 _turnManager = manager;
 
-                manager._tokenSpec.Optional.Pool1.Add(systemEntity) = new WaitCommandTokenComponent(1);
+                manager._systemEntityFactoryTickSpec.Pools.Pool1.Add(systemEntity) = new WaitCommandTokenComponent(1);
             }
-            public bool TryGetToken(bool hasWorkToDo)
-            {
-                if (_turnManager.CurrentPhase == Phase.TickUpdate && hasWorkToDo)
-                {
-                    var commandTokenPool = _turnManager._tokenSpec.Optional.Pool2;
-                    if (commandTokenPool.Has(_systemEntity))
-                    {
+            //public bool TryGetToken(bool hasWorkToDo)
+            //{
+            //    if (_turnManager.CurrentPhase == Phase.TickUpdate && hasWorkToDo)
+            //    {
+            //        var commandTokenPool = _turnManager._tokenSpec.Optional.Pool2;
+            //        if (commandTokenPool.Has(_systemEntity))
+            //        {
 
-                        ref var tokens = ref commandTokenPool.Get(_systemEntity);
-                        tokens.ActionCount--;
-                        return true;
-                    }
-                }
-                return false;
-            }
+            //            ref var tokens = ref commandTokenPool.Get(_systemEntity);
+            //            tokens.ActionCount--;
+            //            return true;
+            //        }
+            //    }
+            //    return false;
+            //}
 
-            public bool TryGetToken(EcsFilter mainFilter)
-            {
-                return TryGetToken(!mainFilter.IsEmpty());
-            }
+            //public bool TryGetToken(EcsFilter mainFilter)
+            //{
+            //    return TryGetToken(!mainFilter.IsEmpty());
+            //}
         }
 
         public readonly struct SimSystemRegistration

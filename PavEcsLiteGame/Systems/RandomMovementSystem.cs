@@ -11,7 +11,7 @@ using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
-    internal class RandomMovementSystem : IEcsRunSystem
+    internal class RandomMovementSystem : IEcsRunSystem, IEcsSystemSpec
     {
         private readonly TurnManager _turnManager;
         private readonly EcsFilterSpec<
@@ -24,6 +24,7 @@ namespace PavEcsGame.Systems
         {
             _turnManager = turnManager;
             universe
+                .Register(this)
                 .Build(ref _spec);
         }
 

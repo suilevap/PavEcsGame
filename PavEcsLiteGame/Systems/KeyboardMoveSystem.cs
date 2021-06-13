@@ -11,23 +11,22 @@ using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
-    class KeyboardMoveSystem : IEcsRunSystem, IEcsInitSystem
+    class KeyboardMoveSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
         private readonly bool _waitKey;
 
         private readonly TurnManager _turnManager;
 
         private Dictionary<ConsoleKey, SpeedComponent>[] _configs;
-        private readonly EcsFilterSpec<
-            EcsSpec<PlayerIndexComponent, SpeedComponent, CommandTokenComponent, IsActiveTag>, 
-            EcsSpec, 
-            EcsSpec> _spec;
+        private readonly EcsFilterSpec
+            .Inc<EcsReadonlySpec<PlayerIndexComponent, IsActiveTag>, EcsSpec<SpeedComponent, CommandTokenComponent>>_spec;
 
         public KeyboardMoveSystem(bool waitKey, TurnManager turnManager, EcsUniverse universe)
         {
             _waitKey = waitKey;
             _turnManager = turnManager;
             universe
+                .Register(this)
                 .Build(ref _spec);
         }
         public void Init(EcsSystems systems)
@@ -61,8 +60,10 @@ namespace PavEcsGame.Systems
                 key = Console.ReadKey(true).Key;
             }
 
-            var (playerIdPool, speedPool, commandTokenPool, _) = _spec.Include;
-            foreach (var ent in _spec.Filter)
+            var (playerIdPool, _) = _spec.IncludeReadonly;
+            var (speedPool, commandTokenPool) = _spec.Include;
+
+            foreach (EcsUnsafeEntity ent in _spec.Filter)
             {
                 var playerId = playerIdPool.Get(ent).Index;
                 ref var currentSpeed = ref speedPool.Get(ent);

@@ -11,7 +11,7 @@ using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
-    class MovementSystem : IEcsRunSystem, IEcsInitSystem
+    class MovementSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
 
         private readonly TurnManager _turnManager;
@@ -26,6 +26,7 @@ namespace PavEcsGame.Systems
         {
             _turnManager = turnManager;
             universe
+                .Register(this)
                 .Build(ref _spec);
         }
         public void Init(EcsSystems systems)

@@ -44,6 +44,7 @@ namespace PavEcsSpec.EcsLite
 
         internal static EcsEntityFactorySpecBuilder<TPools> Create(
             EcsUniverseBuilder builder,
+            IEcsSystemSpec system,
             IEcsSpecBuilder<TPools> pools
         )
         {
@@ -59,6 +60,7 @@ namespace PavEcsSpec.EcsLite
 
         internal static EcsEntityFactorySpecBuilder<TPools> Create<TParentPools>(
             EcsUniverseBuilder builder,
+            IEcsSystemSpec system,
             IEcsSpecBuilder<TPools> pools,
             IEcsSpecBuilder<TParentPools> parentPools
         )

@@ -45,6 +45,7 @@ namespace PavEcsSpec.EcsLite
 
         internal static EcsFilterSpecBuilder<TIncl, TOptional, TExclude> Create(
             EcsUniverseBuilder builder,
+            IEcsSystemSpec system,
             IEcsSpecBuilder<TIncl> include,
             IEcsSpecBuilder<TOptional> optional,
             IEcsSpecBuilder<TExclude> exclude

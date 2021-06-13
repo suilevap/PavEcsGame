@@ -2,7 +2,7 @@
 
 namespace PavEcsSpec.EcsLite
 {
-    internal sealed class UniverseDelHereSystem<T> : IEcsRunSystem 
+    internal sealed class UniverseDelHereSystem<T> : IEcsRunSystem, IEcsSystemSpec
         where T : struct
     {
         private readonly EcsFilterSpec<EcsSpec<T>, EcsSpec, EcsSpec> _spec;
@@ -10,6 +10,7 @@ namespace PavEcsSpec.EcsLite
         public UniverseDelHereSystem(EcsUniverse universe)
         {
             universe
+                .Register(this)
                 .Build(ref _spec);
         }
 

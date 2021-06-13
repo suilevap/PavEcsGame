@@ -5,7 +5,7 @@ using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
-    internal class PerfTimerSystem : IEcsRunSystem
+    internal class PerfTimerSystem : IEcsRunSystem, IEcsSystemSpec
     {
         private struct PerfTick
         {
@@ -21,6 +21,7 @@ namespace PavEcsGame.Systems
         {
             _name = name;
             universe
+                .Register(this)
                 .Build(ref _spec);
         }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Leopotam.EcsLite;
 
 namespace PavEcsSpec.EcsLite
@@ -69,6 +70,7 @@ namespace PavEcsSpec.EcsLite
         }
 
         internal EcsFilterSpecBuilder<TIncl, TOptional, TExclude> CreateFilterSpec<TIncl, TOptional, TExclude>(
+            IEcsSystemSpec system,
             IEcsSpecBuilder<TIncl> include,
             IEcsSpecBuilder<TOptional> optional,
             IEcsSpecBuilder<TExclude> exclude
@@ -79,25 +81,27 @@ namespace PavEcsSpec.EcsLite
         {
             Debug.Assert(_builder != null, "Creation filter after init is not supported");
             var result =
-                EcsFilterSpecBuilder<TIncl, TOptional, TExclude>.Create(_builder, include, optional, exclude);
+                EcsFilterSpecBuilder<TIncl, TOptional, TExclude>.Create(_builder, system, include, optional, exclude);
             _registeredSpec.Add(result);
             return result;
         }
 
         internal EcsEntityFactorySpecBuilder<TPools> CreateEntityFactorySpec<TPools>(
+            IEcsSystemSpec system,
             IEcsSpecBuilder<TPools> pools
         )
             where TPools : struct
         {
             Debug.Assert(_builder != null, "Creation filter after init is not supported");
 
-            var result = 
-                EcsEntityFactorySpecBuilder<TPools>.Create(_builder, pools);
+            var result =
+                EcsEntityFactorySpecBuilder<TPools>.Create(_builder, system, pools);
             _registeredSpec.Add(result);
             return result;
         }
 
         internal EcsEntityFactorySpecBuilder<TPools> CreateEntityFactorySpec<TPools, TParentPools>(
+            IEcsSystemSpec system,
             IEcsSpecBuilder<TPools> pools,
             IEcsSpecBuilder<TParentPools> parentPools
         )
@@ -107,7 +111,7 @@ namespace PavEcsSpec.EcsLite
             Debug.Assert(_builder != null, "Creation filter after init is not supported");
 
             var result =
-                EcsEntityFactorySpecBuilder<TPools>.Create(_builder, pools, parentPools);
+                EcsEntityFactorySpecBuilder<TPools>.Create(_builder, system, pools, parentPools);
             _registeredSpec.Add(result);
             return result;
         }

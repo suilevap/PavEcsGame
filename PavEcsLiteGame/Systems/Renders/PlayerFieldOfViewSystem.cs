@@ -8,24 +8,24 @@ using System.Text;
 
 namespace PavEcsGame.Systems.Renders
 {
-    internal class PlayerFieldOfViewSystem : IEcsRunSystem
+    internal class PlayerFieldOfViewSystem : IEcsRunSystem, IEcsSystemSpec
     {
 
-        private readonly EcsFilterSpec<
-            EcsSpec<AreaResultComponent<float>, PlayerIndexComponent>,
-            EcsSpec<AreaResultComponent<VisibilityType>>,
-            EcsSpec> _playerFieldOfViewSpec;
+        private readonly EcsFilterSpec
+            .Inc<EcsReadonlySpec<AreaResultComponent<float>, PlayerIndexComponent>>
+            .Opt<EcsSpec<AreaResultComponent<VisibilityType>>> _playerFieldOfViewSpec;
 
         public PlayerFieldOfViewSystem(EcsUniverse universe)
         {
             universe
+                .Register(this)
                 .Build(ref _playerFieldOfViewSpec);
         }
         public void Run(EcsSystems systems)
         {
             foreach (EcsUnsafeEntity ent in _playerFieldOfViewSpec.Filter)
             {
-                ref var fovComponent = ref _playerFieldOfViewSpec.Include.Pool1.Get(ent);
+                ref readonly var fovComponent = ref _playerFieldOfViewSpec.Include.Pool1.Get(ent);
                 var filedOfView = fovComponent.Data;
                 ref var result = ref _playerFieldOfViewSpec.Optional.Pool1.Ensure(ent, out var isNew);
                 if (isNew)

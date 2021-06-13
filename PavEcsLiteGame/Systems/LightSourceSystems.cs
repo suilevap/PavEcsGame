@@ -4,21 +4,22 @@ using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
-    internal class LightSourceSystems : IEcsRunSystem
+    internal class LightSourceSystems : IEcsRunSystem, IEcsSystemSpec
     {
         private readonly EcsFilterSpec<
-            EcsSpec<LightSourceComponent>,
+            EcsReadonlySpec<LightSourceComponent>,
             EcsSpec<FieldOfViewRequestEvent>,
             EcsSpec> _lightsSpec;
 
         private readonly EcsFilterSpec<
-             EcsSpec<PlayerIndexComponent, VisualSensorComponent>,
+             EcsReadonlySpec<PlayerIndexComponent, VisualSensorComponent>,
              EcsSpec<FieldOfViewRequestEvent>,
              EcsSpec> _playerSpec;
 
         public LightSourceSystems(EcsUniverse universe)
         {
             universe
+                .Register(this)
                 .Build(ref _playerSpec)
                 .Build(ref _lightsSpec);
 

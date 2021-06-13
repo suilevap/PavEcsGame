@@ -12,7 +12,7 @@ using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
-    class VerifyMapSystem : IEcsRunSystem
+    class VerifyMapSystem : IEcsRunSystem, IEcsSystemSpec
     {
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
@@ -24,6 +24,7 @@ namespace PavEcsGame.Systems
             _map = map;
 
             universe
+                .Register(this)
                 .Build(ref _spec)
                 .Build(ref _mapLoadedEventSpec);
         }

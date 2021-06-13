@@ -8,26 +8,23 @@ using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
 {
-    public class DestroyEntitySystem : IEcsRunSystem, IEcsInitSystem
+    public class DestroyEntitySystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
         private readonly TurnManager _turnManager;
-        //private EcsFilter<DestroyRequestTag>.Exclude<PositionComponent,MarkAsRenderedTag> _destroyFilter;
-        //private EcsFilter<PositionComponent, DestroyRequestTag> _removeFromMapFilter;
         private TurnManager.SimSystemRegistration _registration;
-        private readonly EcsFilterSpec<
-            EcsSpec<DestroyRequestTag>, 
-            EcsSpec,
-            EcsSpec<PositionComponent, MarkAsRenderedTag>> _destroySpec;
+        private readonly EcsFilterSpec
+            .Inc<EcsReadonlySpec<DestroyRequestTag>>
+            .Exc<EcsReadonlySpec<PositionComponent, MarkAsRenderedTag>> _destroySpec;
         
-        private readonly EcsFilterSpec<
-            EcsSpec<PositionComponent, DestroyRequestTag>, 
-            EcsSpec<NewPositionComponent>, 
-            EcsSpec> _removeFormMapSpec;
+        private readonly EcsFilterSpec
+            .Inc<EcsReadonlySpec<PositionComponent, DestroyRequestTag>>
+            .Opt<EcsSpec<NewPositionComponent>> _removeFormMapSpec;
 
         public DestroyEntitySystem(TurnManager turnManager, EcsUniverse universe)
         {
             _turnManager = turnManager;
             universe
+                .Register(this)
                 .Build(ref _destroySpec)
                 .Build(ref _removeFormMapSpec);
         }
@@ -44,7 +41,7 @@ namespace PavEcsGame.Systems
 
             foreach (EcsUnsafeEntity ent in _removeFormMapSpec.Filter)
             {
-                newPosPool.SetObsolete(ent).Value = default;
+                newPosPool.Ensure(ent, out _).Value = default;
             }
 
             foreach (var ent in _destroySpec.Filter)

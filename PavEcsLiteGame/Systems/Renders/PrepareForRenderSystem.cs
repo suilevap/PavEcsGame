@@ -10,7 +10,7 @@ using PaveEcsGame.Utils;
 
 namespace PavEcsGame.Systems.Renders
 {
-    public class PrepareForRenderSystem : IEcsRunSystem
+    public class PrepareForRenderSystem : IEcsRunSystem, IEcsSystemSpec
     {
         private const string _lightShade = "░▒▓";
 
@@ -65,13 +65,11 @@ namespace PavEcsGame.Systems.Renders
         private MapData<RenderItem> _bufferPreviousFrame;
 
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
+        private readonly EcsFilterSpec
+            .Inc<EcsReadonlySpec<MapLoadedEvent>> _mapLoadedSpec;
         private readonly EcsFilterSpec<
-            EcsSpec<MapLoadedEvent>,
-            EcsSpec, 
-            EcsSpec> _mapLoadedSpec;
-        private readonly EcsFilterSpec<
-            EcsSpec<PositionComponent, SymbolComponent>,
-            EcsSpec<MarkAsRenderedTag, SpeedComponent>, 
+            EcsReadonlySpec<PositionComponent, SymbolComponent>,
+            EcsReadonlySpec<MarkAsRenderedTag, SpeedComponent>, 
             EcsSpec> _itemsToRenderSpec;
         private readonly EcsFilterSpec<
             EcsSpec<AreaResultComponent<LightValueComponent>>,
@@ -80,7 +78,7 @@ namespace PavEcsGame.Systems.Renders
 
 
         private readonly EcsFilterSpec<
-            EcsSpec<AreaResultComponent<VisibilityType>>,
+            EcsReadonlySpec<AreaResultComponent<VisibilityType>>,
             EcsSpec,
             EcsSpec> _playerFieldOfViewSpec;
 
@@ -93,6 +91,7 @@ namespace PavEcsGame.Systems.Renders
             _bufferPreviousFrame = new MapData<RenderItem>();
 
             universe
+                .Register(this)
                 .Build(ref _mapLoadedSpec)
                 .Build(ref _itemsToRenderSpec)
                 .Build(ref _lightToRenderSpec)
@@ -117,7 +116,7 @@ namespace PavEcsGame.Systems.Renders
 
             void InitBuffers()
             {
-                foreach (var ent in _mapLoadedSpec.Filter)
+                foreach (EcsUnsafeEntity ent in _mapLoadedSpec.Filter)
                 {
                     var size = _mapLoadedSpec.Include.Pool1.Get(ent).Size;
                     _bufferCurrentFrame.Init(size);
@@ -144,9 +143,9 @@ namespace PavEcsGame.Systems.Renders
             {
                 var visibilityDataPool = _playerFieldOfViewSpec.Include.Pool1;
                 Debug.Assert(_playerFieldOfViewSpec.Filter.GetEntitiesCount() <= 1, "Only one visibility map is supported");
-                foreach (var ent in _playerFieldOfViewSpec.Filter)
+                foreach (EcsUnsafeEntity ent in _playerFieldOfViewSpec.Filter)
                 {
-                    ref var visibilityComponent = ref visibilityDataPool.Get(ent);
+                    ref readonly var visibilityComponent = ref visibilityDataPool.Get(ent);
                     return visibilityComponent.Data;
                 }
                 return null;
@@ -210,14 +209,14 @@ namespace PavEcsGame.Systems.Renders
 
                 var (posPool, symbolPool) = _itemsToRenderSpec.Include;
                 var speedPool = _itemsToRenderSpec.Optional.Pool2;
-                foreach (var ent in _itemsToRenderSpec.Filter)
+                foreach (EcsUnsafeEntity ent in _itemsToRenderSpec.Filter)
                 {
-                    ref var pos = ref posPool.Get(ent);
+                    ref readonly var pos = ref posPool.Get(ent);
                     var visibility = visibilityMap.Get(pos);
                     if (visibility.HasFlag(VisibilityType.Visible)
                        || (!speedPool.Has(ent) && visibility.HasFlag(VisibilityType.Known))) 
                     {
-                        ref var symbol = ref symbolPool.Get(ent);
+                        ref readonly var symbol = ref symbolPool.Get(ent);
 
                         ref var renderItem = ref _bufferCurrentFrame.GetRef(pos);
                         renderItem.Merge(symbol);

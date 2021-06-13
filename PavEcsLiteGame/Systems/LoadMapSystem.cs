@@ -10,7 +10,7 @@ using PaveEcsGame;
 
 namespace PavEcsGame.Systems
 {
-    internal class LoadMapSystem : IEcsInitSystem
+    internal class LoadMapSystem : IEcsInitSystem, IEcsSystemSpec
     {
         private readonly EcsEntityFactorySpec<
                 EcsSpec<NewPositionComponent, IsActiveTag>> _commonFactory;
@@ -45,6 +45,7 @@ namespace PavEcsGame.Systems
             _map = map;
 
             universe
+                .Register(this)
                 .Build(ref _commonFactory)
                 .Build(_commonFactory, ref _actorFactory)
                 .Build(_actorFactory, ref _playerFactory)

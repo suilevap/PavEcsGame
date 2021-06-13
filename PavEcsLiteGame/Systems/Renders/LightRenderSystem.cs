@@ -11,17 +11,14 @@ using PaveEcsGame;
 
 namespace PavEcsGame.Systems.Renders
 {
-    class LightRenderSystem : IEcsRunSystem
+    class LightRenderSystem : IEcsRunSystem, IEcsSystemSpec
     {
-        private readonly EcsFilterSpec<
-            EcsSpec<PositionComponent, LightSourceComponent, AreaResultComponent<float>, SpeedComponent>, 
-            EcsSpec,
-            EcsSpec> _lightToRenderDynamicSpec;
+        private readonly EcsFilterSpec
+            .Inc<EcsReadonlySpec<PositionComponent, LightSourceComponent, SpeedComponent>, EcsSpec<AreaResultComponent<float>>> _lightToRenderDynamicSpec;
 
-        private readonly EcsFilterSpec<
-            EcsSpec<PositionComponent, LightSourceComponent, AreaResultComponent<float>>,
-            EcsSpec,
-            EcsSpec<SpeedComponent>> _lightToRenderStaticSpec;
+        private readonly EcsFilterSpec
+            .Inc<EcsReadonlySpec<PositionComponent, LightSourceComponent>, EcsSpec<AreaResultComponent<float>>>
+            .Exc<EcsReadonlySpec<SpeedComponent>> _lightToRenderStaticSpec;
 
         private int _staticLightVersion = 0;
 
@@ -38,6 +35,7 @@ namespace PavEcsGame.Systems.Renders
             _lightMap = new MapData<LightValueComponent>();
             _lightMapStatic = new MapData<LightValueComponent>();
             universe
+                .Register(this)
                 .Build(ref _lightToRenderDynamicSpec)
                 .Build(ref _lightToRenderStaticSpec)
                 .Build(ref _lightLayerFactory)
@@ -59,7 +57,8 @@ namespace PavEcsGame.Systems.Renders
             }
 
 
-            var (posPool, lightDataPool, lightResultPool, _) = _lightToRenderDynamicSpec.Include;
+            //var (posPool, lightDataPool, _) = _lightToRenderDynamicSpec.IncludeReadonly;
+            var lightResultPool = _lightToRenderDynamicSpec.Include.Pool1;
 
 
             int currentVersion = 0;
@@ -92,17 +91,18 @@ namespace PavEcsGame.Systems.Renders
         }
         private void CalculateLightMap(EcsFilter ecsFilter, MapData<LightValueComponent> lightMap)
         {
-            var (posPool, lightDataPool, lightResultPool, _) = _lightToRenderDynamicSpec.Include;
+            var (posPool, lightDataPool, _) = _lightToRenderDynamicSpec.IncludeReadonly;
+            var lightResultPool = _lightToRenderDynamicSpec.Include.Pool1;
 
-            foreach (var ent in ecsFilter)
+            foreach (EcsUnsafeEntity ent in ecsFilter)
             {
-                var lightData = lightDataPool.Get(ent);
-                var center = posPool.Get(ent);
+                ref readonly var lightData = ref lightDataPool.Get(ent);
+                ref readonly var center = ref posPool.Get(ent);
                 ref var lightResult = ref lightResultPool.Get(ent);
 
                 //int radiusSq = (lightData.Radius + 1) * (lightData.Radius + 1);
                 //float invRadiusSq = 1.0f / radiusSq;
-                var context = new LightDataContext(ref lightData, center);
+                var context = new LightDataContext(in lightData, center);
                 IMapData<PositionComponent, LightValueComponent> m = lightMap; 
                 m.Merge(lightResult.Data, context, _lightMergeDelegate);
             }
@@ -136,7 +136,7 @@ namespace PavEcsGame.Systems.Renders
             public readonly int RadiusSq;
             public readonly float InvRadiusSq;
 
-            public LightDataContext(ref LightSourceComponent lightData, PositionComponent center)
+            public LightDataContext(in LightSourceComponent lightData, PositionComponent center)
             {
                 Center = center;
                 BasicParameters = lightData.BasicParameters;
