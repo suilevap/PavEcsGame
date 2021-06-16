@@ -53,15 +53,6 @@ namespace PavEcsGame.Systems
                 tilePool.Del(ent);
             }
 
-            //static int GetRule(Int2 pos)
-            //{
-
-            //}
-
-            //static bool IsOccupied(in Int2 pos, TileRule)
-            //{
-
-            //}
             void UpdateMask(EcsUnsafeEntity ent, ref TileComponent tile, in Int2 nextPos, int maskShift)
             {
                 var nextEnt = _map.Get(_map.GetSafePos(nextPos));

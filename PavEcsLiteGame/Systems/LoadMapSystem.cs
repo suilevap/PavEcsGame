@@ -38,6 +38,8 @@ namespace PavEcsGame.Systems
         private readonly EcsEntityFactorySpec<EcsSpec<LightSourceComponent, PositionComponent>> _lightSourceFactory;
         private readonly EcsEntityFactorySpec<EcsSpec<VisualSensorComponent>> _actorFactory;
 
+        private readonly EcsEntityFactorySpec<EcsSpec<DirectionComponent, DirectionTileComponent, DirectionBasedOnSpeed>> _dirTileFactory;
+
 
         public LoadMapSystem(string fileName, EcsUniverse universe, IMapData<PositionComponent, EcsPackedEntityWithWorld> map)
         {
@@ -52,6 +54,7 @@ namespace PavEcsGame.Systems
                 .Build(_commonFactory, ref _lightSourceFactory)
                 .Build(_actorFactory, ref _enemyFactory)
                 .Build(_commonFactory, ref _wallFactory)
+                .Build(_commonFactory, ref _dirTileFactory)
                 .Build(ref _mapChangedEventFactory);
         }
 
@@ -134,7 +137,12 @@ namespace PavEcsGame.Systems
                             new MoveFrictionComponent {FrictionValue = 1},
                             new WaitCommandTokenComponent(1))
                         .Add(_actorFactory.Pools,
-                            new VisualSensorComponent(){Radius = 16});
+                            new VisualSensorComponent(){Radius = 16})
+                        .Add(_dirTileFactory.Pools,
+                            new DirectionComponent(),
+                            new DirectionTileComponent() { RuleName="direction_triangle_rule"},
+                            new DirectionBasedOnSpeed()
+                        );
 
                     _lightSourceFactory.Pools.Pool1.Add(ent) = new LightSourceComponent()
                     {
@@ -163,7 +171,12 @@ namespace PavEcsGame.Systems
                             },
                             new MoveFrictionComponent {FrictionValue = 1},
                             new WaitCommandTokenComponent(1))
-                        ;
+                        .Add(_dirTileFactory.Pools,
+                            new DirectionComponent(),
+                            new DirectionTileComponent() { RuleName = "direction_v_rule" },
+                            new DirectionBasedOnSpeed()
+                        );
+                    ;
 
                     //_lightSourceFactory.Pools.Pool1.Add(ent) = new LightSourceComponent()
                     //{

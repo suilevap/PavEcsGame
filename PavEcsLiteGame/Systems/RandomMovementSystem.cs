@@ -8,11 +8,14 @@ using System.Collections.Generic;
 using System.Text;
 using Leopotam.EcsLite;
 using PavEcsSpec.EcsLite;
+using PaveEcsGame.Utils;
 
 namespace PavEcsGame.Systems
 {
     internal class RandomMovementSystem : IEcsRunSystem, IEcsSystemSpec
     {
+        private readonly Int2[] _moves = new[] { new Int2(0, 0), new Int2(1, 0), new Int2(-1, 0), new Int2(0, 1), new Int2(0, -1) };
+
         private readonly TurnManager _turnManager;
         private readonly EcsFilterSpec<
             EcsSpec<SpeedComponent, RandomGeneratorComponent, CommandTokenComponent, IsActiveTag>, 
@@ -38,7 +41,7 @@ namespace PavEcsGame.Systems
                 ref var speed = ref speedPool.Get(ent);
                 var rnd = rndPool.Get(ent).Rnd;
 
-                speed.Speed = new Int2(1 - rnd.Next(3), 1 - rnd.Next(3));
+                speed.Speed = _moves.GetRandom(rnd);
                 commandTokenPools.Get(ent).ActionCount--;
             }
         }

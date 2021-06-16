@@ -50,7 +50,8 @@ namespace PavEcsGame.GameLoop
                 .Add(new KeyboardMoveSystem(waitKey: false, turnManager, universe))
                 .Add(new RandomMovementSystem(turnManager, universe));
 
-            _systems 
+            _systems
+                .Add(new UpdateDirectionBasedOnSpeedSystem(universe))
                 .Add(new MovementSystem(turnManager, universe))
                 .Add(new FrictionSystem(turnManager, universe));
 
@@ -61,6 +62,8 @@ namespace PavEcsGame.GameLoop
 #endif
                 //.Add(new DamageOnCollisionSystem(universe))
                 .Add(new DestroyEntitySystem(turnManager, universe))
+                .Add(new DirectionTileSystem(universe))
+
                 .Add(new LightSourceSystems(universe))
                 .Add(new FieldOfViewSystem(universe, map));
                 //.Add(new LightSystem(universe, map));

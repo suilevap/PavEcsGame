@@ -76,6 +76,14 @@ namespace PavEcsGame.Components
             return res;
         }
 
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float ScalarMul(in PositionComponent lhs, in PositionComponent rhs)
+        {
+            return lhs.Value.X * rhs.Value.X + lhs.Value.Y * rhs.Value.Y;
+        }
+
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(in PositionComponent lhs, in PositionComponent rhs)
         {

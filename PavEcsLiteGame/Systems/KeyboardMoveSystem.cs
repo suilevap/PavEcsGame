@@ -66,12 +66,12 @@ namespace PavEcsGame.Systems
             foreach (EcsUnsafeEntity ent in _spec.Filter)
             {
                 var playerId = playerIdPool.Get(ent).Index;
-                ref var currentSpeed = ref speedPool.Get(ent);
 
                 if (playerId >= 0
                     && playerId < _configs.Length
                     && _configs[playerId].TryGetValue(key, out var newSpeed))
                 {
+                    ref var currentSpeed = ref speedPool.Get(ent);
                     currentSpeed = newSpeed;
                     ref var tokensComponent = ref commandTokenPool.Get(ent);
                     tokensComponent.ActionCount--;
@@ -79,4 +79,5 @@ namespace PavEcsGame.Systems
             }
         }
     }
+
 }

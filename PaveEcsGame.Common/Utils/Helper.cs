@@ -13,6 +13,10 @@ namespace PaveEcsGame.Utils
             b = tmp;
         }
 
+        public static T GetRandom<T>(this T[] data, Random rnd)
+        {
+            return data[rnd.Next(data.Length)];
+        }
         public static T GetByRate<T>(this T[] data, float rate)
         {
             return data[(int)(data.Length * rate - 0.5f)];
