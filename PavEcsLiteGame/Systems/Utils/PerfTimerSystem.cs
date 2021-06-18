@@ -45,7 +45,7 @@ namespace PavEcsGame.Systems
                 var ticks = c.Watch.ElapsedTicks;
                 _avgTickes = (long) (_avgTickes * 0.9f + ticks * 0.1f);
                 
-                Debug.WriteLine($"{c.Name} - {_name} : {c.Watch.ElapsedMilliseconds}ms, Avg:{_avgTickes / TimeSpan.TicksPerMillisecond}ms");
+                //Debug.WriteLine($"{c.Name} - {_name} : {c.Watch.ElapsedMilliseconds}ms, Avg:{_avgTickes / TimeSpan.TicksPerMillisecond}ms");
                 Console.Title = $"Avg:{_avgTickes / TimeSpan.TicksPerMillisecond}ms";
                 c.Name = _name;
                 c.Watch.Restart();

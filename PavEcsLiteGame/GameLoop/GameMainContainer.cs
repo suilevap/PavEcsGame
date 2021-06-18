@@ -41,11 +41,12 @@ namespace PavEcsGame.GameLoop
                 .MarkPerf(universe, "start")
                 .Add(turnManager)
                 .Add(new LoadMapSystem("Data/map1.txt", universe, map))
+                .Add(new SpawnEntitySystem(universe))
                 //.Add(new LoadMapSystem("Data/lightTest.txt", universe, map))
                 .Add(new TileSystem(universe, map))
                 ;//.Add(new SpawnSystem());
 
-            _systems 
+            _systems
                 .Add(new CommandTokenDistributionSystem(TimeSpan.FromSeconds(1f), universe))
                 .Add(new KeyboardMoveSystem(waitKey: false, turnManager, universe))
                 .Add(new RandomMovementSystem(turnManager, universe));
@@ -66,7 +67,7 @@ namespace PavEcsGame.GameLoop
 
                 .Add(new LightSourceSystems(universe))
                 .Add(new FieldOfViewSystem(universe, map));
-                //.Add(new LightSystem(universe, map));
+            //.Add(new LightSystem(universe, map));
 
             _systems
                 .Add(new LightRenderSystem(universe))
@@ -104,7 +105,7 @@ namespace PavEcsGame.GameLoop
             foreach (var gr in universe.GetAllWorlds(_systems))
             {
                 Debug.Print("world: {0}, components count: {1}", gr.Key, gr.Count());
-                Debug.Print("c: {0}", string.Join('|', gr.Select(x => x.Name)));
+                Debug.Print("c: {0}", string.Join(Environment.NewLine + "  ", gr.Select(x => x.Name)));
             }
         }
 

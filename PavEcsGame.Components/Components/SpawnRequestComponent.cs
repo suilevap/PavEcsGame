@@ -5,8 +5,18 @@ using Leopotam.Ecs;
 
 namespace PavEcsGame.Components
 {
-    public struct SpawnRequestComponent : IEcsIgnoreInFilter
+    public struct SpawnRequestComponent
     {
+        public EntityType Type;
+    }
 
+    public enum EntityType
+    {
+        Player,
+        Wall,
+        Enemy,
+        Light,
+        Acid,
+        Electricity
     }
 }

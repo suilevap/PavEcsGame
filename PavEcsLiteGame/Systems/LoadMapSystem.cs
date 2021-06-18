@@ -12,34 +12,12 @@ namespace PavEcsGame.Systems
 {
     internal class LoadMapSystem : IEcsInitSystem, IEcsSystemSpec
     {
-        private readonly EcsEntityFactorySpec<
-                EcsSpec<NewPositionComponent, IsActiveTag>> _commonFactory;
-
         private readonly string _fileName;
         private readonly IMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
-
-        private readonly EcsEntityFactorySpec<
-            EcsSpec<
-                RandomGeneratorComponent, 
-                SpeedComponent, 
-                SymbolComponent,
-                MoveFrictionComponent,
-                WaitCommandTokenComponent>> _enemyFactory;
-
-        private readonly EcsEntityFactorySpec<
-            EcsSpec<PlayerIndexComponent,
-                SpeedComponent, 
-                SymbolComponent,
-                MoveFrictionComponent, 
-                WaitCommandTokenComponent>> _playerFactory;
-
-        private readonly EcsEntityFactorySpec<EcsSpec<SymbolComponent, TileComponent>> _wallFactory;
         private readonly EcsEntityFactorySpec<EcsSpec<MapLoadedEvent>> _mapChangedEventFactory;
-        private readonly EcsEntityFactorySpec<EcsSpec<LightSourceComponent, PositionComponent>> _lightSourceFactory;
-        private readonly EcsEntityFactorySpec<EcsSpec<VisualSensorComponent>> _actorFactory;
-
-        private readonly EcsEntityFactorySpec<EcsSpec<DirectionComponent, DirectionTileComponent, DirectionBasedOnSpeed>> _dirTileFactory;
-
+        
+        private readonly EcsEntityFactorySpec<
+            EcsSpec<NewPositionComponent, SpawnRequestComponent>> _spawnSpec;
 
         public LoadMapSystem(string fileName, EcsUniverse universe, IMapData<PositionComponent, EcsPackedEntityWithWorld> map)
         {
@@ -48,25 +26,16 @@ namespace PavEcsGame.Systems
 
             universe
                 .Register(this)
-                .Build(ref _commonFactory)
-                .Build(_commonFactory, ref _actorFactory)
-                .Build(_actorFactory, ref _playerFactory)
-                .Build(_commonFactory, ref _lightSourceFactory)
-                .Build(_actorFactory, ref _enemyFactory)
-                .Build(_commonFactory, ref _wallFactory)
-                .Build(_commonFactory, ref _dirTileFactory)
+                .Build(ref _spawnSpec)
                 .Build(ref _mapChangedEventFactory);
         }
 
         public async void Init(EcsSystems systems)
         {
-
             var lines = await File.ReadAllLinesAsync(_fileName);
 
             if (lines == null || lines.Length == 0)
                 return;
-
-            var rnd = new Random(42);
 
             _map.Init(new PositionComponent(new Int2(lines.Max(x => x.Length), lines.Length)));
 
@@ -83,13 +52,17 @@ namespace PavEcsGame.Systems
                 pos.Value.X = 0;
                 foreach (var c in line)
                 {
-                    var ent = TrySpawnEntity(c, rnd);
-                    if (ent.Unpack(out _, out var unsafeEnt))
+                    if (TryGetSpawnRequest(c).TryGet(out var request))
                     {
-                        unsafeEnt.Add(_commonFactory.Pools,
-                            new NewPositionComponent {Value = pos},
-                            default
-                        );
+                        var ent = _spawnSpec.NewUnsafeEntity()
+                            .Add(
+                                _spawnSpec.Pools,
+                                new NewPositionComponent()
+                                {
+                                    Value = pos
+                                },
+                                request
+                            );
                     }
 
                     pos.Value.X++;
@@ -100,145 +73,51 @@ namespace PavEcsGame.Systems
 
         }
 
-        private EcsPackedEntityWithWorld? TrySpawnEntity(char symbol, Random rnd)
+        private SpawnRequestComponent? TryGetSpawnRequest(char symbol)
         {
-            EcsPackedEntityWithWorld? result = default;
-            EcsUnsafeEntity ent;
+            SpawnRequestComponent? result = default;
             switch (symbol)
             {
                 //wall
                 case 'X':
                 case 'x':
-                    ent = _wallFactory.NewUnsafeEntity()
-                        //.Tag<SpawnRequestComponent>()
-                        .Add(_wallFactory.Pools, 
-                            new SymbolComponent
-                            {
-                                Value = '#', 
-                                Depth = Depth.Foreground,
-                                MainColor = ConsoleColor.Gray
-                            },
-                            new TileComponent(){RuleName = "wall_rule"});
-                    result = _wallFactory.World.PackEntityWithWorld(ent);
+                    result = new SpawnRequestComponent()
+                    {
+                        Type = EntityType.Wall
+                    };
                     break;
                 //player
                 case 'p':
-                    ent = _playerFactory.NewUnsafeEntity()
-                        //.Tag<SpawnRequestComponent>()
-                        .Add(_playerFactory.Pools,
-                            new PlayerIndexComponent {Index = 0},
-                            new SpeedComponent(),
-                            new SymbolComponent
-                            {
-                                Value = '@', 
-                                Depth = Depth.Foreground,
-                                MainColor = ConsoleColor.White
-                            },
-                            new MoveFrictionComponent {FrictionValue = 1},
-                            new WaitCommandTokenComponent(1))
-                        .Add(_actorFactory.Pools,
-                            new VisualSensorComponent(){Radius = 16})
-                        .Add(_dirTileFactory.Pools,
-                            new DirectionComponent(),
-                            new DirectionTileComponent() { RuleName="direction_triangle_rule"},
-                            new DirectionBasedOnSpeed()
-                        );
-
-                    _lightSourceFactory.Pools.Pool1.Add(ent) = new LightSourceComponent()
+                    result = new SpawnRequestComponent()
                     {
-                        Radius = 16,
-                        BasicParameters = new LightValueComponent()
-                        {
-                            LightType = LightType.None,
-                            Value = 32
-                        }
+                        Type = EntityType.Player
                     };
-
-                    result = _playerFactory.World.PackEntityWithWorld(ent);
                     break;
                 //enemy
                 case 'e':
-                    ent = _enemyFactory.NewUnsafeEntity()
-                        //.Tag<SpawnRequestComponent>()
-                        .Add(_enemyFactory.Pools,
-                            new RandomGeneratorComponent {Rnd = rnd},
-                            new SpeedComponent(),
-                            new SymbolComponent
-                            {
-                                Value = '☺', 
-                                Depth = Depth.Foreground,
-                                MainColor = ConsoleColor.Red
-                            },
-                            new MoveFrictionComponent {FrictionValue = 1},
-                            new WaitCommandTokenComponent(1))
-                        .Add(_dirTileFactory.Pools,
-                            new DirectionComponent(),
-                            new DirectionTileComponent() { RuleName = "direction_v_rule" },
-                            new DirectionBasedOnSpeed()
-                        );
-                    ;
-
-                    //_lightSourceFactory.Pools.Pool1.Add(ent) = new LightSourceComponent()
-                    //{
-                    //    Radius = 16,
-                    //    BasicParameters = new LightValueComponent()
-                    //    {
-                    //        LightType = LightType.Fire,
-                    //        Value = 255
-                    //    }
-                    //};
-
-                    result = _enemyFactory.World.PackEntityWithWorld(ent);
+                    result = new SpawnRequestComponent()
+                    {
+                        Type = EntityType.Enemy
+                    };
                     break;
 
                 case '~':
-                    ent = _lightSourceFactory.NewUnsafeEntity();
-
-                    _lightSourceFactory.Pools.Pool1.Add(ent) = new LightSourceComponent()
+                    result = new SpawnRequestComponent()
                     {
-                        Radius = 3,
-                        BasicParameters = new LightValueComponent()
-                        {
-                            LightType = LightType.Electricity,
-                            Value = 32
-                        }
+                        Type = EntityType.Electricity
                     };
-                    _wallFactory.Pools.Pool1.Add(ent) = new SymbolComponent('Ω');
-
-                    result = _playerFactory.World.PackEntityWithWorld(ent);
                     break;
                 case 'i':
-                    ent = _lightSourceFactory.NewUnsafeEntity();
-
-                    _lightSourceFactory.Pools.Pool1.Set(ent, new LightSourceComponent()
+                    result = new SpawnRequestComponent()
                     {
-                        Radius = 16,
-                        BasicParameters = new LightValueComponent()
-                        {
-                            LightType = LightType.Fire,
-                            Value = 196
-                        }
-                    });
-                    _wallFactory.Pools.Pool1.Add(ent) = new SymbolComponent('i');
-
-
-                    result = _playerFactory.World.PackEntityWithWorld(ent);
+                        Type = EntityType.Light
+                    };
                     break;
                 case '%':
-                    ent = _lightSourceFactory.NewUnsafeEntity();
-
-                    _lightSourceFactory.Pools.Pool1.SetObsolete(ent) = new LightSourceComponent()
+                    result = new SpawnRequestComponent()
                     {
-                        Radius = 4,
-                        BasicParameters = new LightValueComponent()
-                        {
-                            LightType = LightType.Acid,
-                            Value = 32
-                        }
+                        Type = EntityType.Acid
                     };
-                    _wallFactory.Pools.Pool1.SetObsolete(ent) = new SymbolComponent('▒');
-
-                    result = _playerFactory.World.PackEntityWithWorld(ent);
                     break;
             }
 
