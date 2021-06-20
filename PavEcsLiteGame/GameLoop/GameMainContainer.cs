@@ -57,7 +57,9 @@ namespace PavEcsGame.GameLoop
                 .Add(new FrictionSystem(turnManager, universe));
 
             _systems
+                .Add(new RelativePositionSystem(turnManager, universe))
                 .Add(new UpdatePositionSystem(turnManager, map, universe))
+
 #if DEBUG
                 .Add(new VerifyMapSystem(universe, map))
 #endif

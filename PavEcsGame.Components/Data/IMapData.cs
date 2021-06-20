@@ -94,7 +94,10 @@ namespace PavEcsGame.Components
             {
                 var x = _pos.Value.X + 1;
                 _pos.Value.X = x % _w;
-                _pos.Value.Y += x / _w;
+                if (x >= _w)
+                {
+                    _pos.Value.Y++;
+                }
                 return _pos.Value.Y < _h;
             }
 

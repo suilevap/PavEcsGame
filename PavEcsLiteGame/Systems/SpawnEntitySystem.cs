@@ -15,6 +15,9 @@ namespace PavEcsGame.Systems
         private readonly EcsEntityFactorySpec<
                 EcsSpec<IsActiveTag>> _commonFactory;
 
+        private readonly EcsEntityFactorySpec<
+          EcsSpec<LinkToEntityComponent<EcsEntity>, RelativePositionComponent>> _linkFactory;
+
         public readonly EcsEntityFactorySpec<
             EcsSpec<ColliderComponent>> _physicFactroy;
 
@@ -50,6 +53,7 @@ namespace PavEcsGame.Systems
                 .Register(this)
                 .Build(ref _spawnResuestSpec)
                 .Build(ref _commonFactory)
+                .Build(_commonFactory, ref _linkFactory)
                 .Build(_commonFactory, ref _physicFactroy)
                 .Build(_physicFactroy, ref _actorFactory)
                 .Build(_actorFactory, ref _playerFactory)
@@ -119,12 +123,44 @@ namespace PavEcsGame.Systems
                             new ColliderComponent()
                             {
 
-                            })
+                            })//;
+                        .Add(_dirTileFactory.Pools,
+                            new DirectionComponent(),
+                            default,//new DirectionTileComponent() { RuleName = "direction_triangle_rule" },
+                            new DirectionBasedOnSpeed()
+                        );
+
+                    var linkedEnt = _linkFactory.NewUnsafeEntity()
+                        .Add(_linkFactory.Pools,
+                        new LinkToEntityComponent<EcsEntity>()
+                        {
+                            TargetEntity = ent.Pack(_playerFactory.World)
+                        },
+
+                        new RelativePositionComponent()
+                        {
+                            RelativePosition = new PositionComponent(1, 0),
+                            RelativeDirection = new DirectionComponent()
+                            {
+                                Direction = new Int2(1, 0)
+                            }
+                        })
                         .Add(_dirTileFactory.Pools,
                             new DirectionComponent(),
                             new DirectionTileComponent() { RuleName = "direction_triangle_rule" },
-                            new DirectionBasedOnSpeed()
+                            default
                         );
+                    _wallFactory.Pools.Pool1.Add(linkedEnt) = new SymbolComponent('i');
+
+                    //_playerFactory.Pools.Pool2.Add(linkedEnt) = new SpeedComponent();
+
+                    //TrySpawnEntity(
+                    //    linkedEnt, 
+                    //    new SpawnRequestComponent()
+                    //    {
+                    //        Type = EntityType.Light
+                    //    }, 
+                    //    rnd);
 
                     _lightSourceFactory.Pools.Pool1.Add(ent) = new LightSourceComponent()
                     {

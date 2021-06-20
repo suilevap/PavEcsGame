@@ -20,62 +20,62 @@ namespace PavEcsSpec.EcsLite
         public static EcsUnsafeEntity Add<T1, T2>(
             this EcsUnsafeEntity entityId,
             EcsSpec<T1, T2> spec,
-            in T1 c1,
-            in T2 c2
+            in T1? c1,
+            in T2? c2
         )
             where T1 : struct
             where T2 : struct
         {
-            spec.Pool1.Add(entityId) = c1;
-            spec.Pool2.Add(entityId) = c2;
+            if (c1.HasValue) spec.Pool1.Add(entityId) = c1.Value;
+            if (c2.HasValue) spec.Pool2.Add(entityId) = c2.Value;
             return entityId;
         }
 
         public static EcsUnsafeEntity Add<T1, T2, T3>(
             this EcsUnsafeEntity entityId,
             EcsSpec<T1, T2, T3> spec,
-            in T1 c1,
-            in T2 c2,
-            in T3 c3
+            in T1? c1,
+            in T2? c2,
+            in T3? c3
         )
             where T1 : struct
             where T2 : struct
             where T3 : struct
         {
-            spec.Pool1.Add(entityId) = c1;
-            spec.Pool2.Add(entityId) = c2;
-            spec.Pool3.Add(entityId) = c3;
+            if (c1.HasValue) spec.Pool1.Add(entityId) = c1.Value;
+            if (c2.HasValue) spec.Pool2.Add(entityId) = c2.Value;
+            if (c3.HasValue) spec.Pool3.Add(entityId) = c3.Value;
             return entityId;
         }
 
         public static EcsUnsafeEntity Add<T1, T2, T3, T4>(
             this EcsUnsafeEntity entityId,
             EcsSpec<T1, T2, T3, T4> spec,
-            in T1 c1,
-            in T2 c2,
-            in T3 c3,
-            in T4 c4
+            in T1? c1,
+            in T2? c2,
+            in T3? c3,
+            in T4? c4
         )
             where T1 : struct
             where T2 : struct
             where T3 : struct
             where T4 : struct
         {
-            spec.Pool1.Add(entityId) = c1;
-            spec.Pool2.Add(entityId) = c2;
-            spec.Pool3.Add(entityId) = c3;
-            spec.Pool4.Add(entityId) = c4;
+            if (c1.HasValue) spec.Pool1.Add(entityId) = c1.Value;
+            if (c2.HasValue) spec.Pool2.Add(entityId) = c2.Value;
+            if (c3.HasValue) spec.Pool3.Add(entityId) = c3.Value;
+            if (c4.HasValue) spec.Pool4.Add(entityId) = c4.Value;
             return entityId;
         }
 
         public static EcsUnsafeEntity Add<T1, T2, T3, T4, T5>(
             this EcsUnsafeEntity entityId,
             EcsSpec<T1, T2, T3, T4, T5> spec,
-            in T1 c1,
-            in T2 c2,
-            in T3 c3,
-            in T4 c4,
-            in T5 c5
+            in T1? c1,
+            in T2? c2,
+            in T3? c3,
+            in T4? c4,
+            in T5? c5
         )
             where T1 : struct
             where T2 : struct
@@ -83,23 +83,24 @@ namespace PavEcsSpec.EcsLite
             where T4 : struct
             where T5 : struct
         {
-            spec.Pool1.Add(entityId) = c1;
-            spec.Pool2.Add(entityId) = c2;
-            spec.Pool3.Add(entityId) = c3;
-            spec.Pool4.Add(entityId) = c4;
-            spec.Pool5.Add(entityId) = c5;
+            if (c1.HasValue) spec.Pool1.Add(entityId) = c1.Value;
+            if (c2.HasValue) spec.Pool2.Add(entityId) = c2.Value;
+            if (c3.HasValue) spec.Pool3.Add(entityId) = c3.Value;
+            if (c4.HasValue) spec.Pool4.Add(entityId) = c4.Value;
+            if (c5.HasValue) spec.Pool5.Add(entityId) = c5.Value;
+
             return entityId;
         }
 
         public static EcsUnsafeEntity Add<T1, T2, T3, T4, T5, T6>(
             this EcsUnsafeEntity entityId,
             EcsSpec<T1, T2, T3, T4, T5, T6> spec,
-            in T1 c1,
-            in T2 c2,
-            in T3 c3,
-            in T4 c4,
-            in T5 c5,
-            in T6 c6
+            in T1? c1,
+            in T2? c2,
+            in T3? c3,
+            in T4? c4,
+            in T5? c5,
+            in T6? c6
         )
             where T1 : struct
             where T2 : struct
@@ -108,12 +109,13 @@ namespace PavEcsSpec.EcsLite
             where T5 : struct
             where T6 : struct
         {
-            spec.Pool1.Add(entityId) = c1;
-            spec.Pool2.Add(entityId) = c2;
-            spec.Pool3.Add(entityId) = c3;
-            spec.Pool4.Add(entityId) = c4;
-            spec.Pool5.Add(entityId) = c5;
-            spec.Pool6.Add(entityId) = c6;
+            if (c1.HasValue) spec.Pool1.Add(entityId) = c1.Value;
+            if (c2.HasValue) spec.Pool2.Add(entityId) = c2.Value;
+            if (c3.HasValue) spec.Pool3.Add(entityId) = c3.Value;
+            if (c4.HasValue) spec.Pool4.Add(entityId) = c4.Value;
+            if (c5.HasValue) spec.Pool5.Add(entityId) = c5.Value;
+            if (c6.HasValue) spec.Pool6.Add(entityId) = c6.Value;
+
             return entityId;
         }
 
