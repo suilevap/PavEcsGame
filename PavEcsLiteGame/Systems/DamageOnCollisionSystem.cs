@@ -12,7 +12,7 @@ namespace PavEcsGame.Systems
     internal class DamageOnCollisionSystem : IEcsRunSystem, IEcsSystemSpec
     {
         private EcsFilterSpec<
-            EcsReadonlySpec<CollisionEvent<EcsPackedEntityWithWorld>>,
+            EcsReadonlySpec<CollisionEvent<EcsEntity>>,
             EcsSpec, 
             EcsSpec> _spec;
 

@@ -3,4 +3,9 @@
     public interface ITag
     {
     }
+
+    public interface IEntity
+    {
+
+    }
 }

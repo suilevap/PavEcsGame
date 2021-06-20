@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Systems;
@@ -34,7 +35,6 @@ namespace PavEcsGame
         {
             return entity.TryTag(pool, true);
         }
-
 
         public static EcsPackedEntityWithWorld? TryTag<T>(this EcsPackedEntityWithWorld? entity, EcsPool<T> pool,
             bool value) where T : struct, ITag
@@ -84,7 +84,7 @@ namespace PavEcsGame
         {
             if (pool.Has(ent))
             {
-                 pool.Get(ent) = component;
+                pool.Get(ent) = component;
             }
             else
             {
@@ -115,5 +115,21 @@ namespace PavEcsGame
             isNew = true;
             return ref pool.Add(ent);
         }
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Unpack(this in EcsEntity packedEntity, out EcsWorld world, out EcsUnsafeEntity entity)
+        {
+            var result = Leopotam.EcsLite.EcsEntityExtensions.Unpack(packedEntity, out world, out var entId);
+            entity = (EcsUnsafeEntity)entId;
+            return result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static EcsEntity Pack(this in EcsUnsafeEntity entId, EcsWorld world)
+        {
+            return Leopotam.EcsLite.EcsEntityExtensions.PackEntityWithWorld(world, entId);
+        }
+
     }
 }

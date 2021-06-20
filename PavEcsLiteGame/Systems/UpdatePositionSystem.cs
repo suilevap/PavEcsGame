@@ -23,7 +23,7 @@ namespace PavEcsGame.Systems
             .Opt<EcsSpec<PositionComponent>> _newPosSpec;
         
         private readonly EcsEntityFactorySpec<
-            EcsSpec<CollisionEvent<EcsPackedEntityWithWorld>>> _collEvenFactorySpec;
+            EcsSpec<CollisionEvent<EcsEntity>>> _collEvenFactorySpec;
 
         public UpdatePositionSystem(
             TurnManager turnManager, 
@@ -77,9 +77,9 @@ namespace PavEcsGame.Systems
                             if (otherUnsafeEnt != ent) //try to move to same pos
                             {
                                 _collEvenFactorySpec.NewUnsafeEntity()
-                                    .Add(_collEvenFactorySpec.Pools, new CollisionEvent<EcsPackedEntityWithWorld>()
+                                    .Add(_collEvenFactorySpec.Pools, new CollisionEvent<EcsEntity>()
                                     {
-                                        Source = _newPosSpec.World.PackEntityWithWorld(ent),
+                                        Source = ent.Pack(_newPosSpec.World),
                                         Target = otherEnt
                                     });
                             }

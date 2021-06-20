@@ -80,7 +80,7 @@ namespace PavEcsGame.GameLoop
             _systems
                 .UniDelHere<PreviousPositionComponent>(universe)
                 //.UniDelHere<NewPositionComponent>(universe)
-                .UniDelHere<CollisionEvent<EcsPackedEntityWithWorld>>(universe)
+                .UniDelHere<CollisionEvent<EcsEntity>>(universe)
                 .UniDelHere<MapLoadedEvent>(universe)
                 ;
 
