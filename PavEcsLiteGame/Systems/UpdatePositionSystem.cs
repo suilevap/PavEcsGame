@@ -15,13 +15,19 @@ namespace PavEcsGame.Systems
                  
         private TurnManager.SimSystemRegistration _registration;
         private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<PositionComponent, NewPositionComponent>>
-            .Opt<EcsSpec<PreviousPositionComponent>> _movePosSpec;
+            .Inc<EcsReadonlySpec<PositionComponent, NewPositionComponent, ColliderComponent>> _removeFromMapSpec;
+
+        private readonly EcsFilterSpec
+            .Inc<EcsReadonlySpec<ColliderComponent>,EcsSpec<NewPositionComponent>> _newPosForBodySpec;
 
         private readonly EcsFilterSpec
             .Inc<EcsSpec<NewPositionComponent>>
             .Opt<EcsSpec<PositionComponent>> _newPosSpec;
-        
+
+        private readonly EcsFilterSpec
+        .Inc<EcsReadonlySpec<PositionComponent, NewPositionComponent>>
+            .Opt<EcsSpec<PreviousPositionComponent>> _setPrevPosSpec;
+
         private readonly EcsEntityFactorySpec<
             EcsSpec<CollisionEvent<EcsEntity>>> _collEvenFactorySpec;
 
@@ -35,8 +41,10 @@ namespace PavEcsGame.Systems
 
             universe
                 .Register(this)
+                .Build(ref _newPosForBodySpec)
                 .Build(ref _collEvenFactorySpec)
-                .Build(ref _movePosSpec)
+                .Build(ref _removeFromMapSpec)
+                .Build(ref _setPrevPosSpec)
                 .Build(ref _newPosSpec);
         }
 
@@ -52,12 +60,13 @@ namespace PavEcsGame.Systems
             //move to new pos in map and solve collide
             PlaceToNewPos();
             RemoveFromMap();
+            UpdatePrevPos();
             MoveToNewPos();
 
             void PlaceToNewPos()
             {
-                EcsPool<NewPositionComponent> newPosPool = _newPosSpec.Include.Pool1;
-                foreach (EcsUnsafeEntity ent in _newPosSpec.Filter)
+                EcsPool<NewPositionComponent> newPosPool = _newPosForBodySpec.Include.Pool1;
+                foreach (EcsUnsafeEntity ent in _newPosForBodySpec.Filter)
                 {
                     ref var newPosComponent = ref newPosPool.Get(ent);
                     if (newPosComponent.Value.TryGet(out var nextPos))
@@ -92,36 +101,46 @@ namespace PavEcsGame.Systems
 
             void RemoveFromMap()
             {
-                var (posPool, newPosPool) = _movePosSpec.Include;
-                var prevPool = _movePosSpec.Optional.Pool1;
+                var (posPool, newPosPool, _) = _removeFromMapSpec.Include;
                 //remove from previous pos anf store previous pos
-                foreach (EcsUnsafeEntity ent in _movePosSpec.Filter)
+                foreach (EcsUnsafeEntity ent in _removeFromMapSpec.Filter)
                 {
 
                     ref readonly var pos = ref posPool.Get(ent);
                     ref var mapEnt = ref _map.GetRef(pos);
                     Debug.Assert(mapEnt.IsSame(ent), $"Unexpected ent in previous pos.\n" +
-                                                     $" Exp :{_movePosSpec.World.PackEntityWithWorld(ent).ToLogString()}.\n" +
+                                                     $" Exp :{_removeFromMapSpec.World.PackEntityWithWorld(ent).ToLogString()}.\n" +
                                                      $" Act : {mapEnt.ToLogString()} ");
 
                     _map.Set(pos, default);
 
-                    prevPool.SetObsolete(ent).Value = pos;
                 }
             }
 
+            void UpdatePrevPos()
+            {
+                var (posPool, _) = _setPrevPosSpec.Include;
+                var prevPool = _setPrevPosSpec.Optional.Pool1;
+
+                foreach (EcsUnsafeEntity ent in _setPrevPosSpec.Filter)
+                {
+                    prevPool.Ensure(ent, out _).Value = posPool.Get(ent);
+                }
+
+            }
             void MoveToNewPos()
             {
                 //update pos
                 var newPosPool = _newPosSpec.Include.Pool1;
                 var posPool = _newPosSpec.Optional.Pool1;
+
                 foreach (EcsUnsafeEntity ent in _newPosSpec.Filter)
                 {
                     ref var newPosComponent = ref newPosPool.Get(ent);
 
                     if (newPosComponent.Value.TryGet(out var nextPos))
                     {
-                        posPool.SetObsolete(ent) = nextPos;
+                        posPool.Set(ent, nextPos);
                     }
                     else
                     {

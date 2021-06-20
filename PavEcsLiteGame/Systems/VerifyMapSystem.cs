@@ -16,8 +16,11 @@ namespace PavEcsGame.Systems
     {
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
-        private readonly EcsFilterSpec<EcsSpec<PositionComponent>, EcsSpec, EcsSpec> _spec;
-        private readonly EcsFilterSpec<EcsSpec<MapLoadedEvent>, EcsSpec, EcsSpec> _mapLoadedEventSpec;
+        private readonly EcsFilterSpec
+            .Inc<EcsReadonlySpec<PositionComponent, ColliderComponent>> _spec;
+
+        private readonly EcsFilterSpec
+            .Inc<EcsReadonlySpec<MapLoadedEvent>> _mapLoadedEventSpec;
 
         public VerifyMapSystem(EcsUniverse universe, IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> map)
         {
@@ -35,10 +38,10 @@ namespace PavEcsGame.Systems
                 $"{nameof(MapLoadedEvent)} is expected to be no more than one per cycle");
 
 
-            var posPool = _spec.Include.Pool1;
+            var (posPool, _) = _spec.Include;
             foreach(EcsUnsafeEntity ent in _spec.Filter)
             {
-                ref var pos = ref posPool.Get(ent);
+                ref readonly var pos = ref posPool.Get(ent);
                 var mapEnt = _map.Get(pos);
 
                 Debug.Assert(mapEnt.IsSame(ent), $"Not stored entity: Expected: {ent}, Actual:{mapEnt}");

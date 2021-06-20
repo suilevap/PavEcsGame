@@ -15,6 +15,9 @@ namespace PavEcsGame.Systems
         private readonly EcsEntityFactorySpec<
                 EcsSpec<IsActiveTag>> _commonFactory;
 
+        public readonly EcsEntityFactorySpec<
+            EcsSpec<ColliderComponent>> _physicFactroy;
+
         private readonly EcsEntityFactorySpec<
             EcsSpec<
                 RandomGeneratorComponent,
@@ -47,11 +50,12 @@ namespace PavEcsGame.Systems
                 .Register(this)
                 .Build(ref _spawnResuestSpec)
                 .Build(ref _commonFactory)
-                .Build(_commonFactory, ref _actorFactory)
+                .Build(_commonFactory, ref _physicFactroy)
+                .Build(_physicFactroy, ref _actorFactory)
                 .Build(_actorFactory, ref _playerFactory)
                 .Build(_commonFactory, ref _lightSourceFactory)
                 .Build(_actorFactory, ref _enemyFactory)
-                .Build(_commonFactory, ref _wallFactory)
+                .Build(_physicFactroy, ref _wallFactory)
                 .Build(_commonFactory, ref _dirTileFactory);
         }
 
@@ -88,7 +92,12 @@ namespace PavEcsGame.Systems
                                 Depth = Depth.Foreground,
                                 MainColor = ConsoleColor.Gray
                             },
-                            new TileComponent() { RuleName = "wall_rule" });
+                            new TileComponent() { RuleName = "wall_rule" })
+                        .Add(_physicFactroy.Pools,
+                             new ColliderComponent()
+                             {
+
+                             });
                     break;
                 case EntityType.Player:
                     //Debug.Assert(_playerFactory.IsBelongToWorld(world));
@@ -106,6 +115,11 @@ namespace PavEcsGame.Systems
                             new WaitCommandTokenComponent(1))
                         .Add(_actorFactory.Pools,
                             new VisualSensorComponent() { Radius = 16 })
+                        .Add(_physicFactroy.Pools,
+                            new ColliderComponent()
+                            {
+
+                            })
                         .Add(_dirTileFactory.Pools,
                             new DirectionComponent(),
                             new DirectionTileComponent() { RuleName = "direction_triangle_rule" },
@@ -138,6 +152,11 @@ namespace PavEcsGame.Systems
                             },
                             new MoveFrictionComponent { FrictionValue = 1 },
                             new WaitCommandTokenComponent(1))
+                        .Add(_physicFactroy.Pools,
+                            new ColliderComponent()
+                            {
+
+                            })
                         .Add(_dirTileFactory.Pools,
                             new DirectionComponent(),
                             new DirectionTileComponent() { RuleName = "direction_v_rule" },
