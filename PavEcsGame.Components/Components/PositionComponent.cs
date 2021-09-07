@@ -7,7 +7,7 @@ using Leopotam.Ecs.Types;
 
 namespace PavEcsGame.Components
 {
-    public struct PositionComponent
+    public struct PositionComponent : IEquatable<PositionComponent>
     {
         public Int2 Value;
 
@@ -99,20 +99,7 @@ namespace PavEcsGame.Components
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()
         {
-            // ReSharper disable NonReadonlyMemberInGetHashCode
-            return Value.X ^ (Value.Y << 2);
-            // ReSharper restore NonReadonlyMemberInGetHashCode
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool Equals(object other)
-        {
-            if (!(other is PositionComponent))
-            {
-                return false;
-            }
-            var rhs = (PositionComponent)other;
-            return Value.X == rhs.Value.X && Value.Y == rhs.Value.Y;
+            return Value.GetHashCode();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -125,6 +112,11 @@ namespace PavEcsGame.Components
         public static implicit operator PositionComponent(Int2 v)
         {
             return new PositionComponent(v);
+        }
+
+        bool IEquatable<PositionComponent>.Equals(PositionComponent other)
+        {
+            return Value.Equals(other.Value);
         }
     }
 }

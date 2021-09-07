@@ -9,15 +9,16 @@ using System.Text;
 
 namespace PavEcsGame.Systems
 {
-    internal class RelativePositionSystem : IEcsRunSystem, IEcsSystemSpec
+    internal class RelativePositionSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
         private readonly EcsFilterSpec
             .Inc<EcsReadonlySpec<RelativePositionComponent, LinkToEntityComponent<EcsEntity>>>
-            .Opt<EcsSpec<NewPositionComponent, DirectionComponent>> _spec;
+            .Opt<EcsSpec<NewPositionComponent, DirectionComponent, PositionComponent>> _spec;
 
         private readonly EcsEntityFactorySpec<
-            EcsReadonlySpec<NewPositionComponent, DirectionComponent>> _parentSpec;
+            EcsReadonlySpec<PositionComponent, DirectionComponent>> _parentSpec;
         private readonly TurnManager _turnManager;
+        private TurnManager.SimSystemRegistration _reg;
 
         public RelativePositionSystem(TurnManager turnManager, EcsUniverse universe)
         {
@@ -28,30 +29,43 @@ namespace PavEcsGame.Systems
             _turnManager = turnManager;
         }
 
+        public void Init(EcsSystems systems)
+        {
+            _reg = _turnManager.RegisterSimulationSystem(this);
+        }
+
         public void Run(EcsSystems systems)
         {
             var (relPosPool, parentPool) = _spec.Include;
-            var (newPosPool, dirPool) = _spec.Optional;
+            var (newPosPool, dirPool, posPool) = _spec.Optional;
 
-            var (parentNewPosPool, parentDirPool) = _parentSpec.Pools;
-
+            var (parentPosPool, parentDirPool) = _parentSpec.Pools;
+            bool hasWorkTodo = false;
             foreach (EcsUnsafeEntity ent in _spec.Filter)
             {
                 var parentEnt = parentPool.Get(ent).TargetEntity;
 
                 if (parentEnt.Unpack(out _, out var parentId)
-                    && parentNewPosPool.Has(parentId)
+                    && parentPosPool.Has(parentId)
                     && parentDirPool.Has(parentId))
                 {
                     ref readonly var relPos = ref relPosPool.Get(ent);
-                    var parentPos = parentNewPosPool.Get(parentId).Value;
+                    var parentPos = parentPosPool.Get(parentId).Value;
                     ref readonly var parentDir = ref parentDirPool.Get(parentId);
 
-                    newPosPool.Ensure(ent, out _).Value = GetPos(relPos, parentPos, parentDir);
+                    var newPos = GetPos(relPos, parentPos, parentDir);
 
-                    dirPool.Ensure(ent, out _).Direction = relPos.RelativeDirection.Direction.Rotate(parentDir.Direction);
+                    if (!posPool.Has(ent) || posPool.Get(ent) != newPos)
+                    {
+                        var isNewPos = newPosPool.Ensure(ent, out _).Value.TrySet(newPos);
+                        hasWorkTodo = hasWorkTodo || isNewPos;
+                    }
+                    var dir = relPos.RelativeDirection.Direction.Rotate(parentDir.Direction);
+                    var isNewDir = dirPool.Ensure(ent, out _).TrySet(new DirectionComponent() { Direction = dir });
+                    hasWorkTodo = hasWorkTodo || isNewDir;
                 }
             }
+            _reg.UpdateState(hasWorkTodo);
         }
 
         private PositionComponent? GetPos(

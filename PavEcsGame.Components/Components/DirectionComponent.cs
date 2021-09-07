@@ -3,9 +3,13 @@ using System;
 
 namespace PavEcsGame.Components
 {
-    public struct DirectionComponent
+    public struct DirectionComponent : IEquatable<DirectionComponent>
     {
         public Int2 Direction; //todo use byte
+        public bool Equals(DirectionComponent other)
+        {
+            return Direction == other.Direction;
+        }
     }
 
     public enum Direction
