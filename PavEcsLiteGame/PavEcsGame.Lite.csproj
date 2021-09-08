@@ -5,6 +5,8 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyName>PavEcsGame.Lite</AssemblyName>
     <RootNamespace>PavEcsGame</RootNamespace>
+    <StartupObject>PavEcsLiteGame.Program</StartupObject>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

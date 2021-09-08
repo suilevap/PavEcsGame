@@ -19,22 +19,23 @@ namespace PavEcsGame.GameLoop
 {
     internal class GameMainContainer
     {
-        private EcsWorld _world;
-        private EcsUniverse _universe;
-        private EcsSystems _systems;
+        private EcsWorld? _world;
+        private EcsUniverse? _universe;
+        private EcsSystems? _systems;
 
-        public bool IsAlive => _world.IsAlive();
+        public bool IsAlive => _world?.IsAlive() ?? false;
 
         public void Start()
         {
             _world = new EcsWorld();
-            var map = new MapData<EcsPackedEntityWithWorld>();
             _systems = new EcsSystems(_world, "Root");
 
             _systems
                 .AddUniverse(out var universe)
                 .Add(new SynchronizationContextSystem());
             _universe = universe;
+            var map = new MapData<EcsPackedEntityWithWorld>();
+
             var turnManager = new TurnManager(universe);
 
             _systems

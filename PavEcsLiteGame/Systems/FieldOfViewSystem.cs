@@ -34,7 +34,7 @@ namespace PavEcsGame.Systems
 
         private readonly FieldOfViewComputationInt2 _fieldOfView;
         private readonly Func<Int2, Int2, bool> _hasObstacles;
-        private (Int2 delta, float value)[] _fieldOfViewResult;
+        private (Int2 delta, float value)[]? _fieldOfViewResult;
 
         public FieldOfViewSystem(
             EcsUniverse universe,

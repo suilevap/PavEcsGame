@@ -14,12 +14,13 @@ namespace PavEcsGame.Systems.Renders
     {
         private const string _lightShade = "░▒▓";
 
-        private struct RenderItem
+        private struct RenderItem : IEquatable<RenderItem>
         {
+
             public SymbolComponent Symbol;
             public ConsoleColor BackgroundColor;
 
-            public RenderItem(SymbolComponent symbol, ConsoleColor back = ConsoleColor.Black)
+            private RenderItem(SymbolComponent symbol, ConsoleColor back = ConsoleColor.Black)
             {
                 Symbol = symbol;
                 BackgroundColor = back;
@@ -39,7 +40,6 @@ namespace PavEcsGame.Systems.Renders
                 }
             }
 
-
             public static bool operator ==(RenderItem a, RenderItem b)
             {
                 return a.Symbol.Value == b.Symbol.Value &&
@@ -54,6 +54,15 @@ namespace PavEcsGame.Systems.Renders
             public override string ToString()
             {
                 return Symbol.ToString();
+            }
+            
+            public bool Equals(RenderItem other) => this == other;
+
+            public override bool Equals(object? obj) => obj is RenderItem other && Equals(other);
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(Symbol, (int)BackgroundColor);
             }
 
         }
@@ -139,7 +148,7 @@ namespace PavEcsGame.Systems.Renders
                 }
             }
 
-            IReadOnlyMapData<PositionComponent,VisibilityType> TryGetVisibilityMap()
+            IReadOnlyMapData<PositionComponent,VisibilityType>? TryGetVisibilityMap()
             {
                 var visibilityDataPool = _playerFieldOfViewSpec.Include.Pool1;
                 Debug.Assert(_playerFieldOfViewSpec.Filter.GetEntitiesCount() <= 1, "Only one visibility map is supported");
@@ -212,6 +221,8 @@ namespace PavEcsGame.Systems.Renders
                 foreach (EcsUnsafeEntity ent in _itemsToRenderSpec.Filter)
                 {
                     ref readonly var pos = ref posPool.Get(ent);
+                    if (!visibilityMap.IsValid(pos))
+                        continue;
                     var visibility = visibilityMap.Get(pos);
                     if (visibility.HasFlag(VisibilityType.Visible)
                        || (!speedPool.Has(ent) && visibility.HasFlag(VisibilityType.Known))) 

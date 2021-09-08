@@ -9,6 +9,7 @@ namespace PavEcsGame.Components
 {
     public struct PositionComponent : IEquatable<PositionComponent>
     {
+
         public Int2 Value;
 
         public PositionComponent(Int2 value)
@@ -96,6 +97,11 @@ namespace PavEcsGame.Components
             return lhs.Value.X != rhs.Value.X || lhs.Value.Y != rhs.Value.Y;
         }
 
+        public override bool Equals(object obj)
+        {
+            return obj is PositionComponent other && Equals(other);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()
         {
@@ -114,7 +120,8 @@ namespace PavEcsGame.Components
             return new PositionComponent(v);
         }
 
-        bool IEquatable<PositionComponent>.Equals(PositionComponent other)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Equals(PositionComponent other)
         {
             return Value.Equals(other.Value);
         }

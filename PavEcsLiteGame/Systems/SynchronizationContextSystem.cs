@@ -6,11 +6,15 @@ namespace PavEcsGame.Systems
 {
     internal class SynchronizationContextSystem : IEcsInitSystem, IEcsRunSystem
     {
-        private WorkQueue _workQueue;
+        private readonly WorkQueue _workQueue;
+
+        public SynchronizationContextSystem()
+        {
+            _workQueue = new WorkQueue();
+        }
 
         public void Init(EcsSystems systems)
         {
-            _workQueue = new WorkQueue();
             SynchronizationContext.SetSynchronizationContext(new EcsSynchronizationContext(_workQueue));
         }
 

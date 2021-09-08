@@ -28,9 +28,6 @@ namespace PavEcsGame.Systems
             universe
                 .Register(this)
                 .Build(ref _spec);
-        }
-        public void Init(EcsSystems systems)
-        {
             _configs = new Dictionary<ConsoleKey, SpeedComponent>[]
             {
                 new Dictionary<ConsoleKey, SpeedComponent>(){
@@ -40,6 +37,9 @@ namespace PavEcsGame.Systems
                     { ConsoleKey.RightArrow, new SpeedComponent(1, 0) }
                 }
             };
+        }
+        public void Init(EcsSystems systems)
+        {
             //var config1 = new Dictionary<ConsoleKey, SpeedComponent>() { }
         }
 
