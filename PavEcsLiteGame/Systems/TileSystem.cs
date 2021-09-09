@@ -5,7 +5,7 @@ using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsSpec.EcsLite;
-using PaveEcsGame.Tiles;
+using PavEcsGame.Tiles;
 
 namespace PavEcsGame.Systems
 {

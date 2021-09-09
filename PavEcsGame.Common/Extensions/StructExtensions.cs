@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace PaveEcsGame
+namespace PavEcsGame
 {
     public static class StructExtensions
     {

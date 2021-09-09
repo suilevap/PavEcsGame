@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using Leopotam.Ecs.Types;
 
-namespace PaveEcsGame
+namespace PavEcsGame
 {
     public static class Int2Extensions
     {

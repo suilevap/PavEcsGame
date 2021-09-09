@@ -22,7 +22,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PavEcsGame.Lite", "PavEcsLi
 		{DA6043CE-C521-4455-9866-5ECA013905C1} = {DA6043CE-C521-4455-9866-5ECA013905C1}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PaveEcsGame.Common", "PaveEcsGame.Common\PaveEcsGame.Common.csproj", "{7A3E2D62-BE03-45BF-945C-3C6562097AAA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PavEcsGame.Common", "PavEcsGame.Common\PavEcsGame.Common.csproj", "{7A3E2D62-BE03-45BF-945C-3C6562097AAA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PavEcsSpec.EcsLite", "PavEcsSpec.EcsLite\PavEcsSpec.EcsLite.csproj", "{DA6043CE-C521-4455-9866-5ECA013905C1}"
 EndProject

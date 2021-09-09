@@ -1,7 +1,7 @@
 ﻿using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsSpec.EcsLite;
-using PaveEcsGame;
+using PavEcsGame;
 using System;
 using System.Collections.Generic;
 using System.Text;

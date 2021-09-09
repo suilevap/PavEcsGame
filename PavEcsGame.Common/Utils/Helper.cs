@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace PaveEcsGame.Utils
+namespace PavEcsGame.Utils
 {
     public static class Helper
     {

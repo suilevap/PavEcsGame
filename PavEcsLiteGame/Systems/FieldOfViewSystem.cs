@@ -6,8 +6,8 @@ using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
-using PaveEcsGame;
-using PaveEcsGame.Area;
+using PavEcsGame;
+using PavEcsGame.Area;
 
 namespace PavEcsGame.Systems
 {

@@ -1,4 +1,4 @@
-namespace PaveEcsGame
+namespace PavEcsGame
 {
     public static class NullableExtensions
     {

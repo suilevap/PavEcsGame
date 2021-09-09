@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using Leopotam.EcsLite;
 using PavEcsSpec.EcsLite;
-using PaveEcsGame.Utils;
+using PavEcsGame.Utils;
 
 namespace PavEcsGame.Systems
 {

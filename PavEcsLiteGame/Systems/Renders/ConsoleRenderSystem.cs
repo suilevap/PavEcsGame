@@ -4,8 +4,8 @@ using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
-using PaveEcsGame;
-using PaveEcsGame.Utils;
+using PavEcsGame;
+using PavEcsGame.Utils;
 
 namespace PavEcsGame.Systems.Renders
 {

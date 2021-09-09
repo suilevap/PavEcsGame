@@ -13,7 +13,7 @@ using PavEcsGame.Systems;
 using PavEcsGame.Systems.Managers;
 using PavEcsGame.Systems.Renders;
 using PavEcsSpec.EcsLite;
-using PaveEcsGame;
+using PavEcsGame;
 
 namespace PavEcsGame.GameLoop
 {

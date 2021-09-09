@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace PaveEcsGame.Tiles
+namespace PavEcsGame.Tiles
 {
     public class TileRule
     {

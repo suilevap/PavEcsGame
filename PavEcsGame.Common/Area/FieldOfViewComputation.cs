@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Common;
 
-namespace PaveEcsGame.Area
+namespace PavEcsGame.Area
 {
     public abstract class FieldOfViewComputation<T>
         where T: struct

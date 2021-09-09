@@ -6,7 +6,7 @@ using System.Text;
 using Leopotam.Ecs.Types;
 using PavEcsGame.Components;
 
-namespace PaveEcsGame.Area
+namespace PavEcsGame.Area
 {
     public class FieldOfViewComputationInt2 : FieldOfViewComputation<Int2>
     {

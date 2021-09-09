@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 using Leopotam.EcsLite;
-using PaveEcsGame.Utils;
+using PavEcsGame.Utils;
 
 namespace PavEcsGame.Systems
 {

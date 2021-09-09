@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PaveEcsGame.Utils
+namespace PavEcsGame.Utils
 {
     public class RangesCollection
     {

@@ -2,7 +2,7 @@
 using Leopotam.Ecs.Types;
 using PavEcsGame.Components;
 
-namespace PaveEcsGame
+namespace PavEcsGame
 {
     public class MapData<T> : IMapData<Int2, T>, IMapData<PositionComponent, T>
     {

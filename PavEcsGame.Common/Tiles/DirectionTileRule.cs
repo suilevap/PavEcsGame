@@ -3,7 +3,7 @@ using PavEcsGame.Components;
 using System.Diagnostics;
 using System.IO;
 
-namespace PaveEcsGame.Tiles
+namespace PavEcsGame.Tiles
 {
     public class DirectionTileRule
     {
