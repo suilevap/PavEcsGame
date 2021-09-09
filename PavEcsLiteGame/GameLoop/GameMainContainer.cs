@@ -50,7 +50,8 @@ namespace PavEcsGame.GameLoop
             _systems
                 .Add(new CommandTokenDistributionSystem(TimeSpan.FromSeconds(1f), universe))
                 .Add(new KeyboardMoveSystem(waitKey: false, turnManager, universe))
-                .Add(new RandomMovementSystem(turnManager, universe));
+                .Add(new RandomMoveSystem(turnManager, universe))
+                .Add(new MoveCommandSystem(turnManager, universe));
 
             _systems
                 .Add(new UpdateDirectionBasedOnSpeedSystem(universe))

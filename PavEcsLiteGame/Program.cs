@@ -1,7 +1,7 @@
 ﻿using System;
 using PavEcsGame.GameLoop;
 
-namespace PavEcsLiteGame
+namespace PavEcsGame
 {
     class Program
     {

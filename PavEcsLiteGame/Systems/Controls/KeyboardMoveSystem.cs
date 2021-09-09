@@ -17,9 +17,10 @@ namespace PavEcsGame.Systems
 
         private readonly TurnManager _turnManager;
 
-        private Dictionary<ConsoleKey, SpeedComponent>[] _configs;
+        private readonly Dictionary<ConsoleKey, PositionComponent>[] _configs;
         private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<PlayerIndexComponent, IsActiveTag>, EcsSpec<SpeedComponent, CommandTokenComponent>>_spec;
+            .Inc<EcsReadonlySpec<PlayerIndexComponent, IsActiveTag>>
+            .Opt<EcsSpec<MoveCommandComponent>> _spec;
 
         public KeyboardMoveSystem(bool waitKey, TurnManager turnManager, EcsUniverse universe)
         {
@@ -28,19 +29,20 @@ namespace PavEcsGame.Systems
             universe
                 .Register(this)
                 .Build(ref _spec);
-            _configs = new Dictionary<ConsoleKey, SpeedComponent>[]
+
+            _configs = new Dictionary<ConsoleKey, PositionComponent>[]
             {
-                new Dictionary<ConsoleKey, SpeedComponent>(){
-                    { ConsoleKey.UpArrow, new SpeedComponent(0, -1) },
-                    { ConsoleKey.DownArrow, new SpeedComponent(0, 1) },
-                    { ConsoleKey.LeftArrow, new SpeedComponent(-1, 0) },
-                    { ConsoleKey.RightArrow, new SpeedComponent(1, 0) }
+                new Dictionary<ConsoleKey, PositionComponent>(){
+                    { ConsoleKey.UpArrow, new PositionComponent(0, -1) },
+                    { ConsoleKey.DownArrow, new PositionComponent(0, 1) },
+                    { ConsoleKey.LeftArrow, new PositionComponent(-1, 0) },
+                    { ConsoleKey.RightArrow, new PositionComponent(1, 0) }
                 }
             };
         }
         public void Init(EcsSystems systems)
         {
-            //var config1 = new Dictionary<ConsoleKey, SpeedComponent>() { }
+            //var config1 = new Dictionary<ConsoleKey, PositionComponent>() { }
         }
 
         public void Run(EcsSystems systems)
@@ -59,9 +61,8 @@ namespace PavEcsGame.Systems
             {
                 key = Console.ReadKey(true).Key;
             }
-
-            var (playerIdPool, _) = _spec.IncludeReadonly;
-            var (speedPool, commandTokenPool) = _spec.Include;
+            var (playerIdPool, _) = _spec.Include;
+            var commandPool = _spec.Optional.Pool1;
 
             foreach (EcsUnsafeEntity ent in _spec.Filter)
             {
@@ -71,10 +72,13 @@ namespace PavEcsGame.Systems
                     && playerId < _configs.Length
                     && _configs[playerId].TryGetValue(key, out var newSpeed))
                 {
-                    ref var currentSpeed = ref speedPool.Get(ent);
-                    currentSpeed = newSpeed;
-                    ref var tokensComponent = ref commandTokenPool.Get(ent);
-                    tokensComponent.ActionCount--;
+
+                    commandPool.Ensure(ent, out _) =
+                            new MoveCommandComponent()
+                            {
+                                Target = newSpeed,
+                                IsRelative = true,
+                            };
                 }
             }
         }
