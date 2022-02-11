@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29519.87
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31612.314
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PavEcsGame", "PavEcsGame\PavEcsGame.csproj", "{58FD3603-DD1F-4E32-8F80-5E1912FFBC00}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -24,7 +24,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PavEcsGame.Lite", "PavEcsLi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PavEcsGame.Common", "PavEcsGame.Common\PavEcsGame.Common.csproj", "{7A3E2D62-BE03-45BF-945C-3C6562097AAA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PavEcsSpec.EcsLite", "PavEcsSpec.EcsLite\PavEcsSpec.EcsLite.csproj", "{DA6043CE-C521-4455-9866-5ECA013905C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PavEcsSpec.EcsLite", "PavEcsSpec.EcsLite\PavEcsSpec.EcsLite.csproj", "{DA6043CE-C521-4455-9866-5ECA013905C1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PavEcsSpec.Generators", "PavEcsSpec.Generators\PavEcsSpec.Generators.csproj", "{D8DCF391-7EDD-450A-A0E9-AFAB8AA232BE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GenerateTest", "GenerateTest\GenerateTest.csproj", "{59DCDDAB-11AD-4E9F-8F2D-7DCC4FED9786}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -64,6 +68,14 @@ Global
 		{DA6043CE-C521-4455-9866-5ECA013905C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA6043CE-C521-4455-9866-5ECA013905C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA6043CE-C521-4455-9866-5ECA013905C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8DCF391-7EDD-450A-A0E9-AFAB8AA232BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8DCF391-7EDD-450A-A0E9-AFAB8AA232BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8DCF391-7EDD-450A-A0E9-AFAB8AA232BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8DCF391-7EDD-450A-A0E9-AFAB8AA232BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59DCDDAB-11AD-4E9F-8F2D-7DCC4FED9786}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59DCDDAB-11AD-4E9F-8F2D-7DCC4FED9786}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59DCDDAB-11AD-4E9F-8F2D-7DCC4FED9786}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59DCDDAB-11AD-4E9F-8F2D-7DCC4FED9786}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

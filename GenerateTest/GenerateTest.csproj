@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ecs-types\Leopotam.Ecs.Types.csproj" />
+    <ProjectReference Include="..\ecslite\Leopotam.EcsLite.csproj" />
+    <ProjectReference Include="..\PavEcsGame.Components\PavEcsGame.Components.csproj" />
+    <ProjectReference Include="..\PavEcsGame.Common\PavEcsGame.Common.csproj" />
+  </ItemGroup>
+
+  <!-- Add this as a new ItemGroup, replacing paths and names appropriately -->
+  <ItemGroup>
+    <!--Note that this is not a "normal" ProjectReference.
+         It needs the additional 'OutputItemType' and 'ReferenceOutputAssmbly' attributes.-->
+    <!--<Reference Include="netstandard" />-->
+    <ProjectReference Include="..\PavEcsSpec.Generators\PavEcsSpec.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+</Project>

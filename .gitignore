@@ -12,3 +12,8 @@
 /PavEcsSpec.EcsLite/bin
 /PavEcsGame.Common/bin/
 /PavEcsGame.Common/obj/
+/PavEcsSpec.Generators/obj/
+/PavEcsSpec.Generators/bin/
+/PaveEcsSpec.Generators/obj/
+/GenerateTest/bin/*
+/GenerateTest/obj/*
