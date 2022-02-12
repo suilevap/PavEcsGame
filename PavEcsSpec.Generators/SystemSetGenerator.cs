@@ -21,10 +21,7 @@ namespace PavEcsSpec.Generators
             context.RegisterForPostInitialization(
                 c =>
                 {
-                    foreach(var file in EcsInfraTypes.Files)
-                    {
-                        c.AddSource(file.name, file.code);
-                    }
+                    EcsInfraTypes.AddSources(c);
                 });
 
             // Register a syntax receiver that will be created for each generation pass
@@ -39,58 +36,63 @@ namespace PavEcsSpec.Generators
             //if (!(context.SyntaxContextReceiver is SyntaxReceiver receiver))
             //    return;
 
-
-            //            // begin creating the source we'll inject into the users compilation
-            //            var sourceBuilder = new StringBuilder(@"
-            //using System;
-            //namespace HelloWorldGenerated
-            //{
-            //    public static class HelloWorld
-            //    {
-            //        public static void SayHello() 
-            //        {
-            //            Console.WriteLine(""Hello from generated code!"");
-            //            Console.WriteLine(""The following syntax trees existed in the compilation that created this program:"");
-            //");
-
-            //            // using the context, get a list of syntax trees in the users compilation
-            //            var syntaxTrees = context.Compilation.SyntaxTrees;
-
-            //            // add the filepath of each tree to the class we're building
-            //            foreach (SyntaxTree tree in syntaxTrees)
-            //            {
-            //                sourceBuilder.AppendLine($@"Console.WriteLine(@"" - {tree.FilePath}"");");
-            //            }
-
-            //            // finish creating the source to inject
-            //            sourceBuilder.Append(@"
-            //        }
-            //    }
-            //}");
-
-            //            // inject the created source into the users compilation
-            //            context.AddSource("helloWorldGenerator", SourceText.From(sourceBuilder.ToString(), Encoding.UTF8));
-
             if (context.SyntaxReceiver is EntitySyntaxReceiver receiver)
             {
                 var provider = new EntityProviderGenerator();
 
-                Dictionary<ITypeSymbol, string> generatedCode = new Dictionary<ITypeSymbol, string>(SymbolEqualityComparer.IncludeNullability);
 
-                foreach (var declaration in receiver.Candidates)
-                {
-
-                    var model = context.Compilation.GetSemanticModel(declaration.SyntaxTree, true);
-                    if (model.GetDeclaredSymbol(declaration) is ITypeSymbol type)
+                var entityDescrs = receiver.Candidates
+                    .Select(
+                    declaration =>
                     {
-                        //if (type is null || !IsEnumeration(type))
-                        //    continue;
-                        var code = provider.GenerateEntityCode(type, declaration);
-                        generatedCode.Add(type, code);
-                    }
-                }
+                        var model = context.Compilation.GetSemanticModel(declaration.SyntaxTree, true);
+                        var symbol = model.GetDeclaredSymbol(declaration);
+                        if (symbol is ITypeSymbol type)
+                        {
+                            //if (type is null || !IsEnumeration(type))
+                            //    continue;
+                            var entityDescr = EcsEntityDescriptor.Create(type);
+                            ReportDiagnostic(context, entityDescr, declaration);
+                            return entityDescr;
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException($"unsupported symbol {symbol.Name}");
+                        }
+                    })
+                    .ToList();
 
+                Dictionary<string, QuickUnionFind<ITypeSymbol>> universes = new Dictionary<string, QuickUnionFind<ITypeSymbol>>();
+                foreach (var entity in entityDescrs)
+                {
+                    var universe = universes.GetOrCreate(entity.Universe);
+                    universe.Union(entity.Components.Select(x => x.ComponentType));
+                }
                 
+                Dictionary<ITypeSymbol, string> generatedCode = new Dictionary<ITypeSymbol, string>(SymbolEqualityComparer.IncludeNullability);
+                foreach (var entity in entityDescrs)
+                {
+                    var universe = universes[entity.Universe];
+                    var wolrdId = universe.Root(entity.Components.First().ComponentType);
+                    var code = provider.GenerateEntityCode(entity, wolrdId);
+                    generatedCode.Add(entity.EntityType, code);
+                }
+                //foreach (var declaration in receiver.Candidates)
+                //{
+
+                //    var model = context.Compilation.GetSemanticModel(declaration.SyntaxTree, true);
+                //    if (model.GetDeclaredSymbol(declaration) is ITypeSymbol type)
+                //    {
+                //        //if (type is null || !IsEnumeration(type))
+                //        //    continue;
+                //        var entityDescr = EcsEntityDescriptor.Create(type);
+                //        ReportDiagnostic(context, entityDescr, declaration);
+                //        var code = provider.GenerateEntityCode(entityDescr);
+                //        generatedCode.Add(type, code);
+                //    }
+                //}
+
+
 
                 var types = NestedTypeGenerator.WrapNestedTypes(generatedCode);
                 foreach (var pair in types)
@@ -105,7 +107,22 @@ namespace PavEcsSpec.Generators
             //context.AddSource("EmptySystem.generated.cs", SourceText.From(provider.GetSource(), Encoding.UTF8));
         }
 
-    
+        private void ReportDiagnostic(GeneratorExecutionContext context, EcsEntityDescriptor entityDescr, StructDeclarationSyntax declaration)
+        {
+            context.ReportDiagnostic(
+                Diagnostic.Create(
+                    new DiagnosticDescriptor(
+                        "ECS0", 
+                        $"Entity {entityDescr.EntityType}",
+                        entityDescr.ToString(),
+                        "EcsGenerator", 
+                        DiagnosticSeverity.Info,
+                        true), 
+                    declaration.GetLocation())
+                );
+        }
+
+
 
         /// <summary>
         /// Created on demand before each generation pass

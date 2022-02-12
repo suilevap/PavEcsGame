@@ -10,105 +10,9 @@ namespace PavEcsSpec.Generators
 {
     internal class EntityProviderGenerator
     {
-        private enum ComponentDescriptorType
+
+        public string GenerateEntityCode(EcsEntityDescriptor entityDescr, int wolrdId)
         {
-            Include,
-            IncludeReadonly,
-            Optional,
-            Exclude
-        }
-        private readonly struct ComponentDescriptor
-        {
-            public string TypeName { get; }
-
-            public string ReturnName { get; }
-
-            public string MethodName { get; }
-
-            public ComponentDescriptorType Type { get; }
-
-            public ComponentDescriptor(string typeName, string methodName, ComponentDescriptorType type, string returnName = null)
-            {
-                TypeName = typeName;
-                MethodName = methodName;
-                Type = type;
-                ReturnName = returnName;
-            }
-        }
-
-        private class EntityDescriptor
-        {
-            public string Name { get; set; }
-            public List<ComponentDescriptor> Components { get; } = new List<ComponentDescriptor>();
-        }
-
-        private EntityDescriptor GetEntityDescriptor(ITypeSymbol type)
-        {
-            EntityDescriptor result = new EntityDescriptor();
-            result.Name = type.Name;
-            foreach (ISymbol member in type.GetMembers())
-            {
-                //if (member.Kind == SymbolKind.Method)
-                //{
-                //    member.Is
-                //}
-
-                if (member is IMethodSymbol methodSymbol && methodSymbol.IsPartialDefinition)
-                {
-                    var returnType = methodSymbol.ReturnType;
-                    if (returnType.IsValueType)
-                    {
-                        var name = $"{returnType.ContainingNamespace}.{returnType.Name}";
-                        if (methodSymbol.ReturnsByRefReadonly) //include readonly
-                        {
-                            
-                            result.Components.Add(
-                                new ComponentDescriptor(name, methodSymbol.Name,
-                                    ComponentDescriptorType.IncludeReadonly));
-                        }
-                        else if (methodSymbol.ReturnsByRef) //include
-                        {
-                            result.Components.Add(
-                                new ComponentDescriptor(name, methodSymbol.Name,
-                                    ComponentDescriptorType.Include));
-                        }
-                    }
-
-                    if (returnType.IsRefLikeType && returnType is INamedTypeSymbol namedType && namedType.Arity == 1)
-                    {
-                        var componentType = namedType.TypeArguments.First();
-                        var name = $"{componentType.ContainingNamespace}.{componentType.Name}";
-
-                        if (componentType.IsValueType)
-                        {
-                            var namedTypeFullName = $"{namedType.ContainingNamespace}.{namedType.Name}";
-
-                            if (namedType.Name.Contains("Optional"))
-                            {
-                                result.Components.Add(
-                                    new ComponentDescriptor(name, methodSymbol.Name,
-                                        ComponentDescriptorType.Optional, namedTypeFullName));
-                            }
-                            else if (namedType.Name.Contains("Exclude"))
-                            {
-                                result.Components.Add(
-                                    new ComponentDescriptor(name, methodSymbol.Name,
-                                        ComponentDescriptorType.Exclude, namedTypeFullName));
-                            }
-                        }
-                    }
-                    //else if (methodSymbol.ReturnType.) 
-                }
-            }
-
-            return result;
-        }
-
-        public string GenerateEntityCode(ITypeSymbol type, StructDeclarationSyntax syntax)
-        {
-            var ns = type.ContainingNamespace.ToString();
-            var name = type.Name;
-            var entityDescr = GetEntityDescriptor(type);
 
             StringBuilder accessToDataCode = new StringBuilder();
             StringBuilder providerFieldsCode = new StringBuilder();
@@ -117,60 +21,65 @@ namespace PavEcsSpec.Generators
             foreach (var componentDescriptor in entityDescr.Components)
             {
                 var poolName = GetPoolName(componentDescriptor);
-                if (componentDescriptor.Type == ComponentDescriptorType.Include
-                    || componentDescriptor.Type == ComponentDescriptorType.IncludeReadonly)
+                if (componentDescriptor.AccessType == ComponentDescriptorType.Include
+                    || componentDescriptor.AccessType == ComponentDescriptorType.IncludeReadonly)
                 {
                     var readonlyReturn =
-                    componentDescriptor.Type == ComponentDescriptorType.IncludeReadonly ? "readonly" : string.Empty;
+                    componentDescriptor.AccessType == ComponentDescriptorType.IncludeReadonly ? "readonly" : string.Empty;
                     var methodDeclaration = $@"
-public partial ref {readonlyReturn} {componentDescriptor.TypeName} {componentDescriptor.MethodName}()
+public partial ref {readonlyReturn} {componentDescriptor.ComponentType} {componentDescriptor.Method.Name}()
 {{
     return ref _provider.{poolName}.Get(_ent);
 }}";
                     accessToDataCode.AppendLine(methodDeclaration);
                 }
-                if (componentDescriptor.Type == ComponentDescriptorType.Optional
-                    || componentDescriptor.Type == ComponentDescriptorType.Exclude)
+                if (componentDescriptor.AccessType == ComponentDescriptorType.Optional
+                    || componentDescriptor.AccessType == ComponentDescriptorType.Exclude)
                 {
-                    var returnTypeName = $"{componentDescriptor.ReturnName}<{componentDescriptor.TypeName}>";
+                    //var returnTypeName = $"{componentDescriptor.ReturnName}<{componentDescriptor.TypeName}>";
                     var methodDeclaration = $@"
-public partial {returnTypeName} {componentDescriptor.MethodName}()
+public partial {componentDescriptor.ReturnType} {componentDescriptor.Method.Name}()
 {{
-    return new {returnTypeName}(_provider.{poolName}, _ent);
+    return new {componentDescriptor.ReturnType}(_provider.{poolName}, _ent);
 }}";
                     accessToDataCode.AppendLine(methodDeclaration);
                 }
 
-                providerFieldsCode.AppendLine($"public readonly Leopotam.EcsLite.EcsPool<{componentDescriptor.TypeName}> {poolName};");
+                providerFieldsCode.AppendLine($"public readonly Leopotam.EcsLite.EcsPool<{componentDescriptor.ComponentType}> {poolName};");
 
-                initFieldsCode.AppendLine($"{poolName} = world.GetPool<{componentDescriptor.TypeName}>();");
+                initFieldsCode.AppendLine($"{poolName} = world.GetPool<{componentDescriptor.ComponentType}>();");
 
             }
-            var includes = entityDescr.Components.Where(x => x.Type == ComponentDescriptorType.Include
-                                              || x.Type == ComponentDescriptorType.IncludeReadonly)
+            var includes = entityDescr.Components.Where(x => x.AccessType == ComponentDescriptorType.Include
+                                              || x.AccessType == ComponentDescriptorType.IncludeReadonly)
                 .ToArray();
-            var excludes = entityDescr.Components.Where(x => x.Type == ComponentDescriptorType.Exclude)
+            var excludes = entityDescr.Components.Where(x => x.AccessType == ComponentDescriptorType.Exclude)
                 .ToArray();
             if (!includes.Any())
             {
-                throw new InvalidOperationException($"Entity {name} should have at leas one required component");
+                throw new InvalidOperationException($"Entity {entityDescr.EntityType} should have at leas one required component");
             }
             StringBuilder filterCode = new StringBuilder();
 
-            filterCode.Append($"world.Filter<{includes.First().TypeName}>()");
+            filterCode.Append($"world.Filter<{includes.First().ComponentType}>()");
             foreach (var componentDescriptor in includes.Skip(1))
             {
-                filterCode.Append($".Inc<{componentDescriptor.TypeName}>()");
+                filterCode.Append($".Inc<{componentDescriptor.ComponentType}>()");
             }
             foreach (var componentDescriptor in excludes)
             {
-                filterCode.Append($".Exc<{componentDescriptor.TypeName}>()");
+                filterCode.Append($".Exc<{componentDescriptor.ComponentType}>()");
             }
             filterCode.Append($".End()");
 
-            string GetPoolName(in ComponentDescriptor componentDescriptor) => $"_{componentDescriptor.MethodName.ToLowerInvariant()}Pool";
+            string GetPoolName(in ComponentDescriptor componentDescriptor) => $"_{componentDescriptor.Method.Name.ToLowerInvariant()}Pool";
 
+            var name = entityDescr.EntityType.Name;
+            var worldName = $"GENERATED_u{entityDescr.Universe}w{wolrdId}";
             var result = @$"
+/* 
+{entityDescr.ToString().Replace("|",Environment.NewLine)}
+*/
 private readonly partial struct {name}
 {{
     private readonly int _ent;
@@ -186,7 +95,7 @@ private readonly partial struct {name}
 {accessToDataCode.ToString().PadLeftAllLines(4*1)}
 
     public static partial PavEcsSpec.Generated.IEntityProvider<{name}> GetProvider(Leopotam.EcsLite.EcsSystems systems) 
-        => new Provider(systems.GetWorld());
+        => new Provider(systems.GetWorld({worldName}));
 
     private class Provider : PavEcsSpec.Generated.IEntityProvider<{name}>
     {{
@@ -211,35 +120,6 @@ private readonly partial struct {name}
 }}";
 
             return result;
-        //    var a = @$" public struct Enumerator : IDisposable
-        //{{
-        //    private EcsFilter.Enumerator _enumerator;
-        //    private readonly Provider _provider;
-
-        //    public Enumerator(EcsFilter.Enumerator enumerator, Provider provider)
-        //    {{
-        //        _enumerator = enumerator;
-        //        _provider = provider;
-        //    }}
-
-        //    public {name} Current
-        //    {{
-        //        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //        get => new {name}(_enumerator.Current, _provider);
-        //    }}
-
-        //    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //    public bool MoveNext()
-        //    {{
-        //        return _enumerator.MoveNext();
-        //    }}
-
-        //    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //    public void Dispose()
-        //    {{
-        //        _enumerator.Dispose();
-        //    }}
-        //}}";
         }
     }
 }

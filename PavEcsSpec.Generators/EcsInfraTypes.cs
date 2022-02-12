@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -13,6 +15,15 @@ namespace PavEcsSpec.Generators
             new (nameof(AutoRegisterSystemAttribute), AutoRegisterSystemAttribute),
 
         };
+
+        internal static void AddSources(GeneratorPostInitializationContext c)
+        {
+            foreach (var file in EcsInfraTypes.Files)
+            {
+                SourceText sourceText = SourceText.From(file.code.Trim(), Encoding.UTF8);
+                c.AddSource(file.name, sourceText);
+            }
+        }
 
         private const string ProviderTypes = @"
 using Leopotam.EcsLite;
@@ -109,7 +120,7 @@ namespace PavEcsSpec.Generated
 
 ";
 
-        private const string EntityAttribute = @"
+        public const string EntityAttribute = @"
 using System;
 namespace PavEcsSpec.Generated
 {
@@ -119,6 +130,8 @@ namespace PavEcsSpec.Generated
         public EntityAttribute()
         {
         }
+        
+        public string Universe {get; set;}
     }
 }
 ";

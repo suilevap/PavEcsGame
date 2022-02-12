@@ -19,7 +19,7 @@ namespace PavEcsGame.Systems
 
         //private partial EmptySystem(EcsSystems systems);
 
-        [PavEcsSpec.Generated.Entity]
+        [PavEcsSpec.Generated.Entity(Universe="MainUni")]
         private readonly partial struct Entity
         {
             public partial ref readonly PavEcsGame.Components.PositionComponent Pos();
