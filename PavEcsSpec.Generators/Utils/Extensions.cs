@@ -13,7 +13,7 @@ namespace PavEcsSpec.Generators
                 result = new TV();
                 dict.Add(key, result);
             }
-            return result; 
+            return result;
         }
     }
 }

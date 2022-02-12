@@ -78,7 +78,7 @@ public partial {componentDescriptor.ReturnType} {componentDescriptor.Method.Name
             var worldName = $"GENERATED_u{entityDescr.Universe}w{wolrdId}";
             var result = @$"
 /* 
-{entityDescr.ToString().Replace("|",Environment.NewLine)}
+{entityDescr.ToString()}
 */
 private readonly partial struct {name}
 {{
@@ -95,7 +95,17 @@ private readonly partial struct {name}
 {accessToDataCode.ToString().PadLeftAllLines(4*1)}
 
     public static partial PavEcsSpec.Generated.IEntityProvider<{name}> GetProvider(Leopotam.EcsLite.EcsSystems systems) 
-        => new Provider(systems.GetWorld({worldName}));
+    {{
+        const string worldName = ""{worldName}"";
+        var world = systems.GetWorld(worldName);
+        if (world == null)
+        {{
+            world = new Leopotam.EcsLite.EcsWorld();
+            systems.AddWorld(world, worldName);
+        }}
+
+        return new Provider(world);
+    }}
 
     private class Provider : PavEcsSpec.Generated.IEntityProvider<{name}>
     {{

@@ -51,11 +51,10 @@ namespace PavEcsSpec.Generators
         {
             StringBuilder result = new StringBuilder();
 
-            result.Append($"{EntityType}/{Universe} ");
+            result.AppendLine($"{EntityType}/{Universe} ");
             foreach (var component in _components)
             {
-                result.Append("|");
-                result.Append(component.ToString());
+                result.AppendLine(component.ToString());
             }
 
             return result.ToString();
@@ -145,7 +144,7 @@ namespace PavEcsSpec.Generators
                 var universeProp = entityAttribute
                     .NamedArguments
                     .FirstOrDefault(x => x.Key == "Universe");
-                result.Universe = universeProp.Value.Value?.ToString();
+                result.Universe = universeProp.Value.Value?.ToString() ?? String.Empty;
             }
         }
     }

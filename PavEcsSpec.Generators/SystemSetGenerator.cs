@@ -114,7 +114,7 @@ namespace PavEcsSpec.Generators
                     new DiagnosticDescriptor(
                         "ECS0", 
                         $"Entity {entityDescr.EntityType}",
-                        entityDescr.ToString(),
+                        entityDescr.ToString().Replace( Environment.NewLine, "|"),
                         "EcsGenerator", 
                         DiagnosticSeverity.Info,
                         true), 
