@@ -27,18 +27,18 @@ namespace PavEcsGame.Systems
         public TestSystem(EcsSystems systems)
         {
             //_provider = new Entity.Provider(systems.GetWorld());
-            _provider2 = new Entity2.Provider(systems.GetWorld());
-             GetProvider(systems, ref _provider2);
+            _provider2 = Entity2.GetProvider(systems);
+             //GetProvider(systems, ref _provider2);
         }
 
-        private void GetProvider<T>(EcsSystems systems, ref IEntityProvider<T> result) where T : struct
-        {
+        //private void GetProvider<T>(EcsSystems systems, ref IEntityProvider<T> result) where T : struct
+        //{
 
-        }
-        private void GetProvider(EcsSystems systems, ref IEntityProvider<Entity2> result)
-        {
-            result = new Entity2.Provider(systems.GetWorld());
-        }
+        //}
+        //private void GetProvider(EcsSystems systems, ref IEntityProvider<Entity2> result)
+        //{
+        //    result = new Entity2.Provider(systems.GetWorld());
+        //}
 
 
         //[PavEcsSpec.Generators.Entity]
@@ -57,10 +57,41 @@ namespace PavEcsGame.Systems
         {
             public partial ref PositionComponent Pos();
             public partial ref readonly SpeedComponent Speed();
+            //public static partial EcsPackedEntityWithWorld GetId();
 
             public static partial IEntityProvider<Entity2> GetProvider(EcsSystems systems);
+            //public static partial IEntityFactory<Entity2> GetFactory(EcsSystems systems);
+
+
             //public partial class Provider : IEntityProvider<Entity2> { }
         }
+
+        //private readonly partial struct Entity3 //: IExtend<Entity2>
+        //{
+        //    public partial ref PositionComponent Pos();
+        //    public partial OptionalComponent<SpeedComponent> Speed();
+
+        //    public static partial IEntityFactory<Entity3> GetFactory(EcsSystems systems);
+        //    //public partial class Provider : IEntityProvider<Entity2> { }
+        //}
+        public interface IExtend<T> where T :struct
+        {
+            //T2 Get(T2 ent);
+        }
+
+        public interface IEntityFactory<T> where T : struct
+        {
+            T New();
+            T? TryGet(Leopotam.EcsLite.EcsPackedEntityWithWorld entity);
+        }
+        //public interface IEntityProvider<T> where T : struct
+        //{
+        //    BaseEnumerator<T> GetEnumerator();
+
+        //    T Get(int ent);
+        //}
+
+        //public partial int Create(in PositionComponent pos, in SpeedComponent speed)
 
 
         //private readonly partial struct EntityEnumerator
@@ -77,6 +108,9 @@ namespace PavEcsGame.Systems
             //    entity.NewPos().Ensure().Value = pos.Value + speed.Speed;
             //    Console.WriteLine($"entity. {entity.Pos().Value}");
             //}
+            //var newEnt = new Entity2();//_provider2.Get(0);
+            //newEnt.Pos() = new PositionComponent() { Value = 2 };
+            //newEnt.Speed().Speed.X = 4;
             
             foreach (Entity2 entity in _provider2)
             {
@@ -117,7 +151,7 @@ namespace PavEcsGame.Systems
                 => new Provider(systems.GetWorld());
 
 
-            public partial class Provider : IEntityProvider<Entity2>
+            public partial class Provider : IEntityProvider<Entity2>, IEntityFactory<Entity2>
             {
                 public readonly EcsPool<Components.PositionComponent> _posPool;
                 public readonly EcsPool<Components.SpeedComponent> _speedPool;
@@ -125,8 +159,11 @@ namespace PavEcsGame.Systems
 
                 private readonly EcsFilter _filter;
 
+                private readonly EcsWorld _world;
+
                 public Provider(EcsWorld world)
                 {
+                    _world = world;
                     _posPool = world.GetPool<Components.PositionComponent>();
                     _speedPool = world.GetPool<Components.SpeedComponent>();
 
@@ -139,6 +176,25 @@ namespace PavEcsGame.Systems
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public BaseEnumerator<Entity2> GetEnumerator() => new BaseEnumerator<Entity2>(_filter.GetEnumerator(), this);
+
+                public Entity2 New()
+                {
+                    var entId = _world.NewEntity();
+                    _posPool.Add(entId);
+                    _speedPool.Add(entId);
+                    return new Entity2(entId, this);
+                }
+
+                public Entity2? TryGet(EcsPackedEntityWithWorld entity)
+                {
+                    if (entity.Unpack(out var world, out var entid) && world == _world)
+                    {
+                        if (_world != world)
+                            throw new InvalidOperationException($"Unexpected world: Actula: {world}. Expected:{_world}");
+                        return new Entity2(entid, this);
+                    }
+                    return default;
+                }
 
 
                 //[MethodImpl(MethodImplOptions.AggressiveInlining)]

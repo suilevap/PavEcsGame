@@ -33,9 +33,12 @@ namespace PavEcsSpec.Generators
         public void Execute(GeneratorExecutionContext context)
         {
             // retrieve the populated receiver 
-            //if (!(context.SyntaxContextReceiver is SyntaxReceiver receiver))
-            //    return;
-
+#if DEBUG
+            //if (!Debugger.IsAttached)
+            //{
+            //    Debugger.Launch();
+            //}
+#endif 
             if (context.SyntaxReceiver is EntitySyntaxReceiver receiver)
             {
                 var provider = new EntityProviderGenerator();
@@ -112,7 +115,7 @@ namespace PavEcsSpec.Generators
             context.ReportDiagnostic(
                 Diagnostic.Create(
                     new DiagnosticDescriptor(
-                        "ECS0", 
+                        "0", 
                         $"Entity {entityDescr.EntityType}",
                         entityDescr.ToString().Replace( Environment.NewLine, "|"),
                         "EcsGenerator", 

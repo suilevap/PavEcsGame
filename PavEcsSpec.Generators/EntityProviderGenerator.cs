@@ -21,11 +21,10 @@ namespace PavEcsSpec.Generators
             foreach (var componentDescriptor in entityDescr.Components)
             {
                 var poolName = GetPoolName(componentDescriptor);
-                if (componentDescriptor.AccessType == ComponentDescriptorType.Include
-                    || componentDescriptor.AccessType == ComponentDescriptorType.IncludeReadonly)
+                if (componentDescriptor.AccessKind.IsRequired())
                 {
                     var readonlyReturn =
-                    componentDescriptor.AccessType == ComponentDescriptorType.IncludeReadonly ? "readonly" : string.Empty;
+                    componentDescriptor.AccessKind == ComponentDescriptorAccessKind.IncludeReadonly ? "readonly" : string.Empty;
                     var methodDeclaration = $@"
 public partial ref {readonlyReturn} {componentDescriptor.ComponentType} {componentDescriptor.Method.Name}()
 {{
@@ -33,8 +32,7 @@ public partial ref {readonlyReturn} {componentDescriptor.ComponentType} {compone
 }}";
                     accessToDataCode.AppendLine(methodDeclaration);
                 }
-                if (componentDescriptor.AccessType == ComponentDescriptorType.Optional
-                    || componentDescriptor.AccessType == ComponentDescriptorType.Exclude)
+                else
                 {
                     //var returnTypeName = $"{componentDescriptor.ReturnName}<{componentDescriptor.TypeName}>";
                     var methodDeclaration = $@"
@@ -50,10 +48,135 @@ public partial {componentDescriptor.ReturnType} {componentDescriptor.Method.Name
                 initFieldsCode.AppendLine($"{poolName} = world.GetPool<{componentDescriptor.ComponentType}>();");
 
             }
-            var includes = entityDescr.Components.Where(x => x.AccessType == ComponentDescriptorType.Include
-                                              || x.AccessType == ComponentDescriptorType.IncludeReadonly)
+            if (entityDescr.GetIdMethod != null)
+            {
+                var methodDeclaration = $@"
+public partial {entityDescr.GetIdMethod.ReturnType} {entityDescr.GetIdMethod.Name}()
+{{
+    return _ent;
+}}";
+                accessToDataCode.AppendLine(methodDeclaration);
+            }
+
+            string GetPoolName(in ComponentDescriptor componentDescriptor) => $"_{componentDescriptor.Method.Name.ToLowerInvariant()}Pool";
+
+            var name = entityDescr.EntityType.Name;
+            var worldName = $"GENERATED_u{entityDescr.Universe}w{wolrdId}";
+            string providerCode;
+            if (entityDescr.Kind == EntityKind.Filter)
+            {
+                providerCode = $@"
+    private class Provider : {entityDescr.ProviderMethod.ReturnType}
+    {{
+{providerFieldsCode.ToString().PadLeftAllLines(4 * 2)}
+        private readonly Leopotam.EcsLite.EcsFilter _filter;
+
+        public Provider(Leopotam.EcsLite.EcsWorld world)
+        {{
+{initFieldsCode.ToString().PadLeftAllLines(4 * 3)}
+            _filter = {GetFilterCode(entityDescr)};
+        }}
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public {name} Get(int ent) => new {name}(ent, this);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public PavEcsSpec.Generated.BaseEnumerator<{name}> GetEnumerator()
+            => new PavEcsSpec.Generated.BaseEnumerator<{name}>(_filter.GetEnumerator(), this);
+       
+    }}
+";
+            }
+            else if (entityDescr.Kind == EntityKind.Factory)
+            {
+                StringBuilder initRequiredComponents = new StringBuilder();
+                foreach (var componentDescriptor in entityDescr.Components)
+                {
+                    if (componentDescriptor.AccessKind.IsRequired())
+                    {
+                        initRequiredComponents.AppendLine($"{GetPoolName(componentDescriptor)}.Add(entId);");
+                    }
+                }
+                providerCode = $@"
+    private class Provider : {entityDescr.ProviderMethod.ReturnType}
+    {{
+{providerFieldsCode.ToString().PadLeftAllLines(4 * 2)}
+        private readonly Leopotam.EcsLite.EcsWorld _world;
+
+        public Provider(Leopotam.EcsLite.EcsWorld world)
+        {{
+            _world = world;
+{initFieldsCode.ToString().PadLeftAllLines(4 * 3)}
+        }}
+
+        public {name} New()
+        {{
+            var entId = _world.NewEntity();
+{initRequiredComponents.ToString().PadLeftAllLines(4 * 3)}
+            return new {name}(entId, this);
+        }}
+
+        public {name}? TryGet(Leopotam.EcsLite.EcsPackedEntityWithWorld entity)
+        {{
+            if (Leopotam.EcsLite.EcsEntityExtensions.Unpack(entity, out var world, out var entid) && world == _world)
+            {{
+                if (_world != world)
+                    throw new System.InvalidOperationException($""Unexpected world: Actual: {{world}}. Expected: {{_world}} "");
+                return new {name}(entid, this);
+            }}
+            return default;
+        }}
+    }}
+";
+            }
+            else
+            {
+                providerCode = string.Empty;
+            }
+            var result = @$"
+/* 
+{entityDescr.ToString()}
+*/
+private readonly partial struct {name}
+{{
+    private readonly int _ent;
+
+    private readonly Provider _provider;
+
+    private {name}(int ent, Provider provider)
+    {{
+        _ent = ent;
+        _provider = provider;
+    }}
+
+{accessToDataCode.ToString().PadLeftAllLines(4 * 1)}
+
+    public static partial {entityDescr.ProviderMethod.ReturnType} {entityDescr.ProviderMethod.Name}(Leopotam.EcsLite.EcsSystems systems) 
+    {{
+        const string worldName = ""{worldName}"";
+        var world = systems.GetWorld(worldName);
+        if (world == null)
+        {{
+            world = new Leopotam.EcsLite.EcsWorld();
+            systems.AddWorld(world, worldName);
+        }}
+
+        return new Provider(world);
+    }}
+
+    {providerCode}
+}}";
+
+            return result;
+        }
+
+        private static string GetFilterCode(EcsEntityDescriptor entityDescr)
+        {
+            var includes = entityDescr.Components.Where(x => x.AccessKind == ComponentDescriptorAccessKind.Include
+                                              || x.AccessKind == ComponentDescriptorAccessKind.IncludeReadonly)
                 .ToArray();
-            var excludes = entityDescr.Components.Where(x => x.AccessType == ComponentDescriptorType.Exclude)
+            var excludes = entityDescr.Components.Where(x => x.AccessKind == ComponentDescriptorAccessKind.Exclude)
                 .ToArray();
             if (!includes.Any())
             {
@@ -71,65 +194,7 @@ public partial {componentDescriptor.ReturnType} {componentDescriptor.Method.Name
                 filterCode.Append($".Exc<{componentDescriptor.ComponentType}>()");
             }
             filterCode.Append($".End()");
-
-            string GetPoolName(in ComponentDescriptor componentDescriptor) => $"_{componentDescriptor.Method.Name.ToLowerInvariant()}Pool";
-
-            var name = entityDescr.EntityType.Name;
-            var worldName = $"GENERATED_u{entityDescr.Universe}w{wolrdId}";
-            var result = @$"
-/* 
-{entityDescr.ToString()}
-*/
-private readonly partial struct {name}
-{{
-    private readonly int _ent;
-
-    private readonly Provider _provider;
-
-    private {name}(int ent, Provider provider)
-    {{
-        _ent = ent;
-        _provider = provider;
-    }}
-
-{accessToDataCode.ToString().PadLeftAllLines(4*1)}
-
-    public static partial PavEcsSpec.Generated.IEntityProvider<{name}> GetProvider(Leopotam.EcsLite.EcsSystems systems) 
-    {{
-        const string worldName = ""{worldName}"";
-        var world = systems.GetWorld(worldName);
-        if (world == null)
-        {{
-            world = new Leopotam.EcsLite.EcsWorld();
-            systems.AddWorld(world, worldName);
-        }}
-
-        return new Provider(world);
-    }}
-
-    private class Provider : PavEcsSpec.Generated.IEntityProvider<{name}>
-    {{
-{providerFieldsCode.ToString().PadLeftAllLines(4*2)}
-        private readonly Leopotam.EcsLite.EcsFilter _filter;
-
-        public Provider(Leopotam.EcsLite.EcsWorld world)
-        {{
-{initFieldsCode.ToString().PadLeftAllLines(4*3)}
-            _filter = {filterCode.ToString()};
-        }}
-
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public {name} Get(int ent) => new {name}(ent, this);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public PavEcsSpec.Generated.BaseEnumerator<{name}> GetEnumerator()
-            => new PavEcsSpec.Generated.BaseEnumerator<{name}>(_filter.GetEnumerator(), this);
-       
-    }}
-}}";
-
-            return result;
+            return filterCode.ToString();
         }
     }
 }

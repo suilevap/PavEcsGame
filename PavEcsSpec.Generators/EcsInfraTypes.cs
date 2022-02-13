@@ -87,6 +87,12 @@ namespace PavEcsSpec.Generated
         T Get(int ent);
     }
 
+    public interface IEntityFactory<T> where T : struct
+    {
+        T New();
+        T? TryGet(Leopotam.EcsLite.EcsPackedEntityWithWorld entity);
+    }
+
     public struct BaseEnumerator<T> : IDisposable where T : struct
     {
         private EcsFilter.Enumerator _enumerator;

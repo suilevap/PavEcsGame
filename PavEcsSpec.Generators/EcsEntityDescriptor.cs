@@ -6,12 +6,19 @@ using System.Text;
 
 namespace PavEcsSpec.Generators
 {
-    public enum ComponentDescriptorType
+    public enum ComponentDescriptorAccessKind
     {
         Include,
         IncludeReadonly,
         Optional,
         Exclude
+    }
+
+    public enum EntityKind
+    {
+        None,
+        Filter,
+        Factory
     }
     public readonly struct ComponentDescriptor
     {
@@ -21,22 +28,22 @@ namespace PavEcsSpec.Generators
 
         public IMethodSymbol Method { get; }
 
-        public ComponentDescriptorType AccessType { get; }
+        public ComponentDescriptorAccessKind AccessKind { get; }
 
         public ComponentDescriptor(
             ITypeSymbol type,
             IMethodSymbol method,
-            ComponentDescriptorType accessType,
+            ComponentDescriptorAccessKind accessType,
             ITypeSymbol returnType = null)
         {
             ComponentType = type;
             Method = method;
-            AccessType = accessType;
+            AccessKind = accessType;
             ReturnType = returnType;
         }
         public override string ToString()
         {
-            return $"{ReturnType} {ComponentType} {AccessType} {Method}";
+            return $"{ReturnType} {ComponentType} {AccessKind} {Method}";
         }
     }
     internal class EcsEntityDescriptor
@@ -46,6 +53,11 @@ namespace PavEcsSpec.Generators
         public IEnumerable<ComponentDescriptor> Components => _components;
 
         public string Universe { get; private set; }
+        public IMethodSymbol GetIdMethod { get; private set; }
+        public IMethodSymbol ProviderMethod { get; private set; }
+        public EntityKind Kind { get; private set; }
+
+        //public IMethodSymbol FactoryMethod { get; private set; }
 
         public override string ToString()
         {
@@ -56,6 +68,7 @@ namespace PavEcsSpec.Generators
             {
                 result.AppendLine(component.ToString());
             }
+            result.AppendLine($"Provider {ProviderMethod?.Name}, Id: {GetIdMethod?.Name} ");
 
             return result.ToString();
         }
@@ -69,62 +82,94 @@ namespace PavEcsSpec.Generators
 
             foreach (ISymbol member in type.GetMembers())
             {
-
-                if (member is IMethodSymbol methodSymbol && methodSymbol.IsPartialDefinition)
+                if (member is IMethodSymbol methodSymbol &&
+                    methodSymbol.IsPartialDefinition)
                 {
                     var returnType = methodSymbol.ReturnType;
-                    if (returnType.IsValueType)
+                    if (!methodSymbol.IsStatic)
                     {
-                        if (methodSymbol.ReturnsByRefReadonly) //include readonly
+                        if (returnType.IsValueType)
                         {
-
-                            result._components.Add(
-                                new ComponentDescriptor(returnType,
-                                methodSymbol,
-                                    ComponentDescriptorType.IncludeReadonly));
-                        }
-                        else if (methodSymbol.ReturnsByRef) //include
-                        {
-                            result._components.Add(
-                                new ComponentDescriptor(
-                                    returnType,
+                            if (methodSymbol.ReturnsByRefReadonly) //include readonly
+                            {
+                                result._components.Add(
+                                    new ComponentDescriptor(returnType,
                                     methodSymbol,
-                                    ComponentDescriptorType.Include));
+                                        ComponentDescriptorAccessKind.IncludeReadonly));
+                            }
+                            else if (methodSymbol.ReturnsByRef) //include
+                            {
+                                result._components.Add(
+                                    new ComponentDescriptor(
+                                        returnType,
+                                        methodSymbol,
+                                        ComponentDescriptorAccessKind.Include));
+                            }
+                            else if (returnType.SpecialType == SpecialType.System_Int32)
+                            {
+                                result.GetIdMethod = methodSymbol;
+                            }
+                        }
+                        if (returnType.IsRefLikeType && returnType is INamedTypeSymbol namedType &&
+                            namedType.Arity == 1)
+                        {
+                            var componentType = namedType.TypeArguments.First();
+
+                            if (componentType.IsValueType)
+                            {
+                                if (namedType.Name == "OptionalComponent")
+                                {
+                                    result._components.Add(
+                                        new ComponentDescriptor(
+                                            componentType,
+                                            methodSymbol,
+                                            ComponentDescriptorAccessKind.Optional,
+                                            namedType));
+                                }
+                                else if (namedType.Name == "ExcludeComponent")
+                                {
+                                    result._components.Add(
+                                        new ComponentDescriptor(
+                                            componentType,
+                                            methodSymbol,
+                                            ComponentDescriptorAccessKind.Exclude,
+                                            namedType));
+                                }
+                                else
+                                {
+                                    throw new InvalidOperationException($"unexpected return type {namedType}");
+                                }
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException($"unexpected non value return type {componentType}");
+                            }
                         }
                     }
-
-                    if (returnType.IsRefLikeType && returnType is INamedTypeSymbol namedType && namedType.Arity == 1)
+                    else //static method
                     {
-                        var componentType = namedType.TypeArguments.First();
-
-                        if (componentType.IsValueType)
+                        if (returnType is INamedTypeSymbol namedType &&
+                            namedType.Arity == 1)
                         {
-                            if (namedType.Name.Contains("Optional"))
+                            var generictType = namedType.TypeArguments.First();
+                            if (!SymbolEqualityComparer.Default.Equals(generictType, type))
+                                throw new InvalidOperationException($"unexpected return type {generictType}");
+
+                            if (namedType.Name == "IEntityProvider")
                             {
-                                result._components.Add(
-                                    new ComponentDescriptor(
-                                        componentType,
-                                        methodSymbol,
-                                        ComponentDescriptorType.Optional,
-                                        namedType));
+                                result.Kind = EntityKind.Filter;
+                                result.ProviderMethod= methodSymbol;
                             }
-                            else if (namedType.Name.Contains("Exclude"))
+                            else if (namedType.Name == "IEntityFactory")
                             {
-                                result._components.Add(
-                                    new ComponentDescriptor(
-                                        componentType,
-                                        methodSymbol,
-                                        ComponentDescriptorType.Exclude,
-                                        namedType));
+                                result.Kind = EntityKind.Factory;
+                                result.ProviderMethod = methodSymbol;
                             }
                             else
                             {
                                 throw new InvalidOperationException($"unexpected return type {namedType}");
                             }
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException($"unexpected non value return type {componentType}");
+
                         }
                     }
                     //else if (methodSymbol.ReturnType.) 
@@ -138,7 +183,7 @@ namespace PavEcsSpec.Generators
         {
             var entityAttribute = type.GetAttributes()
                 .FirstOrDefault(x => x.AttributeClass.Name == nameof(EcsInfraTypes.EntityAttribute));
-            
+
             if (entityAttribute != null)
             {
                 var universeProp = entityAttribute
@@ -148,4 +193,5 @@ namespace PavEcsSpec.Generators
             }
         }
     }
+
 }

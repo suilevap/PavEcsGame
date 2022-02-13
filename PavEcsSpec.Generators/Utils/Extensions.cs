@@ -15,5 +15,9 @@ namespace PavEcsSpec.Generators
             }
             return result;
         }
+
+        public static bool IsRequired(this ComponentDescriptorAccessKind accessType) =>
+          accessType == ComponentDescriptorAccessKind.Include || accessType == ComponentDescriptorAccessKind.IncludeReadonly;
+
     }
 }
