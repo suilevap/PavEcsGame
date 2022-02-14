@@ -8,7 +8,7 @@ namespace PavEcsSpec.Generators
         public static string PadLeftAllLines(this string data, int width)
         {
             StringBuilder result = new StringBuilder();
-            foreach (var line in data.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+            foreach (var line in data.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
             {
                 if (!string.IsNullOrWhiteSpace(line))
                 {

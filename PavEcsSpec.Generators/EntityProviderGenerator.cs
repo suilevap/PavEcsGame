@@ -91,11 +91,14 @@ public partial {entityDescr.GetIdMethod.ReturnType} {entityDescr.GetIdMethod.Nam
             else if (entityDescr.Kind == EntityKind.Factory)
             {
                 StringBuilder initRequiredComponents = new StringBuilder();
+                StringBuilder checkRequiredComponents = new StringBuilder();
+
                 foreach (var componentDescriptor in entityDescr.Components)
                 {
                     if (componentDescriptor.AccessKind.IsRequired())
                     {
                         initRequiredComponents.AppendLine($"{GetPoolName(componentDescriptor)}.Add(entId);");
+                        checkRequiredComponents.AppendLine($"if (!{GetPoolName(componentDescriptor)}.Has(entId)) return default;");
                     }
                 }
                 providerCode = $@"
@@ -119,11 +122,14 @@ public partial {entityDescr.GetIdMethod.ReturnType} {entityDescr.GetIdMethod.Nam
 
         public {name}? TryGet(Leopotam.EcsLite.EcsPackedEntityWithWorld entity)
         {{
-            if (Leopotam.EcsLite.EcsEntityExtensions.Unpack(entity, out var world, out var entid) && world == _world)
+            if (Leopotam.EcsLite.EcsEntityExtensions.Unpack(entity, out var world, out var entId) && world == _world)
             {{
                 if (_world != world)
                     throw new System.InvalidOperationException($""Unexpected world: Actual: {{world}}. Expected: {{_world}} "");
-                return new {name}(entid, this);
+
+{checkRequiredComponents.ToString().PadLeftAllLines(4 * 4)}
+
+                return new {name}(entId, this);
             }}
             return default;
         }}
