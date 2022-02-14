@@ -90,7 +90,14 @@ namespace PavEcsSpec.Generators
 
             _superSetCount--; // if we combine components, the count of components goes down by 1
         }
-
+        public void Union(T extraItem, IEnumerable<T> items)
+        {
+            var id = GetId(extraItem);
+            foreach (var item in items)
+            {
+                UnionInternal(id, GetId(item));
+            }
+        }
         public void Union(IReadOnlyList<T> items)
         {
             var id1 = GetId(items[0]);

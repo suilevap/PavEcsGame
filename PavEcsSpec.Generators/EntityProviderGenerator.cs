@@ -11,7 +11,7 @@ namespace PavEcsSpec.Generators
     internal class EntityProviderGenerator
     {
 
-        public string GenerateEntityCode(EcsEntityDescriptor entityDescr, int wolrdId)
+        public string GenerateEntityCode(EcsEntityDescriptor entityDescr, string worldName)
         {
 
             StringBuilder accessToDataCode = new StringBuilder();
@@ -61,7 +61,6 @@ public partial {entityDescr.GetIdMethod.ReturnType} {entityDescr.GetIdMethod.Nam
             string GetPoolName(in ComponentDescriptor componentDescriptor) => $"_{componentDescriptor.Method.Name.ToLowerInvariant()}Pool";
 
             var name = entityDescr.EntityType.Name;
-            var worldName = $"GENERATED_u{entityDescr.Universe}w{wolrdId}";
             string providerCode;
             if (entityDescr.Kind == EntityKind.Filter)
             {

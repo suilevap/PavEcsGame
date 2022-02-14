@@ -71,13 +71,30 @@ namespace PavEcsSpec.Generators
                     var universe = universes.GetOrCreate(entity.Universe);
                     universe.Union(entity.Components.Select(x => x.ComponentType));
                 }
-                
+                Dictionary<string, Dictionary<ITypeSymbol, string>> typeToWorldName =
+                    new Dictionary<string, Dictionary<ITypeSymbol, string>>();
+                foreach (var universe in universes)
+                {
+                    Dictionary<ITypeSymbol, string> map = new();
+                    foreach (var gr in universe.Value.GetAllGroups())
+                    {
+                        foreach(var type in gr)
+                        {
+                            var worldName = $"GENERATED_{universe.Key}_{gr.Key}";
+                            map[type] = worldName;
+                        }
+                    }
+                    typeToWorldName[universe.Key] = map;
+                }
+                var mapCode = TypeToWorldNameGenerator.GeneratedCode(typeToWorldName);
+                context.AddSource($"{nameof(EcsInfraTypes.TypeToWorldNameMap)}.generated.cs", mapCode);
+
+
                 Dictionary<ITypeSymbol, string> generatedCode = new Dictionary<ITypeSymbol, string>(SymbolEqualityComparer.IncludeNullability);
                 foreach (var entity in entityDescrs)
                 {
-                    var universe = universes[entity.Universe];
-                    var wolrdId = universe.Root(entity.Components.First().ComponentType);
-                    var code = provider.GenerateEntityCode(entity, wolrdId);
+                    var worldName = typeToWorldName[entity.Universe][entity.Components.First().ComponentType];
+                    var code = provider.GenerateEntityCode(entity, worldName);
                     generatedCode.Add(entity.EntityType, code);
                 }
                 //foreach (var declaration in receiver.Candidates)
@@ -119,7 +136,7 @@ namespace PavEcsSpec.Generators
                         $"Entity {entityDescr.EntityType}",
                         entityDescr.ToString().Replace( Environment.NewLine, "|"),
                         "EcsGenerator", 
-                        DiagnosticSeverity.Info,
+                        DiagnosticSeverity.Warning,
                         true), 
                     declaration.GetLocation())
                 );

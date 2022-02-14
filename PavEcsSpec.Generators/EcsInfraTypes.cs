@@ -13,7 +13,7 @@ namespace PavEcsSpec.Generators
             new (nameof(ProviderTypes), ProviderTypes),
             new (nameof(EntityAttribute), EntityAttribute),
             new (nameof(AutoRegisterSystemAttribute), AutoRegisterSystemAttribute),
-
+            new (nameof(TypeToWorldNameMap), TypeToWorldNameMap),
         };
 
         internal static void AddSources(GeneratorPostInitializationContext c)
@@ -127,6 +127,7 @@ namespace PavEcsSpec.Generated
 ";
 
         public const string EntityAttribute = @"
+#nullable disable
 using System;
 namespace PavEcsSpec.Generated
 {
@@ -152,6 +153,22 @@ namespace PavEcsSpec.Generated
         {
         }
         //public string PropertyName { get; init; } 
+    }
+}
+";
+
+        public const string TypeToWorldNameMap = @"
+#nullable disable
+using System;
+using System.Collections.Generic;
+
+namespace PavEcsSpec.Generated
+{
+    public partial class TypeToWorldNameMap
+    {
+        public partial string GetWorldName<T>(string universeName) where T : struct;
+        public string GetWorldName<T>() where T : struct => GetWorldName<T>(null);
+
     }
 }
 ";
