@@ -26,6 +26,7 @@ namespace GenerateTest
     {
         private readonly EcsWorld _world;
         private readonly EcsSystems _systems;
+        private readonly Providers _providers;
 
         public bool IsAlive => _world?.IsAlive() ?? false;
 
@@ -33,6 +34,7 @@ namespace GenerateTest
         {
             _world = new EcsWorld();
             _systems = new EcsSystems(_world, "Root");
+            _providers = new Providers(_systems);
         }
 
         [Entity]
@@ -40,8 +42,6 @@ namespace GenerateTest
         {
             public partial ref PositionComponent Pos();
             public partial OptionalComponent<SpeedComponent> Speed();
-
-            public static partial IEntityFactory<SpawEnt> GetFactory(EcsSystems systems);
         }
 
         public void Start()
@@ -53,13 +53,13 @@ namespace GenerateTest
             _systems
                 .Init();
 
-            var factory = SpawEnt.GetFactory(_systems);
+            //var factory = SpawEnt.Create(_systems);
 
             for (int i = 0; i < 100000; i++)
             {
                 //var newEnt = _world.NewEntity();
                 //_world.GetPool<PositionComponent>().Add(newEnt).Value = new (i,1)
-                var ent = factory.New();
+                var ent = _providers.SpawEntProvider.New();
                 ent.Pos().Value = new(i, 1);
                 if (i % 4 == 0)
                 {

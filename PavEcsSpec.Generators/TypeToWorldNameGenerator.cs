@@ -15,7 +15,7 @@ namespace PavEcsSpec.Generators
             foreach (var pair in wolrdNameMap)
             {
                 var universeName = pair.Key;
-                var fieldName = universeName ?? "Default";
+                var fieldName = !string.IsNullOrEmpty(universeName) ? universeName : "Default";
 
                 universeSwitch.AppendLine($@"case ""{universeName ?? String.Empty}"" :");
                 universeSwitch.AppendLine($@"   return {fieldName};");

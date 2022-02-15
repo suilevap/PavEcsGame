@@ -43,6 +43,16 @@ namespace PavEcsSpec.Generated
             _ent = ent;
         }
 
+        public bool Clear()
+        {
+            if (_pool.Has(_ent))
+            {
+                _pool.Del(_ent);
+                return true;
+            }
+            return false;
+        }
+
         public ref T Ensure(out bool isNew)
         {
             if (_pool.Has(_ent))
@@ -61,9 +71,25 @@ namespace PavEcsSpec.Generated
                 return ref _pool.Get(_ent);
             }
             return ref _pool.Add(_ent);
-        } 
+        }
 
         public bool Has() => _pool.Has(_ent);
+    }
+
+    public readonly ref struct RequiredComponent<T> where T : struct
+    {
+        private readonly EcsPool<T> _pool;
+        private readonly int _ent;
+
+        public RequiredComponent(EcsPool<T> pool, int ent)
+        {
+            _pool = pool;
+            _ent = ent;
+        }
+
+        public void Remove() => _pool.Del(_ent);
+
+        public ref T Get() => ref _pool.Get(_ent);
     }
 
     public readonly ref struct ExcludeComponent<T> where T : struct
@@ -80,48 +106,51 @@ namespace PavEcsSpec.Generated
         public ref T Add() => ref _pool.Add(_ent);
     }
 
-    public interface IEntityProvider<T> where T : struct
-    {
-        BaseEnumerator<T> GetEnumerator();
+    //public interface IEntityProvider<T> where T : struct
+    //{
+    //    BaseEnumerator<T> GetEnumerator();
+        
+    //    EcsFilter Filter {get;}
 
-        T Get(int ent);
-    }
+    //    T Get(int ent);
+    //}
 
-    public interface IEntityFactory<T> where T : struct
-    {
-        T New();
-        T? TryGet(Leopotam.EcsLite.EcsPackedEntityWithWorld entity);
-    }
+    //public interface IEntityFactory<T> where T : struct
+    //{
+    //    T New();
+    //    T? TryGet(Leopotam.EcsLite.EcsPackedEntityWithWorld entity);
+    //    T? TryGetUnsafe(int entId);
+    //}
 
-    public struct BaseEnumerator<T> : IDisposable where T : struct
-    {
-        private EcsFilter.Enumerator _enumerator;
-        private readonly IEntityProvider<T> _provider;
+    //public struct BaseEnumerator<T> : IDisposable where T : struct
+    //{
+    //    private EcsFilter.Enumerator _enumerator;
+    //    private readonly IEntityProvider<T> _provider;
 
-        public BaseEnumerator(EcsFilter.Enumerator enumerator, IEntityProvider<T> provider)
-        {
-            _enumerator = enumerator;
-            _provider = provider;
-        }
+    //    public BaseEnumerator(EcsFilter.Enumerator enumerator, IEntityProvider<T> provider)
+    //    {
+    //        _enumerator = enumerator;
+    //        _provider = provider;
+    //    }
 
-        public T Current
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _provider.Get(_enumerator.Current);
-        }
+    //    public T Current
+    //    {
+    //        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //        get => _provider.Get(_enumerator.Current);
+    //    }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext()
-        {
-            return _enumerator.MoveNext();
-        }
+    //    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //    public bool MoveNext()
+    //    {
+    //        return _enumerator.MoveNext();
+    //    }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Dispose()
-        {
-            _enumerator.Dispose();
-        }
-    }
+    //    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //    public void Dispose()
+    //    {
+    //        _enumerator.Dispose();
+    //    }
+    //}
 }
 
 ";
@@ -139,6 +168,8 @@ namespace PavEcsSpec.Generated
         }
         
         public string Universe {get; set;}
+        public bool SkipFilter {get; set;}
+
     }
 }
 ";

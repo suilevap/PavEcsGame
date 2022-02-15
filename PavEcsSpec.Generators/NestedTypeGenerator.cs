@@ -14,7 +14,7 @@ namespace PavEcsSpec.Generators
 
             foreach (KeyValuePair<ITypeSymbol, string> pair in generatedCode)
             {
-                var parentType = pair.Key.ContainingType;
+                var parentType = pair.Key.ContainingType ?? pair.Key;
                 if (!parents.TryGetValue(parentType, out var sb))
                 {
                     sb = new StringBuilder();
@@ -45,6 +45,7 @@ namespace PavEcsSpec.Generators
                     //todo append usings
                     
                     finalSb.AppendLine(@"
+using System;
 using System.Runtime.CompilerServices;
 ");
 

@@ -22,5 +22,16 @@ namespace PavEcsSpec.Generators
 
             return result.ToString();
         }
+
+        public static string ToLowerCaseFirstChar(this string data)
+        {
+            if (data.Length == 0) 
+                return data;
+
+            if (char.IsLower(data[0]))
+                return data;
+
+            return data.Substring(0, 1).ToLower() + data.Substring(1);
+        }
     }
 }

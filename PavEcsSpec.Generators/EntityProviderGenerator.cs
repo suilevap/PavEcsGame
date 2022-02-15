@@ -21,7 +21,7 @@ namespace PavEcsSpec.Generators
             foreach (var componentDescriptor in entityDescr.Components)
             {
                 var poolName = GetPoolName(componentDescriptor);
-                if (componentDescriptor.AccessKind.IsRequired())
+                if (componentDescriptor.ReturnType == null)
                 {
                     var readonlyReturn =
                     componentDescriptor.AccessKind == ComponentDescriptorAccessKind.IncludeReadonly ? "readonly" : string.Empty;
@@ -48,60 +48,69 @@ public partial {componentDescriptor.ReturnType} {componentDescriptor.Method.Name
                 initFieldsCode.AppendLine($"{poolName} = world.GetPool<{componentDescriptor.ComponentType}>();");
 
             }
-            if (entityDescr.GetIdMethod != null)
-            {
-                var methodDeclaration = $@"
-public partial {entityDescr.GetIdMethod.ReturnType} {entityDescr.GetIdMethod.Name}()
-{{
-    return _ent;
-}}";
-                accessToDataCode.AppendLine(methodDeclaration);
-            }
 
             string GetPoolName(in ComponentDescriptor componentDescriptor) => $"_{componentDescriptor.Method.Name.ToLowerInvariant()}Pool";
 
             var name = entityDescr.EntityType.Name;
-            string providerCode;
-            if (entityDescr.Kind == EntityKind.Filter)
+            StringBuilder providerMethods = new StringBuilder();
+            if (!entityDescr.SkipFilter)
             {
-                providerCode = $@"
-    private class Provider : {entityDescr.ProviderMethod.ReturnType}
+                providerFieldsCode.AppendLine("private readonly Leopotam.EcsLite.EcsFilter _filter;");
+                initFieldsCode.AppendLine($"_filter = {GetFilterCode(entityDescr)};");
+                providerMethods.Append($@"
+ [MethodImpl(MethodImplOptions.AggressiveInlining)]
+public Enumerator GetEnumerator()
+    => new Enumerator(_filter.GetEnumerator(), this);
+
+public Leopotam.EcsLite.EcsFilter Filter => _filter;
+
+public struct Enumerator : IDisposable 
+{{
+    private Leopotam.EcsLite.EcsFilter.Enumerator _enumerator;
+    private readonly Provider _provider;
+
+    public Enumerator(Leopotam.EcsLite.EcsFilter.Enumerator enumerator, Provider provider)
     {{
-{providerFieldsCode.ToString().PadLeftAllLines(4 * 2)}
-        private readonly Leopotam.EcsLite.EcsFilter _filter;
-
-        public Provider(Leopotam.EcsLite.EcsWorld world)
-        {{
-{initFieldsCode.ToString().PadLeftAllLines(4 * 3)}
-            _filter = {GetFilterCode(entityDescr)};
-        }}
-
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public {name} Get(int ent) => new {name}(ent, this);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public PavEcsSpec.Generated.BaseEnumerator<{name}> GetEnumerator()
-            => new PavEcsSpec.Generated.BaseEnumerator<{name}>(_filter.GetEnumerator(), this);
-       
+        _enumerator = enumerator;
+        _provider = provider;
     }}
-";
-            }
-            else if (entityDescr.Kind == EntityKind.Factory)
-            {
-                StringBuilder initRequiredComponents = new StringBuilder();
-                StringBuilder checkRequiredComponents = new StringBuilder();
 
-                foreach (var componentDescriptor in entityDescr.Components)
+    public {name} Current
+    {{
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new {name}(_enumerator.Current, _provider);
+    }}
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool MoveNext()
+    {{
+        return _enumerator.MoveNext();
+    }}
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Dispose()
+    {{
+        _enumerator.Dispose();
+    }}
+}}
+");
+            }
+            string providerCode;
+            StringBuilder initRequiredComponents = new StringBuilder();
+            StringBuilder checkRequiredComponents = new StringBuilder();
+
+            foreach (var componentDescriptor in entityDescr.Components)
+            {
+                if (componentDescriptor.AccessKind.IsRequired())
                 {
-                    if (componentDescriptor.AccessKind.IsRequired())
-                    {
-                        initRequiredComponents.AppendLine($"{GetPoolName(componentDescriptor)}.Add(entId);");
-                        checkRequiredComponents.AppendLine($"if (!{GetPoolName(componentDescriptor)}.Has(entId)) return default;");
-                    }
+                    initRequiredComponents.AppendLine($"{GetPoolName(componentDescriptor)}.Add(entId);");
+                    checkRequiredComponents.AppendLine($"if (!{GetPoolName(componentDescriptor)}.Has(entId)) return default;");
                 }
-                providerCode = $@"
-    private class Provider : {entityDescr.ProviderMethod.ReturnType}
+            }
+
+
+            providerCode = $@"
+    public class Provider
     {{
 {providerFieldsCode.ToString().PadLeftAllLines(4 * 2)}
         private readonly Leopotam.EcsLite.EcsWorld _world;
@@ -111,6 +120,7 @@ public partial {entityDescr.GetIdMethod.ReturnType} {entityDescr.GetIdMethod.Nam
             _world = world;
 {initFieldsCode.ToString().PadLeftAllLines(4 * 3)}
         }}
+{providerMethods.ToString().PadLeftAllLines(4 * 2)}
 
         public {name} New()
         {{
@@ -132,13 +142,15 @@ public partial {entityDescr.GetIdMethod.ReturnType} {entityDescr.GetIdMethod.Nam
             }}
             return default;
         }}
+
+        public {name}? TryGetUnsafe(int entId)
+        {{
+{checkRequiredComponents.ToString().PadLeftAllLines(4 * 3)}
+            return new {name}(entId, this);
+        }}
     }}
 ";
-            }
-            else
-            {
-                providerCode = string.Empty;
-            }
+
             var result = @$"
 /* 
 {entityDescr.ToString()}
@@ -157,7 +169,9 @@ private readonly partial struct {name}
 
 {accessToDataCode.ToString().PadLeftAllLines(4 * 1)}
 
-    public static partial {entityDescr.ProviderMethod.ReturnType} {entityDescr.ProviderMethod.Name}(Leopotam.EcsLite.EcsSystems systems) 
+    public int GetRawId() => _ent;
+
+    public static Provider Create(Leopotam.EcsLite.EcsSystems systems) 
     {{
         const string worldName = ""{worldName}"";
         var world = systems.GetWorld(worldName);
@@ -170,11 +184,17 @@ private readonly partial struct {name}
         return new Provider(world);
     }}
 
+    public static  Provider Create(Leopotam.EcsLite.EcsWorld world) 
+    {{
+        return new Provider(world);
+    }}
+
     {providerCode}
 }}";
 
             return result;
         }
+
 
         private static string GetFilterCode(EcsEntityDescriptor entityDescr)
         {

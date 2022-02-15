@@ -32,13 +32,32 @@ namespace PavEcsSpec.Generators
 
         public void Execute(GeneratorExecutionContext context)
         {
-            // retrieve the populated receiver 
 #if DEBUG
             //if (!Debugger.IsAttached)
             //{
             //    Debugger.Launch();
             //}
 #endif 
+            try
+            {
+                ExecuteImpl(context);
+            }
+            catch (Exception ex)
+            {
+#if DEBUG
+                //if (!Debugger.IsAttached)
+                //{
+                //    Debugger.Launch();
+                //}
+#endif 
+                throw;
+            }
+        }
+
+        private void ExecuteImpl(GeneratorExecutionContext context)
+        {
+            // retrieve the populated receiver 
+
             if (context.SyntaxReceiver is EntitySyntaxReceiver receiver)
             {
                 var provider = new EntityProviderGenerator();
@@ -78,7 +97,7 @@ namespace PavEcsSpec.Generators
                     Dictionary<ITypeSymbol, string> map = new();
                     foreach (var gr in universe.Value.GetAllGroups())
                     {
-                        foreach(var type in gr)
+                        foreach (var type in gr)
                         {
                             var worldName = $"GENERATED_{universe.Key}_{gr.Key}";
                             map[type] = worldName;
@@ -96,6 +115,14 @@ namespace PavEcsSpec.Generators
                     var worldName = typeToWorldName[entity.Universe][entity.Components.First().ComponentType];
                     var code = provider.GenerateEntityCode(entity, worldName);
                     generatedCode.Add(entity.EntityType, code);
+                }
+                foreach (var gr in entityDescrs.GroupBy(x => x.EntityType.ContainingType, SymbolEqualityComparer.IncludeNullability))
+                {
+                    if (gr.Key is ITypeSymbol parentType)
+                    {
+                        var providerCode = ProvidersGenerator.GenerateCode(gr);
+                        generatedCode.Add(parentType, providerCode);
+                    }
                 }
                 //foreach (var declaration in receiver.Candidates)
                 //{
@@ -117,7 +144,9 @@ namespace PavEcsSpec.Generators
                 var types = NestedTypeGenerator.WrapNestedTypes(generatedCode);
                 foreach (var pair in types)
                 {
-                    context.AddSource($"{pair.Key.Name}.generated.cs", pair.Value);
+                    var fileName = $"{pair.Key.Name}.generated.cs";
+                    var code = pair.Value;
+                    AddSource(context, fileName, code);
                 }
                 //context.AddSource($"{type.Name}_Generated.cs", code);
 
@@ -127,17 +156,24 @@ namespace PavEcsSpec.Generators
             //context.AddSource("EmptySystem.generated.cs", SourceText.From(provider.GetSource(), Encoding.UTF8));
         }
 
+        private static void AddSource(GeneratorExecutionContext context, string fileName, string code)
+        {
+            context.AddSource(fileName, code);
+
+            System.IO.File.WriteAllText("C:/dev/roslyn/" + fileName, code);
+        }
+
         private void ReportDiagnostic(GeneratorExecutionContext context, EcsEntityDescriptor entityDescr, StructDeclarationSyntax declaration)
         {
             context.ReportDiagnostic(
                 Diagnostic.Create(
                     new DiagnosticDescriptor(
-                        "0", 
+                        "0",
                         $"Entity {entityDescr.EntityType}",
-                        entityDescr.ToString().Replace( Environment.NewLine, "|"),
-                        "EcsGenerator", 
+                        entityDescr.ToString().Replace(Environment.NewLine, "|"),
+                        "EcsGenerator",
                         DiagnosticSeverity.Warning,
-                        true), 
+                        true),
                     declaration.GetLocation())
                 );
         }
@@ -166,7 +202,7 @@ namespace PavEcsSpec.Generators
                     //classDeclarationSyntax.AttributeLists.
                     //classDeclarationSyntax.AttributeLists.Any(x=>x.At)
 
-                    var ctors = 
+                    var ctors =
                         classDeclarationSyntax.Members.OfType<ConstructorDeclarationSyntax>()
                             .Take(2)
                             .ToArray();

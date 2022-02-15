@@ -8,15 +8,17 @@ namespace PavEcsGame.Systems
     [PavEcsSpec.Generated.AutoRegisterSystem]
     partial class EmptySystem : IEcsRunSystem
     {
-        private readonly IEntityProvider<Entity> _provider;
-        private readonly IEntityProvider<Entity2> _provider2;
+        private readonly Providers _providers;
 
         public EmptySystem(EcsSystems systems)
         {
-            _provider = Entity.GetProvider(systems);
-            _provider2 = Entity2.GetProvider(systems);
+            _providers = new Providers(systems);
         }
 
+        //private readonly void GeneratedInit(EcsSystems systems)
+        //{
+
+        //}
         //private partial EmptySystem(EcsSystems systems);
 
         [PavEcsSpec.Generated.Entity]
@@ -29,7 +31,7 @@ namespace PavEcsGame.Systems
             //public partial OptionalComponent<PavEcsGame.Components.IsActiveTag> New3();
             public partial ExcludeComponent<DestroyRequestTag> DestroyRequested();
 
-            public static partial IEntityProvider<Entity> GetProvider(EcsSystems systems);
+            //public static partial IEntityProvider<Entity> GetProvider(EcsSystems systems);
         }
 
         [PavEcsSpec.Generated.Entity]
@@ -37,14 +39,24 @@ namespace PavEcsGame.Systems
         {
             public partial ref readonly PositionComponent Pos();
             public partial ref readonly SpeedComponent Speed();
-            public static partial IEntityProvider<Entity2> GetProvider(EcsSystems systems);
+            //public static partial IEntityProvider<Entity2> GetProvider(EcsSystems systems);
+
+        }
+
+        [PavEcsSpec.Generated.Entity]
+        private readonly partial struct Entity3
+        {
+            public partial ref readonly PositionComponent Pos();
+            public partial ref readonly SpeedComponent Speed();
+            //public partial int GetId();
+//            public static partial IEntityFactory<Entity3> GetFactory(EcsSystems systems);
 
         }
 
 
         public void Run(EcsSystems systems)
         {
-            foreach (Entity entity in _provider)
+            foreach (Entity entity in _providers.EntityProvider)
             {
                 ref readonly var pos = ref entity.Pos();
                 ref readonly var speed = ref entity.Speed();
@@ -52,7 +64,7 @@ namespace PavEcsGame.Systems
                 Console.WriteLine($"entity. {entity.Pos().Value}");
             }
 
-            foreach (Entity2 entity in _provider2)
+            foreach (Entity2 entity in _providers.Entity2Provider)
             {
                 Console.WriteLine($"entity. {entity.Pos().Value}");
             }
