@@ -22,6 +22,12 @@ namespace PavEcsSpec.Generators
                 StringBuilder mapping = new StringBuilder();
                 foreach (var typeAndWorld in pair.Value)
                 {
+                    var type = typeAndWorld.Key;
+
+                    if (type.DeclaredAccessibility == Accessibility.Private 
+                        || type.ContainingType?.DeclaredAccessibility == Accessibility.Private) //todo: do we need to check more levels?
+                        continue;
+                    
                     mapping.AppendLine($@"{{ typeof({typeAndWorld.Key}),""{typeAndWorld.Value}"" }},");
                 }
                 mapsCode.AppendLine($@"

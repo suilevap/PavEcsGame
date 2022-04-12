@@ -17,6 +17,30 @@ namespace PavEcsSpec.Generators
             StringBuilder accessToDataCode = new StringBuilder();
             StringBuilder providerFieldsCode = new StringBuilder();
             StringBuilder initFieldsCode = new StringBuilder();
+            StringBuilder extraArgumentsDeclaration = new StringBuilder();
+            StringBuilder extraArgumentsPass = new StringBuilder();
+            
+
+            foreach (var baseEntityDescriptor in entityDescr.BaseEntities)
+            {
+                var providerName = GetProviderName(baseEntityDescriptor);
+                var providerFieldName = "_" + providerName;
+                var methodDeclaration = $@"
+public partial {baseEntityDescriptor.EntityType} {baseEntityDescriptor.Method.Name}()
+{{
+    return (_provider.{providerFieldName}.TryGetUnsafe(_ent)) ?? throw new ArgumentNullException(""{baseEntityDescriptor.Method.Name}"");
+}}";
+                accessToDataCode.AppendLine(methodDeclaration);
+
+                providerFieldsCode.AppendLine($"public readonly {baseEntityDescriptor.EntityType}.Provider {providerFieldName};");
+
+                extraArgumentsDeclaration.Append($", {baseEntityDescriptor.EntityType}.Provider {providerName}");
+                extraArgumentsPass.Append($", {providerName}");
+
+                initFieldsCode.AppendLine($"{providerFieldName} = {providerName};");
+
+            }
+
 
             foreach (var componentDescriptor in entityDescr.Components)
             {
@@ -45,11 +69,15 @@ public partial {componentDescriptor.ReturnType} {componentDescriptor.Method.Name
 
                 providerFieldsCode.AppendLine($"public readonly Leopotam.EcsLite.EcsPool<{componentDescriptor.ComponentType}> {poolName};");
 
+
                 initFieldsCode.AppendLine($"{poolName} = world.GetPool<{componentDescriptor.ComponentType}>();");
 
             }
 
-            string GetPoolName(in ComponentDescriptor componentDescriptor) => $"_{componentDescriptor.Method.Name.ToLowerInvariant()}Pool";
+            static string GetPoolName(in ComponentDescriptor componentDescriptor) => $"_{componentDescriptor.Method.Name.ToLowerInvariant()}Pool";
+
+            static string GetProviderName(in BaseEntityDescriptor baseEntDescriptor) => $"{baseEntDescriptor.Method.Name.ToLowerInvariant()}Provider";
+
 
             var name = entityDescr.EntityType.Name;
             StringBuilder providerMethods = new StringBuilder();
@@ -101,10 +129,15 @@ public struct Enumerator : IDisposable
 
             foreach (var componentDescriptor in entityDescr.Components)
             {
+                var poolName = GetPoolName(componentDescriptor);
                 if (componentDescriptor.AccessKind.IsRequired())
                 {
-                    initRequiredComponents.AppendLine($"{GetPoolName(componentDescriptor)}.Add(entId);");
-                    checkRequiredComponents.AppendLine($"if (!{GetPoolName(componentDescriptor)}.Has(entId)) return default;");
+                    initRequiredComponents.AppendLine($"{poolName}.Add(entId);");
+                    checkRequiredComponents.AppendLine($"if (!{poolName}.Has(entId)) return default;");
+                }
+                else if (componentDescriptor.AccessKind == ComponentDescriptorAccessKind.Exclude)
+                {
+                    checkRequiredComponents.AppendLine($"if ({poolName}.Has(entId)) return default;");
                 }
             }
 
@@ -115,7 +148,7 @@ public struct Enumerator : IDisposable
 {providerFieldsCode.ToString().PadLeftAllLines(4 * 2)}
         private readonly Leopotam.EcsLite.EcsWorld _world;
 
-        public Provider(Leopotam.EcsLite.EcsWorld world)
+        public Provider(Leopotam.EcsLite.EcsWorld world {extraArgumentsDeclaration})
         {{
             _world = world;
 {initFieldsCode.ToString().PadLeftAllLines(4 * 3)}
@@ -171,7 +204,7 @@ private readonly partial struct {name}
 
     public int GetRawId() => _ent;
 
-    public static Provider Create(Leopotam.EcsLite.EcsSystems systems) 
+    public static Provider Create(Leopotam.EcsLite.EcsSystems systems{extraArgumentsDeclaration}) 
     {{
         const string worldName = ""{worldName}"";
         var world = systems.GetWorld(worldName);
@@ -181,12 +214,12 @@ private readonly partial struct {name}
             systems.AddWorld(world, worldName);
         }}
 
-        return new Provider(world);
+        return new Provider(world{extraArgumentsPass});
     }}
 
-    public static  Provider Create(Leopotam.EcsLite.EcsWorld world) 
+    public static  Provider Create(Leopotam.EcsLite.EcsWorld world{extraArgumentsDeclaration}) 
     {{
-        return new Provider(world);
+        return new Provider(world{extraArgumentsPass});
     }}
 
     {providerCode}

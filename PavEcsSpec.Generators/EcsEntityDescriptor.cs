@@ -46,11 +46,38 @@ namespace PavEcsSpec.Generators
             return $"{ReturnType} {ComponentType} {AccessKind} {Method}";
         }
     }
+
+    public readonly struct BaseEntityDescriptor
+    {
+        public ITypeSymbol EntityType { get; }
+
+        public IMethodSymbol Method { get; }
+
+        public BaseEntityDescriptor(
+            ITypeSymbol type,
+            IMethodSymbol method)
+        {
+            EntityType = type;
+            Method = method;
+        }
+        public override string ToString()
+        {
+            return $"{EntityType} {Method}";
+        }
+    }
+
     internal class EcsEntityDescriptor
     {
         private readonly List<ComponentDescriptor> _components = new List<ComponentDescriptor>();
+
+        private readonly List<BaseEntityDescriptor> _baseEntitiesDescriptors = new List<BaseEntityDescriptor>();
+
         public ITypeSymbol EntityType { get; private set; }
         public IEnumerable<ComponentDescriptor> Components => _components;
+        public IEnumerable<BaseEntityDescriptor> BaseEntities => _baseEntitiesDescriptors;
+
+        public IEnumerable<ITypeSymbol> ExtraArgs => _baseEntitiesDescriptors.Select(x => x.EntityType);
+
 
         public string Universe { get; private set; }
         //public IMethodSymbol GetIdMethod { get; private set; }
@@ -68,6 +95,10 @@ namespace PavEcsSpec.Generators
             foreach (var component in _components)
             {
                 result.AppendLine(component.ToString());
+            }
+            foreach (var ent in _baseEntitiesDescriptors)
+            {
+                result.AppendLine(ent.ToString());
             }
             //result.AppendLine($"Provider {ProviderMethod?.Name}, Id: {GetIdMethod?.Name} ");
 
@@ -91,7 +122,14 @@ namespace PavEcsSpec.Generators
                     {
                         if (returnType.IsValueType)
                         {
-                            if (methodSymbol.ReturnsByRefReadonly) //include readonly
+                            if (returnType
+                                .GetAttributes()
+                                .Any(x => x.AttributeClass.Name == nameof(EcsInfraTypes.EntityAttribute)))
+                            {
+                                result._baseEntitiesDescriptors.Add(
+                                    new BaseEntityDescriptor(returnType, methodSymbol));
+                            }
+                            else if (methodSymbol.ReturnsByRefReadonly) //include readonly
                             {
                                 result._components.Add(
                                     new ComponentDescriptor(returnType,

@@ -19,7 +19,7 @@ namespace PavEcsGame.Systems
     {
         //private readonly Entity.Provider _provider;
         //private readonly Entity2.Provider _provider2;
-        private readonly IEntityProvider<Entity2> _provider2;
+        //private readonly IEntityProvider<Entity2> _provider2;
         //private readonly Entity2.Provider _provider2;
 
 
@@ -27,8 +27,29 @@ namespace PavEcsGame.Systems
         public TestSystem(EcsSystems systems)
         {
             //_provider = new Entity.Provider(systems.GetWorld());
-            _provider2 = Entity2.GetProvider(systems);
-             //GetProvider(systems, ref _provider2);
+            //_provider2 = Entity2.GetProvider(systems);
+            //GetProvider(systems, ref _provider2);
+            _providers = new Providers(systems);
+
+            //_providers = new Providers(Entity2.Create(systems));
+        }
+
+        private readonly Providers _providers;
+
+        private readonly struct Providers
+        {
+            public Entity2.Provider Entity2Provider { get;  }
+
+            public Providers(EcsSystems systems)
+                :this(Entity2.Create(systems))
+            {
+                //Entity2Provider = Entity2.Create(systems);
+            }
+            public Providers(Entity2.Provider entity2Provider)
+            {
+                Entity2Provider = entity2Provider;
+            }
+
         }
 
         //private void GetProvider<T>(EcsSystems systems, ref IEntityProvider<T> result) where T : struct
@@ -55,11 +76,13 @@ namespace PavEcsGame.Systems
         //[PavEcsSpec.Generators.Entity]
         private readonly partial struct Entity2
         {
+            public partial Entity2 Base();
+
             public partial ref PositionComponent Pos();
             public partial ref readonly SpeedComponent Speed();
             //public static partial EcsPackedEntityWithWorld GetId();
 
-            public static partial IEntityProvider<Entity2> GetProvider(EcsSystems systems);
+            //public static partial IEntityProvider<Entity2> GetProvider(EcsSystems systems);
             //public static partial IEntityFactory<Entity2> GetFactory(EcsSystems systems);
 
 
@@ -74,16 +97,16 @@ namespace PavEcsGame.Systems
         //    public static partial IEntityFactory<Entity3> GetFactory(EcsSystems systems);
         //    //public partial class Provider : IEntityProvider<Entity2> { }
         //}
-        public interface IExtend<T> where T :struct
-        {
-            //T2 Get(T2 ent);
-        }
+        //public interface IExtend<T> where T :struct
+        //{
+        //    //T2 Get(T2 ent);
+        //}
 
-        public interface IEntityFactory<T> where T : struct
-        {
-            T New();
-            T? TryGet(Leopotam.EcsLite.EcsPackedEntityWithWorld entity);
-        }
+        //public interface IEntityFactory<T> where T : struct
+        //{
+        //    T New();
+        //    T? TryGet(Leopotam.EcsLite.EcsPackedEntityWithWorld entity);
+        //}
         //public interface IEntityProvider<T> where T : struct
         //{
         //    BaseEnumerator<T> GetEnumerator();
@@ -112,7 +135,7 @@ namespace PavEcsGame.Systems
             //newEnt.Pos() = new PositionComponent() { Value = 2 };
             //newEnt.Speed().Speed.X = 4;
             
-            foreach (Entity2 entity in _provider2)
+            foreach (Entity2 entity in _providers.Entity2Provider)
             {
                 entity.Pos().Value += entity.Speed().Speed;
                 //Console.WriteLine($"entity. {entity.Pos().Value}");
@@ -146,12 +169,17 @@ namespace PavEcsGame.Systems
             {
                 return ref _provider._speedPool.Get(_entityId);
             }
+            public partial Entity2 Base()
+            {
+                return new Entity2(_entityId, _provider);
+            }
 
-            public static partial IEntityProvider<Entity2> GetProvider(EcsSystems systems) 
-                => new Provider(systems.GetWorld());
+            //public static partial IEntityProvider<Entity2> GetProvider(EcsSystems systems) 
+            //    => new Provider(systems.GetWorld());
 
+            public static Provider Create(EcsSystems sysmtes) => new Provider(sysmtes.GetWorld());
 
-            public partial class Provider : IEntityProvider<Entity2>, IEntityFactory<Entity2>
+            public partial class Provider //: IEntityProvider<Entity2>, IEntityFactory<Entity2>
             {
                 public readonly EcsPool<Components.PositionComponent> _posPool;
                 public readonly EcsPool<Components.SpeedComponent> _speedPool;
@@ -175,7 +203,38 @@ namespace PavEcsGame.Systems
                 public Entity2 Get(int ent) => new Entity2(ent, this);
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public BaseEnumerator<Entity2> GetEnumerator() => new BaseEnumerator<Entity2>(_filter.GetEnumerator(), this);
+                public Enumerator GetEnumerator() => new Enumerator(_filter.GetEnumerator(), this);
+                //public BaseEnumerator<Entity2> GetEnumerator() => new BaseEnumerator<Entity2>(_filter.GetEnumerator(), this);
+
+                public struct Enumerator : IDisposable 
+                {
+                    private EcsFilter.Enumerator _enumerator;
+                    private readonly Provider _provider;
+
+                    public Enumerator(EcsFilter.Enumerator enumerator, Provider provider)
+                    {
+                        _enumerator = enumerator;
+                        _provider = provider;
+                    }
+
+                    public Entity2 Current
+                    {
+                        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                        get => _provider.Get(_enumerator.Current);
+                    }
+
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    public bool MoveNext()
+                    {
+                        return _enumerator.MoveNext();
+                    }
+
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    public void Dispose()
+                    {
+                        _enumerator.Dispose();
+                    }
+                }
 
                 public Entity2 New()
                 {

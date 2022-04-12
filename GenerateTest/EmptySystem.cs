@@ -12,7 +12,14 @@ namespace PavEcsGame.Systems
 
         public EmptySystem(EcsSystems systems)
         {
-            _providers = new Providers(systems);
+            //
+            var ent1Prov = Entity.Create(systems);
+            _providers = new Providers(
+                ent1Prov,
+                Entity2.Create(systems),
+                Entity3.Create(systems)
+                ,EntityChild.Create(systems, ent1Prov)
+                );
         }
 
         //private readonly void GeneratedInit(EcsSystems systems)
@@ -52,6 +59,15 @@ namespace PavEcsGame.Systems
 //            public static partial IEntityFactory<Entity3> GetFactory(EcsSystems systems);
 
         }
+
+        [PavEcsSpec.Generated.Entity]
+        private readonly partial struct EntityChild
+        {
+            public partial Entity Base();
+
+            public partial ref readonly DirectionBasedOnSpeed DirBasedOnSpeed1();
+        }
+
 
 
         public void Run(EcsSystems systems)

@@ -88,7 +88,9 @@ namespace PavEcsSpec.Generators
                 foreach (var entity in entityDescrs)
                 {
                     var universe = universes.GetOrCreate(entity.Universe);
-                    universe.Union(entity.Components.Select(x => x.ComponentType));
+                    universe.Union(entity.Components.Select(x => x.ComponentType)
+                        .Concat(new[] { entity.EntityType })
+                        .Concat(entity.BaseEntities.Select(x=>x.EntityType)));
                 }
                 Dictionary<string, Dictionary<ITypeSymbol, string>> typeToWorldName =
                     new Dictionary<string, Dictionary<ITypeSymbol, string>>();
@@ -106,7 +108,7 @@ namespace PavEcsSpec.Generators
                     typeToWorldName[universe.Key] = map;
                 }
                 var mapCode = TypeToWorldNameGenerator.GeneratedCode(typeToWorldName);
-                context.AddSource($"{nameof(EcsInfraTypes.TypeToWorldNameMap)}.generated.cs", mapCode);
+                AddSource(context, $"{nameof(EcsInfraTypes.TypeToWorldNameMap)}.generated.cs", mapCode);
 
 
                 Dictionary<ITypeSymbol, string> generatedCode = new Dictionary<ITypeSymbol, string>(SymbolEqualityComparer.IncludeNullability);
@@ -124,22 +126,6 @@ namespace PavEcsSpec.Generators
                         generatedCode.Add(parentType, providerCode);
                     }
                 }
-                //foreach (var declaration in receiver.Candidates)
-                //{
-
-                //    var model = context.Compilation.GetSemanticModel(declaration.SyntaxTree, true);
-                //    if (model.GetDeclaredSymbol(declaration) is ITypeSymbol type)
-                //    {
-                //        //if (type is null || !IsEnumeration(type))
-                //        //    continue;
-                //        var entityDescr = EcsEntityDescriptor.Create(type);
-                //        ReportDiagnostic(context, entityDescr, declaration);
-                //        var code = provider.GenerateEntityCode(entityDescr);
-                //        generatedCode.Add(type, code);
-                //    }
-                //}
-
-
 
                 var types = NestedTypeGenerator.WrapNestedTypes(generatedCode);
                 foreach (var pair in types)
@@ -148,12 +134,8 @@ namespace PavEcsSpec.Generators
                     var code = pair.Value;
                     AddSource(context, fileName, code);
                 }
-                //context.AddSource($"{type.Name}_Generated.cs", code);
 
             }
-
-            //var provider = new EntityProviderGenerator();
-            //context.AddSource("EmptySystem.generated.cs", SourceText.From(provider.GetSource(), Encoding.UTF8));
         }
 
         private static void AddSource(GeneratorExecutionContext context, string fileName, string code)
@@ -176,52 +158,6 @@ namespace PavEcsSpec.Generators
                         true),
                     declaration.GetLocation())
                 );
-        }
-
-
-
-        /// <summary>
-        /// Created on demand before each generation pass
-        /// </summary>
-        class SyntaxReceiver : ISyntaxContextReceiver
-        {
-            public List<IFieldSymbol> Fields { get; } = new List<IFieldSymbol>();
-
-            /// <summary>
-            /// Called for every syntax node in the compilation, we can inspect the nodes and save any information useful for generation
-            /// </summary>
-            public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
-            {
-                Debugger.Break();
-
-                // any field with at least one attribute is a candidate for property generation
-                if (context.Node is ClassDeclarationSyntax classDeclarationSyntax
-                    && classDeclarationSyntax.AttributeLists.Count > 0)
-                {
-                    var symbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
-                    //classDeclarationSyntax.AttributeLists.
-                    //classDeclarationSyntax.AttributeLists.Any(x=>x.At)
-
-                    var ctors =
-                        classDeclarationSyntax.Members.OfType<ConstructorDeclarationSyntax>()
-                            .Take(2)
-                            .ToArray();
-                    if (ctors.Length == 0 || ctors.Length > 1)
-                    {
-                        return;
-                    }
-                    var targetCtor = ctors.First();
-                    //foreach (VariableDeclaratorSyntax variable in classDeclarationSyntax.Declaration.Variables)
-                    //{
-                    //    // Get the symbol being declared by the field, and keep it if its annotated
-                    //    IFieldSymbol fieldSymbol = context.SemanticModel.GetDeclaredSymbol(variable) as IFieldSymbol;
-                    //    if (fieldSymbol.GetAttributes().Any(ad => ad.AttributeClass.ToDisplayString() == "AutoNotify.AutoNotifyAttribute"))
-                    //    {
-                    //        Fields.Add(fieldSymbol);
-                    //    }
-                    //}
-                }
-            }
         }
 
 

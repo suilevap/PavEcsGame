@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace PavEcsSpec.Generators
@@ -12,6 +13,8 @@ namespace PavEcsSpec.Generators
             var thisConstructor = new StringBuilder();
             var simpleConstructorSigntature = new StringBuilder();
             var simpleConstructorCode = new StringBuilder();
+
+
 
             foreach (var entity in entities)
             {
@@ -29,16 +32,24 @@ namespace PavEcsSpec.Generators
                 simpleConstructorSigntature.Append($"{name}.Provider {argName}");
                 simpleConstructorCode.AppendLine($"{name}Provider = {argName};");
             }
+            string defaultCtr = String.Empty;
+            if (entities.All(x => !x.ExtraArgs.Any()))
+            {
+                defaultCtr = $@"
+public Providers(Leopotam.EcsLite.EcsSystems systems)
+    : this({thisConstructor.ToString()})
+{{
+}}
+";
+            }
 
             return $@"
 private readonly struct Providers
 {{
 {props.ToString().PadLeftAllLines(4*1)}
 
-    public Providers(Leopotam.EcsLite.EcsSystems systems)
-        : this({thisConstructor.ToString()})
-    {{
-    }}
+{defaultCtr.PadLeftAllLines(4*1)}
+
     public Providers({simpleConstructorSigntature.ToString()})
     {{
         //Entity2Provider = entity2Provider;
