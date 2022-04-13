@@ -236,6 +236,10 @@ namespace PavEcsSpec.Generators
                     .FirstOrDefault(x => x.Key == "SkipFilter");
                 result.SkipFilter = (isFilterProp.Value.Value as bool?) ?? false;
             }
+            else
+            {
+                throw new ArgumentException($"Entity type {type} without expected attirubte");
+            }
         }
     }
 

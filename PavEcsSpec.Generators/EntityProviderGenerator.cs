@@ -19,7 +19,12 @@ namespace PavEcsSpec.Generators
             StringBuilder initFieldsCode = new StringBuilder();
             StringBuilder extraArgumentsDeclaration = new StringBuilder();
             StringBuilder extraArgumentsPass = new StringBuilder();
-            
+
+            StringBuilder initRequiredComponents = new StringBuilder();
+            StringBuilder ensureRequiredComponents = new StringBuilder();
+
+            StringBuilder checkRequiredComponentsFormat = new StringBuilder();
+
 
             foreach (var baseEntityDescriptor in entityDescr.BaseEntities)
             {
@@ -30,7 +35,18 @@ public partial {baseEntityDescriptor.EntityType} {baseEntityDescriptor.Method.Na
 {{
     return (_provider.{providerFieldName}.TryGetUnsafe(_ent)) ?? throw new ArgumentNullException(""{baseEntityDescriptor.Method.Name}"");
 }}";
+
+                var debugProp = $@"
+#if DEBUG
+public  {baseEntityDescriptor.EntityType} DEBUG_{baseEntityDescriptor.Method.Name}
+{{
+    get => _provider.{providerFieldName}.TryGetUnsafe(_ent) ?? default;
+}}
+#endif
+";
                 accessToDataCode.AppendLine(methodDeclaration);
+                accessToDataCode.AppendLine(debugProp);
+
 
                 providerFieldsCode.AppendLine($"public readonly {baseEntityDescriptor.EntityType}.Provider {providerFieldName};");
 
@@ -38,6 +54,11 @@ public partial {baseEntityDescriptor.EntityType} {baseEntityDescriptor.Method.Na
                 extraArgumentsPass.Append($", {providerName}");
 
                 initFieldsCode.AppendLine($"{providerFieldName} = {providerName};");
+
+                initRequiredComponents.AppendLine($"{providerFieldName}.Ensure(entId);");
+                ensureRequiredComponents.AppendLine($"{providerFieldName}.Ensure(entId);");
+
+                checkRequiredComponentsFormat.AppendLine($"if (!{providerFieldName}.Is(entId)) {{0}}");
 
             }
 
@@ -54,7 +75,18 @@ public partial ref {readonlyReturn} {componentDescriptor.ComponentType} {compone
 {{
     return ref _provider.{poolName}.Get(_ent);
 }}";
+
+                    var property = $@"
+#if DEBUG
+public {componentDescriptor.ComponentType} Debug_{componentDescriptor.Method.Name}
+{{
+    get => _provider.{poolName}.Get(_ent);
+}}
+#endif
+";
                     accessToDataCode.AppendLine(methodDeclaration);
+                    accessToDataCode.AppendLine(property);
+
                 }
                 else
                 {
@@ -64,7 +96,17 @@ public partial {componentDescriptor.ReturnType} {componentDescriptor.Method.Name
 {{
     return new {componentDescriptor.ReturnType}(_provider.{poolName}, _ent);
 }}";
+
+                    var property = $@"
+#if DEBUG
+public {componentDescriptor.ReturnType} Debug_{componentDescriptor.Method.Name}
+{{
+    get => new {componentDescriptor.ReturnType}(_provider.{poolName}, _ent);
+}}
+#endif
+";
                     accessToDataCode.AppendLine(methodDeclaration);
+                    accessToDataCode.AppendLine(property);
                 }
 
                 providerFieldsCode.AppendLine($"public readonly Leopotam.EcsLite.EcsPool<{componentDescriptor.ComponentType}> {poolName};");
@@ -124,20 +166,24 @@ public struct Enumerator : IDisposable
 ");
             }
             string providerCode;
-            StringBuilder initRequiredComponents = new StringBuilder();
-            StringBuilder checkRequiredComponents = new StringBuilder();
+
 
             foreach (var componentDescriptor in entityDescr.Components)
             {
                 var poolName = GetPoolName(componentDescriptor);
                 if (componentDescriptor.AccessKind.IsRequired())
                 {
-                    initRequiredComponents.AppendLine($"{poolName}.Add(entId);");
-                    checkRequiredComponents.AppendLine($"if (!{poolName}.Has(entId)) return default;");
+                    var add = $"{poolName}.Add(entId);";
+                    var check = $"if (!{poolName}.Has(entId)) {{0}}";
+
+                    initRequiredComponents.AppendLine(add);
+                    checkRequiredComponentsFormat.AppendLine(check);
+                    
+                    ensureRequiredComponents.AppendLine(String.Format(check, add));
                 }
                 else if (componentDescriptor.AccessKind == ComponentDescriptorAccessKind.Exclude)
                 {
-                    checkRequiredComponents.AppendLine($"if ({poolName}.Has(entId)) return default;");
+                    checkRequiredComponentsFormat.AppendLine($"if ({poolName}.Has(entId)) {{0}}");
                 }
             }
 
@@ -146,7 +192,7 @@ public struct Enumerator : IDisposable
     public class Provider
     {{
 {providerFieldsCode.ToString().PadLeftAllLines(4 * 2)}
-        private readonly Leopotam.EcsLite.EcsWorld _world;
+        public readonly Leopotam.EcsLite.EcsWorld _world;
 
         public Provider(Leopotam.EcsLite.EcsWorld world {extraArgumentsDeclaration})
         {{
@@ -158,8 +204,25 @@ public struct Enumerator : IDisposable
         public {name} New()
         {{
             var entId = _world.NewEntity();
+            return Add(entId);
+        }}
+
+        public {name} Add(int entId)
+        {{
 {initRequiredComponents.ToString().PadLeftAllLines(4 * 3)}
             return new {name}(entId, this);
+        }}
+
+        public {name} Ensure(int entId)
+        {{
+{ensureRequiredComponents.ToString().PadLeftAllLines(4 * 3)}
+            return new {name}(entId, this);
+        }}
+
+        public bool Is(int entId)
+        {{
+{string.Format(checkRequiredComponentsFormat.ToString(), "return false;").PadLeftAllLines(4 * 3)}
+            return true;
         }}
 
         public {name}? TryGet(Leopotam.EcsLite.EcsPackedEntityWithWorld entity)
@@ -169,16 +232,14 @@ public struct Enumerator : IDisposable
                 if (_world != world)
                     throw new System.InvalidOperationException($""Unexpected world: Actual: {{world}}. Expected: {{_world}} "");
 
-{checkRequiredComponents.ToString().PadLeftAllLines(4 * 4)}
-
-                return new {name}(entId, this);
+                return TryGetUnsafe(entId);
             }}
             return default;
         }}
 
         public {name}? TryGetUnsafe(int entId)
         {{
-{checkRequiredComponents.ToString().PadLeftAllLines(4 * 3)}
+{string.Format(checkRequiredComponentsFormat.ToString(), "return default;").PadLeftAllLines(4 * 3)}
             return new {name}(entId, this);
         }}
     }}
@@ -204,6 +265,8 @@ private readonly partial struct {name}
 
     public int GetRawId() => _ent;
 
+    public Leopotam.EcsLite.EcsPackedEntityWithWorld Id => Leopotam.EcsLite.EcsEntityExtensions.PackEntityWithWorld(_provider._world, _ent);
+
     public static Provider Create(Leopotam.EcsLite.EcsSystems systems{extraArgumentsDeclaration}) 
     {{
         const string worldName = ""{worldName}"";
@@ -217,7 +280,7 @@ private readonly partial struct {name}
         return new Provider(world{extraArgumentsPass});
     }}
 
-    public static  Provider Create(Leopotam.EcsLite.EcsWorld world{extraArgumentsDeclaration}) 
+    public static Provider Create(Leopotam.EcsLite.EcsWorld world{extraArgumentsDeclaration}) 
     {{
         return new Provider(world{extraArgumentsPass});
     }}
