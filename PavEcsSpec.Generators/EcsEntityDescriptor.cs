@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -71,6 +72,7 @@ namespace PavEcsSpec.Generators
         private readonly List<ComponentDescriptor> _components = new List<ComponentDescriptor>();
 
         private readonly List<BaseEntityDescriptor> _baseEntitiesDescriptors = new List<BaseEntityDescriptor>();
+        public StructDeclarationSyntax Declaration;
 
         public ITypeSymbol EntityType { get; private set; }
         public IEnumerable<ComponentDescriptor> Components => _components;
@@ -106,9 +108,10 @@ namespace PavEcsSpec.Generators
         }
 
 
-        public static EcsEntityDescriptor Create(ITypeSymbol type)
+        public static EcsEntityDescriptor Create(ITypeSymbol type, Microsoft.CodeAnalysis.CSharp.Syntax.StructDeclarationSyntax declaration)
         {
             EcsEntityDescriptor result = new EcsEntityDescriptor();
+            result.Declaration = declaration;
             result.EntityType = type;
             ParseAttributes(type, result);
 

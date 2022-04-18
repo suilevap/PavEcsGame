@@ -73,15 +73,24 @@ namespace PavEcsSpec.Generators
                         {
                             //if (type is null || !IsEnumeration(type))
                             //    continue;
-                            var entityDescr = EcsEntityDescriptor.Create(type);
-                            ReportDiagnostic(context, entityDescr, declaration);
-                            return entityDescr;
+                            try
+                            {
+                                var entityDescr = EcsEntityDescriptor.Create(type, declaration);
+                                ReportDiagnostic(context, entityDescr, declaration);
+                                return entityDescr;
+                            }
+                            catch(Exception ex)
+                            {
+                                ReportError(context, declaration, $"Ex {symbol.Name} {ex.Message} {ex.StackTrace}");
+                            }
                         }
                         else
                         {
-                            throw new InvalidOperationException($"unsupported symbol {symbol.Name}");
+                            ReportError(context, declaration, $"unsupported symbol {symbol.Name}");
                         }
+                        return default(EcsEntityDescriptor);
                     })
+                    .Where(x => x != null)
                     .ToList();
 
                 Dictionary<string, QuickUnionFind<ITypeSymbol>> universes = new Dictionary<string, QuickUnionFind<ITypeSymbol>>();
@@ -90,7 +99,7 @@ namespace PavEcsSpec.Generators
                     var universe = universes.GetOrCreate(entity.Universe);
                     universe.Union(entity.Components.Select(x => x.ComponentType)
                         .Concat(new[] { entity.EntityType })
-                        .Concat(entity.BaseEntities.Select(x=>x.EntityType)));
+                        .Concat(entity.BaseEntities.Select(x => x.EntityType)));
                 }
                 Dictionary<string, Dictionary<ITypeSymbol, string>> typeToWorldName =
                     new Dictionary<string, Dictionary<ITypeSymbol, string>>();
@@ -114,16 +123,30 @@ namespace PavEcsSpec.Generators
                 Dictionary<ITypeSymbol, string> generatedCode = new Dictionary<ITypeSymbol, string>(SymbolEqualityComparer.IncludeNullability);
                 foreach (var entity in entityDescrs)
                 {
-                    var worldName = typeToWorldName[entity.Universe][entity.Components.First().ComponentType];
-                    var code = provider.GenerateEntityCode(entity, worldName);
-                    generatedCode.Add(entity.EntityType, code);
+                    try
+                    {
+                        var worldName = typeToWorldName[entity.Universe][entity.Components.First().ComponentType];
+                        var code = provider.GenerateEntityCode(entity, worldName);
+                        generatedCode.Add(entity.EntityType, code);
+                    }
+                    catch (Exception ex)
+                    {
+                        ReportError(context, entity.Declaration, $"Ex {entity.EntityType} {ex.Message} {ex.StackTrace}");
+                    }
                 }
                 foreach (var gr in entityDescrs.GroupBy(x => x.EntityType.ContainingType, SymbolEqualityComparer.IncludeNullability))
                 {
                     if (gr.Key is ITypeSymbol parentType)
                     {
-                        var providerCode = ProvidersGenerator.GenerateCode(gr);
-                        generatedCode.Add(parentType, providerCode);
+                        try
+                        {
+                            var providerCode = ProvidersGenerator.GenerateCode(gr);
+                            generatedCode.Add(parentType, providerCode);
+                        }
+                        catch (Exception ex)
+                        {
+                            ReportError(context, gr.FirstOrDefault().Declaration, $"Ex {parentType.Name} {ex.Message} {ex.StackTrace}");
+                        }
                     }
                 }
 
@@ -142,7 +165,24 @@ namespace PavEcsSpec.Generators
         {
             context.AddSource(fileName, code);
 
-            System.IO.File.WriteAllText("C:/dev/roslyn/" + fileName, code);
+            try
+            {
+                System.IO.File.WriteAllText("C:/dev/roslyn/" + fileName, code);
+            }
+            catch (Exception ex)
+            {
+                context.ReportDiagnostic(
+                   Diagnostic.Create(
+                       new DiagnosticDescriptor(
+                           "0",
+                           $"Entity {fileName}",
+                          "Failed to save",
+                           "EcsGenerator",
+                           DiagnosticSeverity.Warning,
+                           true),
+                       null)
+                   );
+            }
         }
 
         private void ReportDiagnostic(GeneratorExecutionContext context, EcsEntityDescriptor entityDescr, StructDeclarationSyntax declaration)
@@ -159,7 +199,20 @@ namespace PavEcsSpec.Generators
                     declaration.GetLocation())
                 );
         }
-
+        private void ReportError(GeneratorExecutionContext context, StructDeclarationSyntax declaration, string error)
+        {
+            context.ReportDiagnostic(
+                Diagnostic.Create(
+                    new DiagnosticDescriptor(
+                        "0",
+                        $"Error",
+                        error,
+                        "EcsGenerator",
+                        DiagnosticSeverity.Error,
+                        true),
+                    declaration.GetLocation())
+                );
+        }
 
         class EntitySyntaxReceiver : ISyntaxReceiver
         {

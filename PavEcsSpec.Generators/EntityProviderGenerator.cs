@@ -237,10 +237,30 @@ public struct Enumerator : IDisposable
             return default;
         }}
 
+        public bool TryGet(Leopotam.EcsLite.EcsPackedEntityWithWorld entity, out {name} ent)
+        {{
+            if (Leopotam.EcsLite.EcsEntityExtensions.Unpack(entity, out var world, out var entId) && world == _world)
+            {{
+                if (_world != world)
+                    throw new System.InvalidOperationException($""Unexpected world: Actual: {{world}}. Expected: {{_world}} "");
+
+                return TryGetUnsafe(entId, out ent);
+            }}
+            ent = default;
+            return false;
+        }}
+
         public {name}? TryGetUnsafe(int entId)
         {{
 {string.Format(checkRequiredComponentsFormat.ToString(), "return default;").PadLeftAllLines(4 * 3)}
             return new {name}(entId, this);
+        }}
+
+        public bool TryGetUnsafe(int entId, out {name} ent)
+        {{
+{string.Format(checkRequiredComponentsFormat.ToString(), "{ent = default; return false;}").PadLeftAllLines(4 * 3)}
+            ent = new {name}(entId, this);
+            return true;
         }}
     }}
 ";
