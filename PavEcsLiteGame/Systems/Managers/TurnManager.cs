@@ -5,20 +5,44 @@ using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Components.SystemComponents;
 using PavEcsSpec.EcsLite;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems.Managers
 {
-    public class TurnManager : IEcsRunSystem, IEcsSystemSpec
+    public partial class TurnManager : IEcsRunSystem, IEcsSystemSpec
     {
 
         private long _tick;
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<SystemRefComponent<IEcsSystem>>, EcsSpec<SystemHasMoreWorkTag>>
-            /*.Opt<EcsSpec<WaitCommandTokenComponent, CommandTokenComponent>>*/ _tokenSpec;
 
-        private readonly EcsEntityFactorySpec<EcsSpec<SystemRefComponent<IEcsSystem>>> _systemEntityFactorySpec;
+        [Entity]
+        private readonly partial struct TokenEnt
+        {
+            public partial ref readonly SystemRefComponent<IEcsSystem> System();
+            public partial ref SystemHasMoreWorkTag HasMoreWork();
 
-        private readonly EcsEntityFactorySpec<EcsSpec<WaitCommandTokenComponent>> _systemEntityFactoryTickSpec;
+        }
+
+        [Entity(SkipFilter = true)]
+        private readonly partial struct AddMoreWorkEnt
+        {
+            public partial ref readonly SystemRefComponent<IEcsSystem> System();
+            public partial OptionalComponent<SystemHasMoreWorkTag> HasMoreWork();
+
+        }
+
+        [Entity(SkipFilter = true)]
+        private readonly partial struct SystemEnt
+        {
+            public partial ref SystemRefComponent<IEcsSystem> System();
+        }
+
+        [Entity(SkipFilter = true)]
+        private readonly partial struct TickEnt
+        {
+            public partial ref readonly SystemRefComponent<IEcsSystem> System();
+
+            public partial ref WaitCommandTokenComponent WaitCommand();
+        }
 
 
         public enum Phase
@@ -27,34 +51,25 @@ namespace PavEcsGame.Systems.Managers
             Simulation
         }
 
-        public TurnManager(EcsUniverse universe)
-        {
-            universe
-                .Register(this)
-                .Build(ref _tokenSpec)
-                .Build(ref _systemEntityFactorySpec)
-                .Build(_systemEntityFactorySpec, ref _systemEntityFactoryTickSpec)
-                ;
-        }
 
-        public Phase CurrentPhase => _tokenSpec.Filter.IsEmpty() ? Phase.TickUpdate : Phase.Simulation;
+        public Phase CurrentPhase => _providers.TokenEntProvider.Filter.IsEmpty() ? Phase.TickUpdate : Phase.Simulation;
 
         public long Tick => _tick;
 
         public SimSystemRegistration RegisterSimulationSystem(IEcsSystem system)
         {
-            var result = _systemEntityFactorySpec.NewUnsafeEntity()
-               .Add(_systemEntityFactorySpec.Pools,
-                   new SystemRefComponent<IEcsSystem>() { System = system });
-            return new SimSystemRegistration(result, this);
+            var result = _providers.SystemEntProvider.New();
+            result.System().System = system;
+
+            return new SimSystemRegistration((EcsUnsafeEntity)result.GetRawId(), this);
         }
 
         public TickSystemRegistration RegisterTickSystem(IEcsSystem system)
         {
-            var result = _systemEntityFactorySpec.NewUnsafeEntity()
-                .Add(_systemEntityFactorySpec.Pools,
-                    new SystemRefComponent<IEcsSystem>() { System = system });
-            return new TickSystemRegistration(result, this);
+            var result = _providers.SystemEntProvider.New();
+            result.System().System = system;
+
+            return new TickSystemRegistration((EcsUnsafeEntity)result.GetRawId(), this);
         }
 
         public void Run(EcsSystems systems)
@@ -65,14 +80,6 @@ namespace PavEcsGame.Systems.Managers
             }
         }
 
-
-        private void AssertEntityIsValid(EcsPackedEntityWithWorld entity)
-        {
-            Debug.Assert(entity.Unpack(out var world, out EcsUnsafeEntity unsafeEnt), $"entity: {entity} should be alive");
-            Debug.Assert(_tokenSpec.Include.IsBelongToWorld(world), $"entity doesn't belong to expected world. Actual:{world}, expected:{_tokenSpec.Include}");
-            Debug.Assert(_tokenSpec.IncludeReadonly.Pool1.Has(unsafeEnt), $"entity doesn't have expected system component.");
-        }
-
         public readonly struct TickSystemRegistration
         {
             private readonly EcsUnsafeEntity _systemEntity;
@@ -80,33 +87,13 @@ namespace PavEcsGame.Systems.Managers
 
             public TickSystemRegistration(EcsUnsafeEntity systemEntity, TurnManager manager)
             {
-                Debug.Assert(manager._tokenSpec.IncludeReadonly.Pool1.Has(systemEntity), $"entity doesn't have expected system component.");
-
                 _systemEntity = systemEntity;
                 _turnManager = manager;
+                var ent = manager._providers.TickEntProvider.TryGetUnsafe(systemEntity);
+                Debug.Assert(ent != null, $"entity doesn't have expected system component.");
 
-                manager._systemEntityFactoryTickSpec.Pools.Pool1.Add(systemEntity) = new WaitCommandTokenComponent(1);
+                ent.Value.WaitCommand() = new WaitCommandTokenComponent(1);
             }
-            //public bool TryGetToken(bool hasWorkToDo)
-            //{
-            //    if (_turnManager.CurrentPhase == Phase.TickUpdate && hasWorkToDo)
-            //    {
-            //        var commandTokenPool = _turnManager._tokenSpec.Optional.Pool2;
-            //        if (commandTokenPool.Has(_systemEntity))
-            //        {
-
-            //            ref var tokens = ref commandTokenPool.Get(_systemEntity);
-            //            tokens.ActionCount--;
-            //            return true;
-            //        }
-            //    }
-            //    return false;
-            //}
-
-            //public bool TryGetToken(EcsFilter mainFilter)
-            //{
-            //    return TryGetToken(!mainFilter.IsEmpty());
-            //}
         }
 
         public readonly struct SimSystemRegistration
@@ -115,15 +102,14 @@ namespace PavEcsGame.Systems.Managers
             private readonly TurnManager _manager;
             public SimSystemRegistration(EcsUnsafeEntity systemEntity, TurnManager manager)
             {
-
                 _systemEntity = systemEntity;
                 _manager = manager;
-
             }
             public void UpdateState(bool hasWorkToDo)
             {
-                _systemEntity.TryTag<SystemHasMoreWorkTag>(_manager._tokenSpec.Include.Pool1, hasWorkToDo);
-                //_systemEntity.Tag<SystemHasMoreWorkTag>(hasWorkToDo);
+                var ent = _manager._providers.AddMoreWorkEntProvider.TryGetUnsafe(_systemEntity);
+                Debug.Assert(ent != null, $"entity doesn't have expected system component.");
+                ent.Value.HasMoreWork().TryTag(hasWorkToDo);
             }
 
             public void UpdateState(EcsFilter mainFilter)

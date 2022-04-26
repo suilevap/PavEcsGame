@@ -8,27 +8,32 @@ using PavEcsGame.Components;
 using PavEcsGame.Components.SystemComponents;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
+using PavEcsSpec.Generated;
+
 
 namespace PavEcsGame.Systems
 {
-    class KeyboardMoveSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
+    partial class KeyboardMoveSystem : IEcsRunSystem, IEcsSystemSpec
     {
         private readonly bool _waitKey;
 
         private readonly TurnManager _turnManager;
 
         private readonly Dictionary<ConsoleKey, PositionComponent>[] _configs;
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<PlayerIndexComponent, IsActiveTag>>
-            .Opt<EcsSpec<MoveCommandComponent>> _spec;
 
-        public KeyboardMoveSystem(bool waitKey, TurnManager turnManager, EcsUniverse universe)
+        [Entity]
+        private readonly partial struct PlayerEnt
+        {
+            public partial ref readonly PlayerIndexComponent Player();
+            public partial ref readonly IsActiveTag ActiveTag();
+            public partial OptionalComponent<MoveCommandComponent> MoveCommand();
+        }
+
+        public KeyboardMoveSystem(bool waitKey, TurnManager turnManager, EcsSystems universe)
+            :this(universe)
         {
             _waitKey = waitKey;
             _turnManager = turnManager;
-            universe
-                .Register(this)
-                .Build(ref _spec);
 
             _configs = new Dictionary<ConsoleKey, PositionComponent>[]
             {
@@ -40,10 +45,6 @@ namespace PavEcsGame.Systems
                 }
             };
         }
-        public void Init(EcsSystems systems)
-        {
-            //var config1 = new Dictionary<ConsoleKey, PositionComponent>() { }
-        }
 
         public void Run(EcsSystems systems)
         {
@@ -54,26 +55,23 @@ namespace PavEcsGame.Systems
             }
             if (_turnManager.CurrentPhase != TurnManager.Phase.TickUpdate)
                 return;
-            if (_spec.Filter.IsEmpty())
+            if (_providers.PlayerEntProvider.Filter.IsEmpty())
                 return;
             
             if (_waitKey)
             {
                 key = Console.ReadKey(true).Key;
             }
-            var (playerIdPool, _) = _spec.Include;
-            var commandPool = _spec.Optional.Pool1;
 
-            foreach (EcsUnsafeEntity ent in _spec.Filter)
+            foreach (PlayerEnt ent in _providers.PlayerEntProvider)
             {
-                var playerId = playerIdPool.Get(ent).Index;
-
+                var playerId = ent.Player().Index;
                 if (playerId >= 0
-                    && playerId < _configs.Length
-                    && _configs[playerId].TryGetValue(key, out var newSpeed))
+                  && playerId < _configs.Length
+                  && _configs[playerId].TryGetValue(key, out var newSpeed))
                 {
 
-                    commandPool.Ensure(ent, out _) =
+                    ent.MoveCommand().Ensure() =
                             new MoveCommandComponent()
                             {
                                 Target = newSpeed,

@@ -9,58 +9,56 @@ using System.Text;
 using Leopotam.EcsLite;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    class VerifyMapSystem : IEcsRunSystem, IEcsSystemSpec
+    partial class VerifyMapSystem : IEcsRunSystem, IEcsSystemSpec
     {
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<PositionComponent, ColliderComponent>> _spec;
+        [Entity]
+        private readonly partial struct Ent
+        {
+            public partial ref readonly PositionComponent Pos();
+            public partial ref readonly ColliderComponent Collider();
 
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<MapLoadedEvent>> _mapLoadedEventSpec;
+        }
+        [Entity]
+        private readonly partial struct MapLoaded
+        {
+            public partial ref readonly MapLoadedEvent LoadEvent();
+        }
 
-        public VerifyMapSystem(EcsUniverse universe, IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> map)
+        public VerifyMapSystem(EcsSystems universe, IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> map)
+            : this(universe)
         {
             _map = map;
-
-            universe
-                .Register(this)
-                .Build(ref _spec)
-                .Build(ref _mapLoadedEventSpec);
         }
 
         public void Run(EcsSystems systems)
         {
-            Debug.Assert(_mapLoadedEventSpec.Filter.GetEntitiesCount() <= 1, 
-                $"{nameof(MapLoadedEvent)} is expected to be no more than one per cycle");
+            Debug.Assert(_providers.MapLoadedProvider.Filter.GetEntitiesCount() <= 1,
+               $"{nameof(MapLoadedEvent)} is expected to be no more than one per cycle");
 
-
-            var (posPool, _) = _spec.Include;
-            foreach(EcsUnsafeEntity ent in _spec.Filter)
+            foreach(var ent in _providers.EntProvider)
             {
-                ref readonly var pos = ref posPool.Get(ent);
+                ref readonly var pos = ref ent.Pos();
                 var mapEnt = _map.Get(pos);
 
-                Debug.Assert(mapEnt.IsSame(ent), $"Not stored entity: Expected: {ent}, Actual:{mapEnt}");
+                Debug.Assert(mapEnt.EqualsTo(ent.Id), $"Not stored entity: Expected: {ent.Id}, Actual:{mapEnt}");
             }
-
             foreach(var (pos,ent) in _map.GetAll())
             {
                 if (!ent.IsAlive())
                     continue;
                 
-                Debug.Assert(ent.IsBelongTo(_spec), $"Stored entity from different world: {ent}");
+                Debug.Assert(ent.Unpack(out var world, out int _) && world == _providers.EntProvider._world, 
+                    $"Stored entity from different world: {ent}");
 
-                if (ent.Unpack(out _, out EcsUnsafeEntity entId))
-                {
-                    Debug.Assert(posPool.Has(entId), $"Stored ent without pos: {ent}");
-                    var entPos = posPool.Get(entId);
-                    Debug.Assert(pos.Equals(entPos), $"Stored in wrong place: {ent}, actual pos:{pos}, expected: {entPos}");
-                }
+                Debug.Assert(_providers.EntProvider.TryGet(ent, out var entity), $"Stored ent without required components: {ent}");
             }
         }
+
     }
 }

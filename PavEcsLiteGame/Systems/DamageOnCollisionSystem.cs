@@ -6,39 +6,40 @@ using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsSpec.EcsLite;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    internal class DamageOnCollisionSystem : IEcsRunSystem, IEcsSystemSpec
+    internal partial class DamageOnCollisionSystem : IEcsRunSystem, IEcsSystemSpec
     {
-        private EcsFilterSpec<
-            EcsReadonlySpec<CollisionEvent<EcsEntity>>,
-            EcsSpec, 
-            EcsSpec> _spec;
-
-        private EcsEntityFactorySpec<EcsSpec<DestroyRequestTag, IsActiveTag>> _destroyFactorySpec;
-        private EcsEntityFactorySpec<EcsSpec<PlayerIndexComponent>> _playerFactorySpec;
-
-        public DamageOnCollisionSystem(EcsUniverse universe)
+        [Entity]
+        private partial struct Entity
         {
-            universe
-                .Register(this)
-                .Build(ref _spec)
-                .Build(ref _playerFactorySpec)
-                .Build(ref _destroyFactorySpec);
+            public partial ref readonly CollisionEvent<EcsEntity> Event();
+        }
+
+        [Entity(SkipFilter=true)]
+        private partial struct DestroyEnt
+        {
+            public partial ref readonly IsActiveTag IsActive();
+
+            public partial OptionalComponent<DestroyRequestTag> DestroyTag();
+        }
+
+        [Entity(SkipFilter = true)]
+        private partial struct PlayerEnt
+        {
+            public partial ref PlayerIndexComponent PlayerId();
         }
 
         public void Run(EcsSystems systems)
         {
-            var (destroyReqPool, isActivePool) = _destroyFactorySpec.Pools;
-            var collEventPool = _spec.Include.Pool1;
-            foreach (EcsUnsafeEntity ent in _spec.Filter)
+            foreach(var ent in _providers.EntityProvider)
             {
-                var otherEnt = collEventPool.Get(ent).Target;
-                if (otherEnt.Unpack(out _, out EcsUnsafeEntity otherId)
-                    && isActivePool.Has(otherId))
+                var otherEnt = ent.Event().Target;
+                if (_providers.DestroyEntProvider.TryGet(otherEnt).TryGet(out var destroyEnt))
                 {
-                    otherId.TryTag<DestroyRequestTag>(destroyReqPool, true);
+                    destroyEnt.DestroyTag().TryTag(true);
                 }
             }
         }

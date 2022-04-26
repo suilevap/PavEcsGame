@@ -4,22 +4,22 @@ using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsSpec.EcsLite;
 using PavEcsGame.Tiles;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    class DirectionTileSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
+    partial class DirectionTileSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<DirectionComponent, DirectionTileComponent>, EcsSpec<SymbolComponent>> _spec;
+
+        [Entity]
+        private partial struct Entity
+        {
+            public partial ref readonly DirectionComponent Dir();
+            public partial ref readonly DirectionTileComponent Tile();
+            public partial ref SymbolComponent Symbol();
+        }
 
         private readonly Dictionary<string, DirectionTileRule> _rules = new Dictionary<string, DirectionTileRule>();
-
-        public DirectionTileSystem(EcsUniverse universe)
-        {
-            universe
-                .Register(this)
-                .Build(ref _spec);
-        }
 
         public void Init(EcsSystems systems)
         {
@@ -27,22 +27,18 @@ namespace PavEcsGame.Systems
             TryGetRule("direction_arrow_rule");
             TryGetRule("direction_triangle_rule");
             TryGetRule("direction_v_rule");
+
         }
 
         public void Run(EcsSystems systems)
         {
-            var (dirPool, tilePool) = _spec.IncludeReadonly;
-            var symbolPool = _spec.Include.Pool1;
-            foreach (EcsUnsafeEntity ent in _spec.Filter)
+            foreach (var ent in _providers.EntityProvider)
             {
-                ref readonly var tile = ref tilePool.Get(ent);
-                var dir = dirPool.Get(ent).Direction.ToDirection();
-
-                ref var symbol = ref symbolPool.Get(ent);
-                var tileRule = TryGetRule(tile.RuleName);
+                var tileRule = TryGetRule(ent.Tile().RuleName);
                 if (tileRule != null)
                 {
-                    symbol.Value = tileRule.GetSymbol(dir);
+                    var dir = ent.Dir().Direction.ToDirection();
+                    ent.Symbol().Value = tileRule.GetSymbol(dir);
                 }
             }
         }

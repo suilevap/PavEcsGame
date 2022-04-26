@@ -1,52 +1,45 @@
 ﻿using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsSpec.EcsLite;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    internal class LightSourceSystems : IEcsRunSystem, IEcsSystemSpec
+    internal partial class LightSourceSystems : IEcsRunSystem, IEcsSystemSpec
     {
-        private readonly EcsFilterSpec<
-            EcsReadonlySpec<LightSourceComponent>,
-            EcsSpec<FieldOfViewRequestEvent>,
-            EcsSpec> _lightsSpec;
 
-        private readonly EcsFilterSpec<
-             EcsReadonlySpec<PlayerIndexComponent, VisualSensorComponent>,
-             EcsSpec<FieldOfViewRequestEvent>,
-             EcsSpec> _playerSpec;
-
-        public LightSourceSystems(EcsUniverse universe)
+        [Entity]
+        private readonly partial struct LightEnt
         {
-            universe
-                .Register(this)
-                .Build(ref _playerSpec)
-                .Build(ref _lightsSpec);
+            public partial ref readonly LightSourceComponent Source();
+            public partial OptionalComponent<FieldOfViewRequestEvent> FovRequest();
+        }
 
+        [Entity]
+        private readonly partial struct PlayerEnt
+        {
+            public partial ref readonly PlayerIndexComponent PlayerIndex();
+            public partial ref readonly VisualSensorComponent Sensor();
+            public partial OptionalComponent<FieldOfViewRequestEvent> FovRequest();
         }
 
         public void Run(EcsSystems systems)
         {
-            var lightDataPool = _lightsSpec.Include.Pool1;
-            var eventPool = _lightsSpec.Optional.Pool1;
-
-            foreach (EcsUnsafeEntity ent in _lightsSpec.Filter)
+            foreach(var ent in _providers.LightEntProvider)
             {
-                var radius = lightDataPool.Get(ent).Radius;
-                ref var ev = ref eventPool.Ensure(ent, out var isNew);
+                var radius = ent.Source().Radius;
+                ref var ev = ref ent.FovRequest().Ensure(out var isNew);
                 if (isNew || ev.Radius < radius)
                 {
                     ev.Radius = radius;
                 }
             }
 
-            var (_, sensorPool) = _playerSpec.Include;
-            foreach (EcsUnsafeEntity ent in _playerSpec.Filter)
+            foreach (var ent in _providers.PlayerEntProvider)
             {
-                var radius = sensorPool.Get(ent).Radius;
-                ref var ev = ref eventPool.Ensure(ent, out var isNew);
-                ev.Radius = radius;
+                ent.FovRequest().Ensure().Radius = ent.Sensor().Radius;
             }
+
         }
     }
 }

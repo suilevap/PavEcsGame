@@ -4,27 +4,33 @@ using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    public class CommandTokenDistributionSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
+    public partial class CommandTokenDistributionSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
         private readonly TimeSpan _autoRechargeTime;
         private DateTime _previousRecharge;
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<WaitCommandTokenComponent>>
-            .Opt<EcsSpec<CommandTokenComponent>> _waitTokenSpec;
 
-        private readonly EcsFilterSpec
-            .Inc<EcsSpec<CommandTokenComponent>> _withTokenSpec;
 
-        public CommandTokenDistributionSystem(TimeSpan autoRechargeTime, EcsUniverse universe)
+        [Entity]
+        private partial struct WaitTokenEnt
+        {
+            public partial ref readonly WaitCommandTokenComponent WaitToken();
+            public partial OptionalComponent<CommandTokenComponent> CommandToken();
+        }
+
+        [Entity]
+        private partial struct WithTokenEnt
+        {
+            public partial RequiredComponent<CommandTokenComponent> CommandToken();
+        }
+
+        public CommandTokenDistributionSystem(TimeSpan autoRechargeTime, EcsSystems universe)
+            : this (universe)
         {
             _autoRechargeTime = autoRechargeTime;
-            universe
-                .Register(this)
-                .Build(ref _waitTokenSpec)
-                .Build(ref _withTokenSpec);
         }
         public void Init(EcsSystems systems)
         {
@@ -34,19 +40,18 @@ namespace PavEcsGame.Systems
         public void Run(EcsSystems systems)
         {
             CleanupEmptyCommandTokens();
-            if (_withTokenSpec.Filter.IsEmpty() || (DateTime.UtcNow - _previousRecharge) > _autoRechargeTime)
+            if (_providers.WithTokenEntProvider.Filter.IsEmpty() || (DateTime.UtcNow - _previousRecharge) > _autoRechargeTime)
             {
                 RechargeCommandTokens();
             }
 
             void CleanupEmptyCommandTokens()
             {
-                var tokenPool = _withTokenSpec.Include.Pool1;
-                foreach (EcsUnsafeEntity ent in _withTokenSpec.Filter)
+                foreach (var ent in _providers.WithTokenEntProvider)
                 {
-                    if (tokenPool.Get(ent).ActionCount <= 0)
+                    if (ent.CommandToken().Get().ActionCount <= 0)
                     {
-                        tokenPool.Del(ent);
+                        ent.CommandToken().Remove();
                     }
                 }
             }
@@ -54,12 +59,10 @@ namespace PavEcsGame.Systems
             void RechargeCommandTokens()
             {
                 _previousRecharge = DateTime.UtcNow;
-                EcsPool<CommandTokenComponent> tokenPool = _waitTokenSpec.Optional.Pool1;
-                EcsReadonlyPool<WaitCommandTokenComponent> waitTokenPool = _waitTokenSpec.Include.Pool1;
 
-                foreach (EcsUnsafeEntity ent in _waitTokenSpec.Filter)
+                foreach (var ent in _providers.WaitTokenEntProvider)
                 {
-                    tokenPool.Ensure(ent, out _) = waitTokenPool.Get(ent).RechargeValue;
+                    ent.CommandToken().Ensure() = ent.WaitToken().RechargeValue;
                 }
             }
         }

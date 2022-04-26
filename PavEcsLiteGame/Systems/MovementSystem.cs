@@ -8,26 +8,31 @@ using PavEcsGame.Components;
 using PavEcsGame.Components.SystemComponents;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    class MovementSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
+    partial class MovementSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
 
         private readonly TurnManager _turnManager;
         private TurnManager.SimSystemRegistration _reg;
 
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<PositionComponent, SpeedComponent, IsActiveTag>>
-            .Opt<EcsSpec<NewPositionComponent>> _spec;
+        private Providers _providers;
+        [Entity]
+        private readonly partial struct MoveableEnt
+        {
+            public partial ref readonly PositionComponent Pos();
+            public partial ref readonly SpeedComponent Speed();
+            public partial ref readonly IsActiveTag ActiveTag();
+            public partial OptionalComponent<NewPositionComponent> NewPos();
+        }
 
 
-        public MovementSystem(TurnManager turnManager, EcsUniverse universe)
+        public MovementSystem(TurnManager turnManager, EcsSystems universe)
+            : this(universe)
         {
             _turnManager = turnManager;
-            universe
-                .Register(this)
-                .Build(ref _spec);
         }
         public void Init(EcsSystems systems)
         {
@@ -37,22 +42,12 @@ namespace PavEcsGame.Systems
         public void Run(EcsSystems systems)
         {
             bool hasWorkToDo = false;
-            var (posPool, speedPool, _) = _spec.Include;
-            var newPosPool = _spec.Optional.Pool1;
-            foreach (EcsUnsafeEntity ent in _spec.Filter)
+            foreach (var entity in _providers.MoveableEntProvider)
             {
-                ref readonly SpeedComponent speed = ref speedPool.Get(ent);
-                if (speed.Speed != Int2.Zero)
+                if (entity.Speed().Speed != Int2.Zero)
                 {
                     hasWorkToDo = true;
-                    ref readonly PositionComponent pos = ref posPool.Get(ent);
-
-                    newPosPool.Set(
-                        ent, 
-                        new NewPositionComponent()
-                        {
-                            Value = new PositionComponent(pos.Value + speed.Speed)
-                        });
+                    entity.NewPos().Ensure().Value = new PositionComponent(entity.Pos().Value + entity.Speed().Speed);
                 }
             }
             _reg.UpdateState(hasWorkToDo);

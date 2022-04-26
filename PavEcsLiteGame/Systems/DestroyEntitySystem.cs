@@ -5,28 +5,37 @@ using PavEcsGame.Components.SystemComponents;
 using PavEcsGame.GameLoop;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    public class DestroyEntitySystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
+    public partial class DestroyEntitySystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
         private readonly TurnManager _turnManager;
         private TurnManager.SimSystemRegistration _registration;
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<DestroyRequestTag>>
-            .Exc<EcsReadonlySpec<PositionComponent, MarkAsRenderedTag>> _destroySpec;
-        
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<PositionComponent, DestroyRequestTag>>
-            .Opt<EcsSpec<NewPositionComponent>> _removeFormMapSpec;
 
-        public DestroyEntitySystem(TurnManager turnManager, EcsUniverse universe)
+        [Entity]
+        private partial struct DestroyEnt
+        {
+            public partial ref readonly DestroyRequestTag DestroyRequest();
+            public partial ExcludeComponent<PositionComponent> NoPos();
+            public partial ExcludeComponent<MarkAsRenderedTag> NotRendered();
+
+        }
+
+        [Entity]
+        private partial struct RemoveFromMapEnt
+        {
+            public partial ref readonly PositionComponent Pos();
+            public partial ref readonly DestroyRequestTag DestroyReq();
+            public partial OptionalComponent<NewPositionComponent> NewPos();
+
+        }
+
+        public DestroyEntitySystem(TurnManager turnManager, EcsSystems universe)
+            : this(universe)
         {
             _turnManager = turnManager;
-            universe
-                .Register(this)
-                .Build(ref _destroySpec)
-                .Build(ref _removeFormMapSpec);
         }
         public void Init(EcsSystems systems)
         {
@@ -35,18 +44,16 @@ namespace PavEcsGame.Systems
 
         public void Run(EcsSystems systems)
         {
-            _registration.UpdateState(_removeFormMapSpec.Filter);
+            _registration.UpdateState(_providers.RemoveFromMapEntProvider.Filter);
 
-            var newPosPool = _removeFormMapSpec.Optional.Pool1;
-
-            foreach (EcsUnsafeEntity ent in _removeFormMapSpec.Filter)
+            foreach (var ent in _providers.RemoveFromMapEntProvider)
             {
-                newPosPool.Ensure(ent, out _).Value = default;
+                ent.NewPos().Ensure().Value = default;
             }
 
-            foreach (var ent in _destroySpec.Filter)
+            foreach (var ent in _providers.DestroyEntProvider)
             {
-                _destroySpec.World.DelEntity(ent);
+                _providers.DestroyEntProvider._world.DelEntity(ent.GetRawId());
             }
         }
     }

@@ -6,23 +6,30 @@ using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsSpec.EcsLite;
 using PavEcsGame.Tiles;
+using PavEcsSpec.Generated;
+
 
 namespace PavEcsGame.Systems
 {
-    class TileSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
+    partial class TileSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
         private readonly IReadOnlyMapData<Int2, EcsPackedEntityWithWorld> _map;
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<PositionComponent>, EcsSpec<TileComponent, SymbolComponent>> _spec;
-        
+
+        [Entity]
+        private readonly partial struct Ent
+        {
+            public partial ref readonly PositionComponent Pos();
+            public partial RequiredComponent<TileComponent> Tile();
+            public partial ref SymbolComponent View();
+
+        }
+
         private readonly Dictionary<string, TileRule> _rules = new Dictionary<string, TileRule>();
 
-        public TileSystem(EcsUniverse universe, IReadOnlyMapData<Int2, EcsPackedEntityWithWorld> map)
+        public TileSystem(EcsSystems universe, IReadOnlyMapData<Int2, EcsPackedEntityWithWorld> map)
+            : this(universe)
         {
             _map = map;
-            universe
-                .Register(this)
-                .Build(ref _spec);
         }
 
         public void Init(EcsSystems systems)
@@ -33,40 +40,38 @@ namespace PavEcsGame.Systems
 
         public void Run(EcsSystems systems)
         {
-            var posPool = _spec.IncludeReadonly.Pool1;
-            var (tilePool, symbolPool) = _spec.Include;
-            foreach (EcsUnsafeEntity ent in _spec.Filter)
+            foreach (Ent entity in _providers.EntProvider)
             {
-                ref var tile = ref tilePool.Get(ent);
-                ref readonly var pos = ref posPool.Get(ent);
-
-                UpdateMask(ent, ref tile, pos.Value + new Int2(1, 0), 0);
-                UpdateMask(ent, ref tile, pos.Value + new Int2(0, 1), 1);
-
-                ref var symbol = ref symbolPool.Get(ent);
-                var tileRule = TryGetRule(tile.RuleName);
+                var tile = entity.Tile();
+                ref var tileData = ref tile.Get();
+                ref readonly var pos = ref entity.Pos();
+                //entity.Id
+                UpdateMask(ref tileData, pos.Value + new Int2(1, 0), 0);
+                UpdateMask(ref tileData, pos.Value + new Int2(0, 1), 1);
+                ref var view = ref entity.View();
+                var tileRule = TryGetRule(tileData.RuleName);
                 if (tileRule != null)
                 {
-                    symbol.Value = tileRule.Symbols[tile.Mask];
+                    view.Value = tileRule.Symbols[tileData.Mask];
                 }
+                tile.Remove();
 
-                tilePool.Del(ent);
             }
 
-            void UpdateMask(EcsUnsafeEntity ent, ref TileComponent tile, in Int2 nextPos, int maskShift)
+            void UpdateMask(ref TileComponent tile, in Int2 nextPos, int maskShift)
             {
-                var nextEnt = _map.Get(_map.GetSafePos(nextPos));
-                if (nextEnt.Unpack(out _, out EcsUnsafeEntity nextId) &&
-                    tilePool.Has(nextId))
+                var nextId = _map.Get(_map.GetSafePos(nextPos));
+                if (_providers.EntProvider.TryGet(nextId, out var nextEnt))
                 {
-                    ref var nextTile = ref tilePool.Get(nextId);
+                    ref var nextTile = ref nextEnt.Tile().Get();
                     if (nextTile.RuleName == tile.RuleName)
                     {
                         tile.Mask |= 1 << maskShift;
-                        nextTile.Mask |= 1 << ((maskShift + 2)%4);
+                        nextTile.Mask |= 1 << ((maskShift + 2) % 4);
                     }
                 }
             }
+
         }
 
         private TileRule TryGetRule(string name)

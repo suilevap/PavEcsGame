@@ -19,16 +19,19 @@ namespace PavEcsGame.GameLoop
 {
     internal class GameMainContainer
     {
-        private EcsWorld? _world;
+        private EcsWorld _world;
         private EcsUniverse? _universe;
-        private EcsSystems? _systems;
+        private EcsSystems _systems;
 
         public bool IsAlive => _world?.IsAlive() ?? false;
 
-        public void Start()
+        public GameMainContainer()
         {
             _world = new EcsWorld();
             _systems = new EcsSystems(_world, "Root");
+        }
+        public void Start()
+        {
 
             _systems
                 .AddUniverse(out var universe)
@@ -36,56 +39,56 @@ namespace PavEcsGame.GameLoop
             _universe = universe;
             var map = new MapData<EcsPackedEntityWithWorld>();
 
-            var turnManager = new TurnManager(universe);
+            var turnManager = new TurnManager(_systems);
 
             _systems
                 .MarkPerf(universe, "start")
                 .Add(turnManager)
-                .Add(new LoadMapSystem("Data/map1.txt", universe, map))
-                .Add(new SpawnEntitySystem(universe))
+                .Add(new LoadMapSystem("Data/map1.txt", _systems, map))
+                .Add(new SpawnEntitySystem(_systems))
                 //.Add(new LoadMapSystem("Data/lightTest.txt", universe, map))
-                .Add(new TileSystem(universe, map))
+                .Add(new TileSystem(_systems, map))
                 ;//.Add(new SpawnSystem());
 
             _systems
-                .Add(new CommandTokenDistributionSystem(TimeSpan.FromSeconds(1f), universe))
-                .Add(new KeyboardMoveSystem(waitKey: false, turnManager, universe))
-                .Add(new RandomMoveSystem(turnManager, universe))
-                .Add(new MoveCommandSystem(turnManager, universe));
+                .Add(new CommandTokenDistributionSystem(TimeSpan.FromSeconds(1f), _systems))
+                .Add(new KeyboardMoveSystem(waitKey: false, turnManager, _systems))
+                .Add(new RandomMoveSystem(turnManager, _systems))
+                .Add(new MoveCommandSystem(turnManager, _systems));
 
             _systems
-                .Add(new UpdateDirectionBasedOnSpeedSystem(universe))
-                .Add(new MovementSystem(turnManager, universe))
-                .Add(new FrictionSystem(turnManager, universe));
+                .Add(new UpdateDirectionBasedOnSpeedSystem(_systems))
+                .Add(new MovementSystem(turnManager, _systems))
+                .Add(new FrictionSystem(turnManager, _systems));
 
             _systems
-                .Add(new RelativePositionSystem(turnManager, universe))
-                .Add(new UpdatePositionSystem(turnManager, map, universe))
+                .Add(new RelativePositionSystem(turnManager, _systems))
+                .Add(new UpdatePositionSystem(turnManager, map, _systems))
 
 #if DEBUG
-                .Add(new VerifyMapSystem(universe, map))
+                .Add(new VerifyMapSystem(_systems, map))
 #endif
                 //.Add(new DamageOnCollisionSystem(universe))
-                .Add(new DestroyEntitySystem(turnManager, universe))
-                .Add(new DirectionTileSystem(universe))
+                .Add(new DestroyEntitySystem(turnManager, _systems))
+                .Add(new DirectionTileSystem(_systems))
 
-                .Add(new LightSourceSystems(universe))
-                .Add(new FieldOfViewSystem(universe, map));
+                .Add(new LightSourceSystems(_systems))
+                .Add(new FieldOfViewSystem(_systems, map));
             //.Add(new LightSystem(universe, map));
 
             _systems
-                .Add(new LightRenderSystem(universe))
-                .Add(new PlayerFieldOfViewSystem(universe))
-                .Add(new PrepareForRenderSystem(universe, map))
-                .Add(new ConsoleRenderSystem(universe))
+                .Add(new LightRenderSystem(_systems))
+                .Add(new PlayerFieldOfViewSystem(_systems))
+                .Add(new PrepareForRenderSystem(_systems, map))
+                .Add(new ConsoleRenderSystem(_systems))
                 //.Add(new SymbolRenderSystem(map, universe))
                 ;
 
             _systems
-                .UniDelHere<PreviousPositionComponent>(universe)
+                .MyDelHere<PreviousPositionComponent>()
                 //.UniDelHere<NewPositionComponent>(universe)
-                .UniDelHere<CollisionEvent<EcsEntity>>(universe)
-                .UniDelHere<MapLoadedEvent>(universe)
+                .MyDelHere<CollisionEvent<EcsEntity>>()
+                .MyDelHere<MapLoadedEvent>()
                 ;
 
             _systems

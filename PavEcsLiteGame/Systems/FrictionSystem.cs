@@ -5,24 +5,26 @@ using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    public class FrictionSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
+    public partial class FrictionSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
         private readonly TurnManager _turnManager;
         private TurnManager.SimSystemRegistration _reg;
-        private readonly EcsFilterSpec<
-            EcsSpec<SpeedComponent, MoveFrictionComponent>, 
-            EcsSpec, 
-            EcsSpec> _spec;
 
-        public FrictionSystem(TurnManager turnManager, EcsUniverse universe)
+        [Entity]
+        private readonly partial struct Ent
+        {
+            public partial ref SpeedComponent Speed();
+            public partial ref readonly MoveFrictionComponent Friction();
+        }
+
+        public FrictionSystem(TurnManager turnManager, EcsSystems universe)
+            : this(universe)
         {
             _turnManager = turnManager;
-            universe
-                .Register(this)
-                .Build(ref _spec);
         }
         public void Init(EcsSystems systems)
         {
@@ -32,11 +34,10 @@ namespace PavEcsGame.Systems
         public void Run(EcsSystems systems)
         {
             bool hasWorkToDo = false;
-            var (speedPool, frictionPool) = _spec.Include;
-            foreach (var ent in _spec.Filter)
+            foreach (var ent in _providers.EntProvider)
             {
-                ref var speed = ref speedPool.Get(ent);
-                var friction = frictionPool.Get(ent).FrictionValue;
+                ref var speed = ref  ent.Speed();
+                var friction = ent.Friction().FrictionValue;
                 if (speed.Speed != Int2.Zero && friction != 0)
                 {
                     hasWorkToDo = true;

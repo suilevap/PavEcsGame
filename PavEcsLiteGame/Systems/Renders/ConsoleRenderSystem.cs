@@ -6,31 +6,28 @@ using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
 using PavEcsGame;
 using PavEcsGame.Utils;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems.Renders
 {
-    public class ConsoleRenderSystem : IEcsInitSystem, IEcsRunSystem, IEcsSystemSpec
+    public partial class ConsoleRenderSystem : IEcsInitSystem, IEcsRunSystem, IEcsSystemSpec
     {
 
-        private readonly EcsFilterSpec
-            .Inc<EcsSpec<RenderItemCommand>> _renderCommandSpec;
+        [Entity]
+        private partial struct RenderCommandEntity
+        {
+            public partial RequiredComponent<RenderItemCommand> Command();
+        }
 
 
         private List<EcsUnsafeEntity>[] _groupedbyColor = new List<EcsUnsafeEntity>[16];
-        public ConsoleRenderSystem(EcsUniverse universe)
-        {
-            universe
-                .Register(this)
-                .Build(ref _renderCommandSpec);
 
+        public void Init(EcsSystems systems)
+        {
             for (int i = 0; i < _groupedbyColor.Length; i++)
             {
                 _groupedbyColor[i] = new List<EcsUnsafeEntity>(128);
             }
-        }
-
-        public void Init(EcsSystems systems)
-        {
             Console.CursorVisible = false;
         }
         public void Run(EcsSystems systems)
@@ -41,13 +38,13 @@ namespace PavEcsGame.Systems.Renders
         private void RenderGroupedByMainColor()
         {
 
-            var commandPool = _renderCommandSpec.Include.Pool1;
-            foreach (EcsUnsafeEntity ent in _renderCommandSpec.Filter)
+            foreach(var ent in _providers.RenderCommandEntityProvider)
             {
-                var color = commandPool.Get(ent).Symbol.MainColor;
-                _groupedbyColor[(int)color].Add(ent);
+                var key = (int)ent.Command().Get().Symbol.MainColor;
+                _groupedbyColor[key].Add((EcsUnsafeEntity) ent.GetRawId());
             }
 
+            var commandPool = _providers.RenderCommandEntityProvider._commandPool;
             for (int i = 0; i < _groupedbyColor.Length; i++)
             {
                 var list = _groupedbyColor[i];
@@ -56,14 +53,15 @@ namespace PavEcsGame.Systems.Renders
                     ConsoleColor mainColor = (ConsoleColor)i;
                     Console.ForegroundColor = mainColor;
 
-                    foreach (EcsUnsafeEntity ent in list)
+                    foreach (EcsUnsafeEntity entId in list)
                     {
-                        RenderItemWithoutColor(in commandPool.Get(ent));
-                        commandPool.Del(ent);
+                        RenderItemWithoutColor(in commandPool.Get(entId));
+                        commandPool.Del(entId);
                     }
                     list.Clear();
                 }
             }
+
             static void RenderItemWithoutColor(in RenderItemCommand item)
             {
                 if (Console.CursorLeft != item.Position.Value.X || Console.CursorTop != item.Position.Value.Y)
@@ -86,32 +84,32 @@ namespace PavEcsGame.Systems.Renders
             }
         }
 
-        private void RenderSimple()
-        {
+        //private void RenderSimple()
+        //{
 
-            var commandPool = _renderCommandSpec.Include.Pool1;
-            foreach (EcsUnsafeEntity ent in _renderCommandSpec.Filter)
-            {
-                RenderItem(in commandPool.Get(ent));
-                commandPool.Del(ent);
-            }
+        //    var commandPool = _renderCommandSpec.Include.Pool1;
+        //    foreach (EcsUnsafeEntity ent in _renderCommandSpec.Filter)
+        //    {
+        //        RenderItem(in commandPool.Get(ent));
+        //        commandPool.Del(ent);
+        //    }
 
-            static void RenderItem(in RenderItemCommand item)
-            {
-                Console.SetCursorPosition(item.Position.Value.X, item.Position.Value.Y);
-                if (item.Symbol.Value != default)
-                {
-                    Console.ForegroundColor = item.Symbol.MainColor;
-                    Console.BackgroundColor = item.BackgroundColor;
-                    Console.Write(item.Symbol.Value);
-                }
-                else
-                {
-                    Console.ResetColor();
-                    Console.Write(SymbolComponent.Empty.Value);
-                }
-            }
+        //    static void RenderItem(in RenderItemCommand item)
+        //    {
+        //        Console.SetCursorPosition(item.Position.Value.X, item.Position.Value.Y);
+        //        if (item.Symbol.Value != default)
+        //        {
+        //            Console.ForegroundColor = item.Symbol.MainColor;
+        //            Console.BackgroundColor = item.BackgroundColor;
+        //            Console.Write(item.Symbol.Value);
+        //        }
+        //        else
+        //        {
+        //            Console.ResetColor();
+        //            Console.Write(SymbolComponent.Empty.Value);
+        //        }
+        //    }
 
-        }
+        //}
     }
 }

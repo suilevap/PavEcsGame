@@ -6,25 +6,33 @@ using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    class MoveCommandSystem : IEcsInitSystem, IEcsRunSystem, IEcsSystemSpec
+    partial class MoveCommandSystem : IEcsInitSystem, IEcsRunSystem, IEcsSystemSpec
     {
         private readonly TurnManager _turnManager;
 
-        private readonly EcsFilterSpec
-            .Inc<EcsSpec<MoveCommandComponent, SpeedComponent, CommandTokenComponent>> _spec;
+
+        [Entity]
+        private partial struct Entity
+        {
+            public partial RequiredComponent<MoveCommandComponent> Move();
+            public partial ref SpeedComponent Speed();
+
+            public partial ref CommandTokenComponent CommandToken();
+
+        }
+
 
         private TurnManager.SimSystemRegistration _registration;
 
 
-        public MoveCommandSystem(TurnManager turnManager, EcsUniverse universe)
+        public MoveCommandSystem(TurnManager turnManager, EcsSystems universe)
+            : this(universe)
         {
             _turnManager = turnManager;
-            universe
-                .Register(this)
-                .Build(ref _spec);
         }
 
         public void Init(EcsSystems systems)
@@ -34,20 +42,16 @@ namespace PavEcsGame.Systems
 
         public void Run(EcsSystems systems)
         {
-            _registration.UpdateState(_spec.Filter);
-            var (commandPool,speedPool, commandTokenPool) = _spec.Include;
-            foreach (EcsUnsafeEntity ent in _spec.Filter)
+            _registration.UpdateState(_providers.EntityProvider.Filter);
+            foreach (Entity ent in _providers.EntityProvider)
             {
-                ref readonly var command = ref commandPool.Get(ent);
-
+                ref readonly var command = ref ent.Move().Get();
                 if (command.IsRelative)
                 {
-                    speedPool.Ensure(ent, out _) = new SpeedComponent(command.Target.Value);
+                    ent.Speed() = new SpeedComponent(command.Target.Value);
                 }
-
-                commandPool.Del(ent);
-
-                commandTokenPool.Get(ent).ActionCount--;
+                ent.Move().Remove();
+                ent.CommandToken().ActionCount--;
             }
         }
     }

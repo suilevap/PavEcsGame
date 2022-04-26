@@ -10,17 +10,19 @@ namespace PavEcsGame.Systems
     {
         private readonly Providers _providers;
 
-        public EmptySystem(EcsSystems systems)
-        {
-            //
-            var ent1Prov = Entity.Create(systems);
-            _providers = new Providers(
-                ent1Prov,
-                Entity2.Create(systems),
-                Entity3.Create(systems)
-                ,EntityChild.Create(systems, ent1Prov)
-                );
-        }
+        public EmptySystem() { }
+
+        //public EmptySystem(EcsSystems systems)
+        //{
+        //    //
+        //    var ent1Prov = Entity.Create(systems);
+        //    _providers = new Providers(
+        //        ent1Prov,
+        //        Entity2.Create(systems),
+        //        Entity3.Create(systems)
+        //        ,EntityChild.Create(systems, ent1Prov)
+        //        );
+        //}
 
         //private readonly void GeneratedInit(EcsSystems systems)
         //{
@@ -37,6 +39,8 @@ namespace PavEcsGame.Systems
             public partial OptionalComponent<PavEcsGame.Components.IsActiveTag> New2();
             //public partial OptionalComponent<PavEcsGame.Components.IsActiveTag> New3();
             public partial ExcludeComponent<DestroyRequestTag> DestroyRequested();
+
+            //public partial RequiredComponent<T> Value();
 
             //public static partial IEntityProvider<Entity> GetProvider(EcsSystems systems);
         }
@@ -63,7 +67,7 @@ namespace PavEcsGame.Systems
         [PavEcsSpec.Generated.Entity]
         private readonly partial struct EntityChild
         {
-            public partial Entity Base();
+            //public partial Entity Base();
 
             public partial ref readonly DirectionBasedOnSpeed DirBasedOnSpeed1();
         }
@@ -88,6 +92,12 @@ namespace PavEcsGame.Systems
         }
     }
 
+
+    partial class EmptySystem<T> //: IEcsRunSystem
+    //where T : struct
+    {
+
+    }
     //partial class EmptySystem
     //{
 
@@ -170,5 +180,36 @@ namespace PavEcsGame.Systems
     //    private readonly Entity.Provider _provider;
     //}
 
-   
+    partial class GeneratedDelHereSystem<T> : IEcsRunSystem//, IEcsSystemSpec
+          where T : struct
+    {
+        //private readonly EcsFilterSpec<EcsSpec<T>, EcsSpec, EcsSpec> _spec;
+
+        //public UniverseDelHereSystem(EcsUniverse universe)
+        //{
+        //    universe
+        //        .Register(this)
+        //        .Build(ref _spec);
+        //}
+
+        public GeneratedDelHereSystem(EcsSystems systems)
+        {
+            var worldName = TypeToWorldNameMap.GetWorldName<T>();
+            _providers = new Providers(Ent.Create(worldName, systems));
+        }
+
+        [Entity]
+        private readonly partial struct Ent
+        {
+            public partial RequiredComponent<T> ComponentToDel();
+        }
+
+        public void Run(EcsSystems systems)
+        {
+            foreach (var entity in _providers.EntProvider)
+            {
+                entity.ComponentToDel().Remove();
+            }
+        }
+    }
 }

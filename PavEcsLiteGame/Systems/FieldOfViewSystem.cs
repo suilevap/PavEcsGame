@@ -8,43 +8,47 @@ using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
 using PavEcsGame;
 using PavEcsGame.Area;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    class FieldOfViewSystem : IEcsRunSystem, IEcsSystemSpec
+    partial class FieldOfViewSystem : IEcsRunSystem, IEcsSystemSpec
     {
-        private struct FieldOfViewCalculated 
-        {
-            public PositionComponent Position;
-            public FieldOfViewRequestEvent Request;
-        }
 
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
-        //private readonly EcsFilterSpec<
-        //    EcsReadonlySpec<PositionComponent, FieldOfViewRequestEvent>, 
-        //    EcsSpec<AreaResultComponent<float>, FieldOfViewCalculated>, 
-        //    EcsSpec> _filedOfViewSourcesSpec;
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<PositionComponent>, EcsSpec<FieldOfViewRequestEvent>>
-            .Opt<EcsSpec<AreaResultComponent<float>, FieldOfViewCalculated>> _filedOfViewSourcesSpec;
+        [Entity]
+        private readonly partial struct FovSourceEnt
+        {
+            public struct FieldOfViewCalculated
+            {
+                public PositionComponent Position;
+                public FieldOfViewRequestEvent Request;
+            }
+            public partial ref readonly PositionComponent Pos();
+            public partial RequiredComponent<FieldOfViewRequestEvent> Request();
 
-        private readonly EcsEntityFactorySpec<
-            EcsReadonlySpec<PositionComponent, SpeedComponent>> _obstacleSpec;
+            public partial OptionalComponent<AreaResultComponent<float>> Result();
+            public partial OptionalComponent<FieldOfViewCalculated> FovCalculated();
+        }
+
+        [Entity(SkipFilter = true)]
+        private partial struct ObstacleEnt
+        {
+            public partial ref readonly PositionComponent Pos();
+            public partial ExcludeComponent<SpeedComponent> Speed();
+        }
 
         private readonly FieldOfViewComputationInt2 _fieldOfView;
         private readonly Func<Int2, Int2, bool> _hasObstacles;
         private (Int2 delta, float value)[]? _fieldOfViewResult;
 
         public FieldOfViewSystem(
-            EcsUniverse universe,
+            EcsSystems universe,
             IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> map)
+            : this(universe)
         {
             _map = map;
-            universe
-                .Register(this)
-                .Build(ref _filedOfViewSourcesSpec)
-                .Build(ref _obstacleSpec);
 
             _fieldOfView = new FieldOfViewComputationInt2();
             _hasObstacles = HasObstacle;
@@ -53,32 +57,24 @@ namespace PavEcsGame.Systems
         public void Run(EcsSystems systems)
         {
 
-            var posPool = _filedOfViewSourcesSpec.IncludeReadonly.Pool1;
-            var requestPool = _filedOfViewSourcesSpec.Include.Pool1;
-
-            var (resultPool, previousInputPool) = _filedOfViewSourcesSpec.Optional;
-            foreach (EcsUnsafeEntity ent in _filedOfViewSourcesSpec.Filter)
+            foreach (var ent in _providers.FovSourceEntProvider)
             {
-                ref readonly var pos = ref posPool.Get(ent);
-                ref var request = ref requestPool.Get(ent);
-
-                ref var prevInput = ref previousInputPool.Ensure(ent, out var isNew);
-
+                ref readonly var pos = ref ent.Pos();
+                ref var request = ref ent.Request().Get(); 
+                ref var prevInput = ref ent.FovCalculated().Ensure(out var isNew);
                 if (isNew || prevInput.Position != pos || prevInput.Request != request)
                 {
                     var radius = request.Radius;
                     prevInput.Position = pos;
                     prevInput.Request = request;
-                    
                     UpdateFieldOfViewData(ent, pos, radius);
                 }
-
-                requestPool.Del(ent);
+                ent.Request().Remove();
             }
 
-            void UpdateFieldOfViewData(EcsUnsafeEntity ent, PositionComponent pos, int radius)
+            void UpdateFieldOfViewData(in FovSourceEnt ent, in PositionComponent pos, int radius)
             {
-                ref var result = ref resultPool.Ensure(ent, out var isNew);
+                ref var result = ref ent.Result().Ensure(out var isNew);
                 if (isNew)
                 {
                     result.Data = new MapData<float>();
@@ -115,12 +111,8 @@ namespace PavEcsGame.Systems
             var p = pos + delta;
             if (!_map.IsValid(p))
                 return true;
-            if (_map.Get(p).Unpack(out _, out EcsUnsafeEntity rawEnt))
-            {
-                //TODO: check if it solid
-                return !_obstacleSpec.Pools.Pool2.Has(rawEnt);
-            }
-            return false;
+            var ent = _map.Get(p);
+            return _providers.ObstacleEntProvider.TryGet(ent).HasValue;
         }
     }
 }

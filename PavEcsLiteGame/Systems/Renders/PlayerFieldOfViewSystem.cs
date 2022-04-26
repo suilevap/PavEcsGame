@@ -5,31 +5,30 @@ using PavEcsGame;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems.Renders
 {
-    internal class PlayerFieldOfViewSystem : IEcsRunSystem, IEcsSystemSpec
+    internal partial class PlayerFieldOfViewSystem : IEcsRunSystem, IEcsSystemSpec
     {
 
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<AreaResultComponent<float>, PlayerIndexComponent, DirectionComponent, PositionComponent>>
-            .Opt<EcsSpec<AreaResultComponent<VisibilityType>>> _playerFieldOfViewSpec;
-
-        public PlayerFieldOfViewSystem(EcsUniverse universe)
+        [Entity]
+        private partial struct PlayerFovEnt
         {
-            universe
-                .Register(this)
-                .Build(ref _playerFieldOfViewSpec);
+            public partial ref readonly AreaResultComponent<float> Fov();
+            public partial ref readonly PlayerIndexComponent PlayerIndex();
+            public partial ref readonly DirectionComponent Dir();
+            public partial ref readonly PositionComponent Pos();
+            public partial OptionalComponent<AreaResultComponent<VisibilityType>> Result();
         }
+
         public void Run(EcsSystems systems)
         {
-            var (fovPool, _, dirPool, posPool) = _playerFieldOfViewSpec.Include;
-            var resultPool = _playerFieldOfViewSpec.Optional.Pool1;
-            foreach (EcsUnsafeEntity ent in _playerFieldOfViewSpec.Filter)
+            foreach(var ent in _providers.PlayerFovEntProvider)
             {
-                ref readonly var fovComponent = ref fovPool.Get(ent);
+                ref readonly var fovComponent = ref ent.Fov();
                 var filedOfView = fovComponent.Data;
-                ref var result = ref resultPool.Ensure(ent, out var isNew);
+                ref var result = ref ent.Result().Ensure(out var isNew);
                 if (isNew)
                 {
                     result.Data = new MapData<VisibilityType>();
@@ -38,7 +37,7 @@ namespace PavEcsGame.Systems.Renders
                 if (fovComponent.Revision != result.Revision || isNew)//todo or direction changed?
                 {
                     result.Revision = fovComponent.Revision;
-                    var data = new EntityData(posPool.Get(ent), dirPool.Get(ent));
+                    var data = new EntityData(ent.Pos(), ent.Dir());
 
                     result.Data.Merge(filedOfView, data, VisibilityMerge);
                 }

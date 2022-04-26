@@ -7,162 +7,194 @@ using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
+using PavEcsSpec.Generated;
+
 
 namespace PavEcsGame.Systems
 {
-    internal class SpawnEntitySystem : IEcsRunSystem, IEcsSystemSpec
+    internal partial class SpawnEntitySystem : IEcsRunSystem, IEcsSystemSpec
     {
-        private readonly EcsEntityFactorySpec<
-                EcsSpec<IsActiveTag>> _commonFactory;
 
-        private readonly EcsEntityFactorySpec<
-          EcsSpec<LinkToEntityComponent<EcsEntity>, RelativePositionComponent>> _linkFactory;
+        [Entity(SkipFilter = true)]
+        private readonly partial struct CommonEntity
+        {
+            public partial ref IsActiveTag IsActive();
 
-        public readonly EcsEntityFactorySpec<
-            EcsSpec<ColliderComponent>> _physicFactroy;
+        }
 
-        private readonly EcsEntityFactorySpec<
-            EcsSpec<
-                RandomGeneratorComponent,
-                SpeedComponent,
-                SymbolComponent,
-                MoveFrictionComponent,
-                WaitCommandTokenComponent>> _enemyFactory;
 
-        private readonly EcsEntityFactorySpec<
-            EcsSpec<PlayerIndexComponent,
-                SpeedComponent,
-                SymbolComponent,
-                MoveFrictionComponent,
-                WaitCommandTokenComponent>> _playerFactory;
+        [Entity(SkipFilter = true)]
+        private readonly partial struct LinkEntity
+        {
+            public partial CommonEntity Common();
 
-        private readonly EcsEntityFactorySpec<EcsSpec<SymbolComponent, TileComponent>> _wallFactory;
-        private readonly EcsEntityFactorySpec<EcsSpec<LightSourceComponent, PositionComponent>> _lightSourceFactory;
-        private readonly EcsEntityFactorySpec<EcsSpec<VisualSensorComponent>> _actorFactory;
+            public partial ref LinkToEntityComponent<EcsEntity> LinkTo();
+            public partial ref RelativePositionComponent RelPos();
 
-        private readonly EcsEntityFactorySpec<EcsSpec<DirectionComponent, DirectionTileComponent, DirectionBasedOnSpeed>> _dirTileFactory;
+        }
 
-        private readonly EcsFilterSpec
-            .Inc<EcsSpec<SpawnRequestComponent>> _spawnResuestSpec;
+
+        [Entity(SkipFilter = true)]
+        private readonly partial struct PhysicEntity
+        {
+            public partial CommonEntity Common();
+
+            public partial ref ColliderComponent Collider();
+
+        }
+
+        [Entity(SkipFilter = true)]
+        private readonly partial struct EnemyEntity
+        {
+            public partial ActorEntity Actor();
+
+            public partial DirTileEntity DirTile();
+
+            public partial ref RandomGeneratorComponent Rnd();
+            public partial ref SpeedComponent Speed();
+            public partial ref SymbolComponent View();
+            public partial ref MoveFrictionComponent Friction();
+            public partial ref WaitCommandTokenComponent WaitCommandToken();
+
+        }
+
+        [Entity(SkipFilter = true)]
+        private readonly partial struct PlayerEntity
+        {
+            public partial ActorEntity Actor();
+
+            public partial DirTileEntity DirTile();
+
+            public partial LightEntity Light();
+
+            public partial ref PlayerIndexComponent Index();
+            public partial ref SpeedComponent Speed();
+            public partial ref SymbolComponent View();
+            public partial ref MoveFrictionComponent Friction();
+            public partial ref WaitCommandTokenComponent WaitCommandToken();
+
+        }
+
+        [Entity(SkipFilter = true)]
+        private readonly partial struct WallEntity
+        {
+            public partial PhysicEntity Physic();
+
+            public partial ref SymbolComponent View();
+            public partial ref TileComponent Tile();
+        }
+
+        [Entity(SkipFilter = true)]
+        private readonly partial struct LightEntity
+        {
+            public partial CommonEntity Common();
+
+            public partial OptionalComponent<PositionComponent> Pos();
+            public partial ref LightSourceComponent Source();
+
+            public partial OptionalComponent<SymbolComponent> View();
+
+        }
+
+        [Entity(SkipFilter = true)]
+        private readonly partial struct ActorEntity
+        {
+            public partial PhysicEntity Physic();
+
+            public partial ref VisualSensorComponent Sensor();
+        }
+
+        [Entity(SkipFilter = true)]
+        private readonly partial struct DirTileEntity
+        {
+            public partial CommonEntity Common();
+
+            public partial ref DirectionComponent Dir();
+            public partial OptionalComponent<DirectionTileComponent> DirTile();
+
+            public partial ref DirectionBasedOnSpeed DirBasedOnSpeed();
+        }
+
+        [Entity(SkipFilter = false)]
+        private readonly partial struct SpawnRequestEntity
+        {
+            public partial RequiredComponent<SpawnRequestComponent> Request();
+        }
+
         private readonly Random _rnd;
 
-        public SpawnEntitySystem(EcsUniverse universe)
+        public SpawnEntitySystem(EcsSystems universe)
         {
             _rnd = new Random(42);
-            universe
-                .Register(this)
-                .Build(ref _spawnResuestSpec)
-                .Build(ref _commonFactory)
-                .Build(_commonFactory, ref _linkFactory)
-                .Build(_commonFactory, ref _physicFactroy)
-                .Build(_physicFactroy, ref _actorFactory)
-                .Build(_actorFactory, ref _playerFactory)
-                .Build(_commonFactory, ref _lightSourceFactory)
-                .Build(_actorFactory, ref _enemyFactory)
-                .Build(_physicFactroy, ref _wallFactory)
-                .Build(_commonFactory, ref _dirTileFactory);
+
+            var commonProvider = CommonEntity.Create(universe);
+            var dirTileProvider = DirTileEntity.Create(universe, commonProvider);
+
+            var linkProvider = LinkEntity.Create(universe, commonProvider);
+            var physicProvider = PhysicEntity.Create(universe, commonProvider);
+            var actorProvider = ActorEntity.Create(universe, physicProvider);
+            var lightProvider = LightEntity.Create(universe, commonProvider);
+
+            var playerProvider = PlayerEntity.Create(universe, actorProvider, dirTileProvider, lightProvider);
+            var enemyProvider = EnemyEntity.Create(universe, actorProvider, dirTileProvider);
+            var wallProvider = WallEntity.Create(universe, physicProvider);
+            ;
+            _providers = new Providers(
+                commonProvider,
+                linkProvider,
+                physicProvider,
+                enemyProvider,
+                playerProvider,
+                wallProvider,
+                lightProvider,
+                actorProvider,
+                dirTileProvider,
+                SpawnRequestEntity.Create(universe)
+                );
         }
 
         public void Run(EcsSystems systems)
         {
-            var spawnReqPool = _spawnResuestSpec.Include.Pool1;
-
-            foreach (EcsUnsafeEntity ent in _spawnResuestSpec.Filter)
+            foreach (var spawn in _providers.SpawnRequestEntityProvider)
             {
-                ref var spawnReq = ref spawnReqPool.Get(ent);
-                TrySpawnEntity(ent, spawnReq, _rnd);
-                ent.Add(
-                    _commonFactory.Pools,
-                    new IsActiveTag());
-
-                spawnReqPool.Del(ent);
+                ref var spawnReq = ref spawn.Request().Get();
+                TrySpawnEntity((EcsUnsafeEntity)spawn.GetRawId(), spawnReq, _rnd);
+                _providers.CommonEntityProvider.Ensure(spawn.GetRawId());
+                spawn.Request().Remove();
             }
         }
 
         private void TrySpawnEntity(EcsUnsafeEntity ent, in SpawnRequestComponent request, Random rnd)
         {
-            //EcsUnsafeEntity ent;
-            //if (!entity.Unpack(out var world, out ent))
-            //    return;
 
             switch (request.Type)
             {
                 case EntityType.Wall:
-                    //Debug.Assert(_wallFactory.IsBelongToWorld(world) );
-                    ent.Add(_wallFactory.Pools,
-                            new SymbolComponent
-                            {
-                                Value = '#',
-                                Depth = Depth.Foreground,
-                                MainColor = ConsoleColor.Gray
-                            },
-                            new TileComponent() { RuleName = "wall_rule" })
-                        .Add(_physicFactroy.Pools,
-                             new ColliderComponent()
-                             {
-
-                             });
+                    var wall = _providers.WallEntityProvider.Add(ent);
+                    wall.View() = new SymbolComponent
+                    {
+                        Value = '#',
+                        Depth = Depth.Foreground,
+                        MainColor = ConsoleColor.Gray
+                    };
+                    wall.Tile() = new TileComponent() { RuleName = "wall_rule" };
                     break;
                 case EntityType.Player:
                     //Debug.Assert(_playerFactory.IsBelongToWorld(world));
 
-                    ent.Add(_playerFactory.Pools,
-                            new PlayerIndexComponent { Index = 0 },
-                            new SpeedComponent(),
-                            new SymbolComponent
-                            {
-                                Value = '@',
-                                Depth = Depth.Foreground,
-                                MainColor = ConsoleColor.White
-                            },
-                            new MoveFrictionComponent { FrictionValue = 1 },
-                            new WaitCommandTokenComponent(1))
-                        .Add(_actorFactory.Pools,
-                            new VisualSensorComponent() { Radius = 16 })
-                        .Add(_physicFactroy.Pools,
-                            new ColliderComponent()
-                            {
+                    var player = _providers.PlayerEntityProvider.Add(ent);
+                    player.Index() = new PlayerIndexComponent { Index = 0 };
+                    player.View() = new SymbolComponent
+                    {
+                        Value = '@',
+                        Depth = Depth.Foreground,
+                        MainColor = ConsoleColor.White
+                    };
+                    player.Friction() = new MoveFrictionComponent { FrictionValue = 1 };
+                    player.WaitCommandToken() = new WaitCommandTokenComponent(1);
+                    player.Actor().Sensor() = new VisualSensorComponent() { Radius = 16 };
 
-                            })//;
-                        .Add(_dirTileFactory.Pools,
-                            new DirectionComponent(),
-                            default,//new DirectionTileComponent() { RuleName = "direction_triangle_rule" },
-                            new DirectionBasedOnSpeed()
-                        );
-
-                    var linkedEnt = _linkFactory.NewUnsafeEntity()
-                        .Add(_linkFactory.Pools,
-                        new LinkToEntityComponent<EcsEntity>()
-                        {
-                            TargetEntity = ent.Pack(_playerFactory.World)
-                        },
-
-                        new RelativePositionComponent()
-                        {
-                            RelativePosition = new PositionComponent(1, 0),
-                            RelativeDirection = new DirectionComponent()
-                            {
-                                Direction = new Int2(1, 0)
-                            }
-                        })
-                        .Add(_dirTileFactory.Pools,
-                            new DirectionComponent(),
-                            new DirectionTileComponent() { RuleName = "direction_triangle_rule" },
-                            default
-                        );
-                    _wallFactory.Pools.Pool1.Add(linkedEnt) = new SymbolComponent('i');
-
-                    //_playerFactory.Pools.Pool2.Add(linkedEnt) = new SpeedComponent();
-
-                    //TrySpawnEntity(
-                    //    linkedEnt, 
-                    //    new SpawnRequestComponent()
-                    //    {
-                    //        Type = EntityType.Light
-                    //    }, 
-                    //    rnd);
-
-                    _lightSourceFactory.Pools.Pool1.Add(ent) = new LightSourceComponent()
+                    player.Light().Source() = new LightSourceComponent()
                     {
                         Radius = 16,
                         BasicParameters = new LightValueComponent()
@@ -175,61 +207,38 @@ namespace PavEcsGame.Systems
                     break;
 
                 case EntityType.Enemy:
-                    //Debug.Assert(_enemyFactory.IsBelongToWorld(world));
-
-                    ent.Add(_enemyFactory.Pools,
-                            new RandomGeneratorComponent { Rnd = rnd },
-                            new SpeedComponent(),
-                            new SymbolComponent
-                            {
-                                Value = '☺',
-                                Depth = Depth.Foreground,
-                                MainColor = ConsoleColor.Red
-                            },
-                            new MoveFrictionComponent { FrictionValue = 1 },
-                            new WaitCommandTokenComponent(1))
-                        .Add(_physicFactroy.Pools,
-                            new ColliderComponent()
-                            {
-
-                            })
-                        .Add(_dirTileFactory.Pools,
-                            new DirectionComponent(),
-                            new DirectionTileComponent() { RuleName = "direction_v_rule" },
-                            new DirectionBasedOnSpeed()
-                        );
-                    ;
-
-                    //_lightSourceFactory.Pools.Pool1.Add(ent) = new LightSourceComponent()
-                    //{
-                    //    Radius = 16,
-                    //    BasicParameters = new LightValueComponent()
-                    //    {
-                    //        LightType = LightType.Fire,
-                    //        Value = 255
-                    //    }
-                    //};
+                    var enemy = _providers.EnemyEntityProvider.Add(ent);
+                    enemy.Rnd().Rnd = rnd;
+                    enemy.View() = new SymbolComponent
+                    {
+                        Value = '☺',
+                        Depth = Depth.Foreground,
+                        MainColor = ConsoleColor.Red
+                    };
+                    enemy.Friction() = new MoveFrictionComponent { FrictionValue = 1 };
+                    enemy.WaitCommandToken() = new WaitCommandTokenComponent(1);
+                    enemy.DirTile().DirTile().Ensure().RuleName = "direction_v_rule";
 
                     break;
 
                 case EntityType.Electricity:
-                    //Debug.Assert(_lightSourceFactory.IsBelongToWorld(world));
-
-                    _lightSourceFactory.Pools.Pool1.Add(ent) = new LightSourceComponent()
+                    var el = _providers.LightEntityProvider.Add(ent);
+                    el.Source() = new LightSourceComponent()
                     {
-                        Radius = 3,
+                        Radius = 4,
                         BasicParameters = new LightValueComponent()
                         {
                             LightType = LightType.Electricity,
                             Value = 32
                         }
                     };
-                    _wallFactory.Pools.Pool1.Add(ent) = new SymbolComponent('Ω');
+                    el.View().Ensure().Value = 'Ω';
 
                     break;
                 case EntityType.Light:
                     //Debug.Assert(_lightSourceFactory.IsBelongToWorld(world));
-                    _lightSourceFactory.Pools.Pool1.Set(ent, new LightSourceComponent()
+                    var light = _providers.LightEntityProvider.Add(ent);
+                    light.Source() = new LightSourceComponent()
                     {
                         Radius = 16,
                         BasicParameters = new LightValueComponent()
@@ -237,13 +246,12 @@ namespace PavEcsGame.Systems
                             LightType = LightType.Fire,
                             Value = 196
                         }
-                    });
-                    _wallFactory.Pools.Pool1.Add(ent) = new SymbolComponent('i');
+                    };
+                    light.View().Ensure().Value = 'i';
                     break;
                 case EntityType.Acid:
-                    //Debug.Assert(_lightSourceFactory.IsBelongToWorld(world));
-
-                    _lightSourceFactory.Pools.Pool1.Add(ent) = new LightSourceComponent()
+                    var acid = _providers.LightEntityProvider.Add(ent);
+                    acid.Source() = new LightSourceComponent()
                     {
                         Radius = 4,
                         BasicParameters = new LightValueComponent()
@@ -252,8 +260,7 @@ namespace PavEcsGame.Systems
                             Value = 32
                         }
                     };
-                    _wallFactory.Pools.Pool1.SetObsolete(ent) = new SymbolComponent('▒');
-
+                    acid.View().Ensure().Value = '▒';
                     break;
             }
         }

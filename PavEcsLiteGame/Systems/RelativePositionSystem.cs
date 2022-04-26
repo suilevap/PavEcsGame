@@ -6,26 +6,39 @@ using PavEcsGame;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    internal class RelativePositionSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
+    internal partial class RelativePositionSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<RelativePositionComponent, LinkToEntityComponent<EcsEntity>>>
-            .Opt<EcsSpec<NewPositionComponent, DirectionComponent, PositionComponent>> _spec;
 
-        private readonly EcsEntityFactorySpec<
-            EcsReadonlySpec<PositionComponent, DirectionComponent>> _parentSpec;
+        [Entity]
+        private readonly partial struct Ent
+        {
+            public partial ref readonly RelativePositionComponent RelativePos();
+            public partial ref readonly LinkToEntityComponent<EcsEntity> LinkTo();
+
+            public partial OptionalComponent<NewPositionComponent> NewPos();
+            public partial OptionalComponent<DirectionComponent> Dir();
+            public partial OptionalComponent<PositionComponent> Pos();
+
+        }
+
+        [Entity(SkipFilter = true)]
+        private readonly partial struct ParentEntity
+        {
+            public partial ref readonly PositionComponent Pos();
+
+            public partial ref readonly DirectionComponent Dir();
+        }
+
         private readonly TurnManager _turnManager;
         private TurnManager.SimSystemRegistration _reg;
 
-        public RelativePositionSystem(TurnManager turnManager, EcsUniverse universe)
+        public RelativePositionSystem(TurnManager turnManager, EcsSystems universe)
+            : this(universe)
         {
-            universe
-                .Register(this)
-                .Build(ref _spec)
-                .Build(ref _parentSpec);
             _turnManager = turnManager;
         }
 
@@ -36,32 +49,22 @@ namespace PavEcsGame.Systems
 
         public void Run(EcsSystems systems)
         {
-            var (relPosPool, parentPool) = _spec.Include;
-            var (newPosPool, dirPool, posPool) = _spec.Optional;
-
-            var (parentPosPool, parentDirPool) = _parentSpec.Pools;
             bool hasWorkTodo = false;
-            foreach (EcsUnsafeEntity ent in _spec.Filter)
+            foreach (var ent in _providers.EntProvider)
             {
-                var parentEnt = parentPool.Get(ent).TargetEntity;
-
-                if (parentEnt.Unpack(out _, out var parentId)
-                    && parentPosPool.Has(parentId)
-                    && parentDirPool.Has(parentId))
+                var parentId = ent.LinkTo().TargetEntity;
+                if (_providers.ParentEntityProvider.TryGet(parentId).TryGet(out var parentEnt))
                 {
-                    ref readonly var relPos = ref relPosPool.Get(ent);
-                    var parentPos = parentPosPool.Get(parentId).Value;
-                    ref readonly var parentDir = ref parentDirPool.Get(parentId);
-
-                    var newPos = GetPos(relPos, parentPos, parentDir);
-
-                    if (!posPool.Has(ent) || posPool.Get(ent) != newPos)
+                    ref readonly var relPos = ref ent.RelativePos();
+                    var newPos = GetPos(relPos, parentEnt.Pos(), parentEnt.Dir());
+                    var pos = ent.Pos();
+                    if (!pos.Has() || pos.Ensure() != newPos)//todo: add try get for optional?
                     {
-                        var isNewPos = newPosPool.Ensure(ent, out _).Value.TrySet(newPos);
+                        var isNewPos = ent.NewPos().Ensure().Value.TrySet(newPos);
                         hasWorkTodo = hasWorkTodo || isNewPos;
                     }
-                    var dir = relPos.RelativeDirection.Direction.Rotate(parentDir.Direction);
-                    var isNewDir = dirPool.Ensure(ent, out _).TrySet(new DirectionComponent() { Direction = dir });
+                    var dir = relPos.RelativeDirection.Direction.Rotate(parentEnt.Dir().Direction);
+                    var isNewDir = ent.Dir().Ensure().TrySet(new DirectionComponent() { Direction = dir });
                     hasWorkTodo = hasWorkTodo || isNewDir;
                 }
             }

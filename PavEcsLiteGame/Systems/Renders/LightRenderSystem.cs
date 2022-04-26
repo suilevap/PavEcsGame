@@ -8,38 +8,62 @@ using PavEcsGame.Components;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
 using PavEcsGame;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems.Renders
 {
-    class LightRenderSystem : IEcsRunSystem, IEcsSystemSpec
+    partial class LightRenderSystem : IEcsRunSystem, IEcsSystemSpec
     {
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<PositionComponent, LightSourceComponent, SpeedComponent>, EcsSpec<AreaResultComponent<float>>> _lightToRenderDynamicSpec;
 
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<PositionComponent, LightSourceComponent>, EcsSpec<AreaResultComponent<float>>>
-            .Exc<EcsReadonlySpec<SpeedComponent>> _lightToRenderStaticSpec;
+        private interface ILightSource
+        {
+            ref readonly PositionComponent Pos();
+            ref readonly LightSourceComponent LightSource();
+            ref AreaResultComponent<float> Result();
+        }
+
+        [Entity]
+        private partial struct LightToRenderDynamicEnt : ILightSource
+        {
+            public partial ref readonly PositionComponent Pos();
+            public partial ref readonly LightSourceComponent LightSource();
+            public partial ref readonly SpeedComponent Speed();
+            public partial ref AreaResultComponent<float> Result();
+        }
+
+        [Entity]
+        private partial struct LightToRenderStaticEnt : ILightSource
+        {
+            public partial ref readonly PositionComponent Pos();
+            public partial ref readonly LightSourceComponent LightSource();
+            public partial ExcludeComponent<SpeedComponent> Speed();
+            public partial ref AreaResultComponent<float> Result();
+        }
 
         private int _staticLightVersion = 0;
 
-        private readonly EcsEntityFactorySpec<EcsSpec<AreaResultComponent<LightValueComponent>>> _lightLayerFactory;
+        [Entity(SkipFilter = true)]
+        private partial struct LightLayerEnt
+        {
+            public partial ref AreaResultComponent<LightValueComponent> Light();
+        }
+
 
         private readonly MapData<LightValueComponent> _lightMap;
         private readonly MapData<LightValueComponent> _lightMapStatic;
-        private readonly EcsFilterSpec<EcsSpec<MapLoadedEvent>, EcsSpec, EcsSpec> _mapLoadedSpec;
+
+        [Entity]
+        private partial struct MapLoadedEnt
+        {
+            public partial ref readonly MapLoadedEvent Loaded();
+        }
 
         private readonly LightValueComponent _ambient = default;
 
-        public LightRenderSystem(EcsUniverse universe)
+        public LightRenderSystem()
         {
             _lightMap = new MapData<LightValueComponent>();
             _lightMapStatic = new MapData<LightValueComponent>();
-            universe
-                .Register(this)
-                .Build(ref _lightToRenderDynamicSpec)
-                .Build(ref _lightToRenderStaticSpec)
-                .Build(ref _lightLayerFactory)
-                .Build(ref _mapLoadedSpec);
 
             _ambient = new LightValueComponent()
             {
@@ -47,25 +71,22 @@ namespace PavEcsGame.Systems.Renders
             };
         }
 
+
         public void Run(EcsSystems systems)
         {
-            foreach (var ent in _mapLoadedSpec.Filter)
+            foreach (var ent in _providers.MapLoadedEntProvider)
             {
-                var size = _mapLoadedSpec.Include.Pool1.Get(ent).Size;
+                var size = ent.Loaded().Size;
                 _lightMap.Init(size);
-                _lightMapStatic.Init(size);
+                 _lightMapStatic.Init(size);
             }
 
-
-            //var (posPool, lightDataPool, _) = _lightToRenderDynamicSpec.IncludeReadonly;
-            var lightResultPool = _lightToRenderDynamicSpec.Include.Pool1;
-
-
             int currentVersion = 0;
-            foreach (var ent in _lightToRenderStaticSpec.Filter)
+
+            foreach (var ent in _providers.LightToRenderStaticEntProvider)
             {
-                var rev = lightResultPool.Get(ent).Revision;
-                currentVersion ^= (ent<<8 | ent);
+                var rev = ent.Result().Revision;
+                currentVersion ^= (ent.GetRawId() << 8 | rev);
             }
 
             if (currentVersion != _staticLightVersion)
@@ -73,40 +94,63 @@ namespace PavEcsGame.Systems.Renders
                 _staticLightVersion = currentVersion;
                 _lightMapStatic.Fill(_ambient);
 
-                CalculateLightMap(_lightToRenderStaticSpec.Filter, _lightMapStatic);
+                CalcualteStaticLight(_lightMapStatic);
                 Debug.Print("Re-render static light");
             }
 
+
             _lightMap.Clear();
             _lightMap.CopyFrom(_lightMapStatic);
-            CalculateLightMap(_lightToRenderDynamicSpec.Filter, _lightMap);
+            //CalculateLightMap(_lightToRenderDynamicSpec.Filter, _lightMap);
+            CalcualteDynamicLight(_lightMap);
 
-            _lightLayerFactory.NewUnsafeEntity()
-                .Add(_lightLayerFactory.Pools,
-                    new AreaResultComponent<LightValueComponent>()
-                    {
-                        Data = _lightMap
-                    });
+
+            _providers.LightLayerEntProvider.New().Light().Data = _lightMap;
            
         }
-        private void CalculateLightMap(EcsFilter ecsFilter, MapData<LightValueComponent> lightMap)
+
+        private void CalcualteDynamicLight(MapData<LightValueComponent> lightMap)
         {
-            var (posPool, lightDataPool, _) = _lightToRenderDynamicSpec.IncludeReadonly;
-            var lightResultPool = _lightToRenderDynamicSpec.Include.Pool1;
-
-            foreach (EcsUnsafeEntity ent in ecsFilter)
+            foreach (var ent in _providers.LightToRenderDynamicEntProvider)
             {
-                ref readonly var lightData = ref lightDataPool.Get(ent);
-                ref readonly var center = ref posPool.Get(ent);
-                ref var lightResult = ref lightResultPool.Get(ent);
-
-                //int radiusSq = (lightData.Radius + 1) * (lightData.Radius + 1);
-                //float invRadiusSq = 1.0f / radiusSq;
-                var context = new LightDataContext(in lightData, center);
-                IMapData<PositionComponent, LightValueComponent> m = lightMap; 
-                m.Merge(lightResult.Data, context, _lightMergeDelegate);
+                CalculateLightMap(ent, lightMap);
             }
         }
+        private void CalcualteStaticLight(MapData<LightValueComponent> lightMap)
+        {
+            foreach(var ent in _providers.LightToRenderStaticEntProvider)
+            {
+                CalculateLightMap(ent, lightMap);
+            }
+        }
+        private void CalculateLightMap<T>(T ent, MapData<LightValueComponent> lightMap)
+            where T : struct, ILightSource
+        {
+
+            //int radiusSq = (lightData.Radius + 1) * (lightData.Radius + 1);
+            //float invRadiusSq = 1.0f / radiusSq;
+            var context = new LightDataContext(in ent.LightSource(), ent.Pos());
+            IMapData<PositionComponent, LightValueComponent> m = lightMap;
+            m.Merge(ent.Result().Data, context, _lightMergeDelegate);
+        }
+        //private void CalculateLightMap(EcsFilter ecsFilter, MapData<LightValueComponent> lightMap)
+        //{
+        //    var (posPool, lightDataPool, _) = _lightToRenderDynamicSpec.IncludeReadonly;
+        //    var lightResultPool = _lightToRenderDynamicSpec.Include.Pool1;
+
+        //    foreach (EcsUnsafeEntity ent in ecsFilter)
+        //    {
+        //        ref readonly var lightData = ref lightDataPool.Get(ent);
+        //        ref readonly var center = ref posPool.Get(ent);
+        //        ref var lightResult = ref lightResultPool.Get(ent);
+
+        //        //int radiusSq = (lightData.Radius + 1) * (lightData.Radius + 1);
+        //        //float invRadiusSq = 1.0f / radiusSq;
+        //        var context = new LightDataContext(in lightData, center);
+        //        IMapData<PositionComponent, LightValueComponent> m = lightMap; 
+        //        m.Merge(lightResult.Data, context, _lightMergeDelegate);
+        //    }
+        //}
 
         private  readonly MergeDelegate<LightDataContext, PositionComponent, LightValueComponent, float>
             _lightMergeDelegate = LightMerge;

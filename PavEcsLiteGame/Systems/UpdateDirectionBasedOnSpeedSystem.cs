@@ -5,37 +5,38 @@ using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    class UpdateDirectionBasedOnSpeedSystem : IEcsRunSystem, IEcsSystemSpec
+    partial class UpdateDirectionBasedOnSpeedSystem : IEcsRunSystem, IEcsSystemSpec//, IEcsInitSystem
     {
 
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<SpeedComponent, DirectionBasedOnSpeed, IsActiveTag>, EcsSpec<DirectionComponent>> _spec;
 
-        public UpdateDirectionBasedOnSpeedSystem(EcsUniverse universe)
+        [Entity]
+        private readonly partial struct Ent
         {
-            universe
-                .Register(this)
-                .Build(ref _spec);
+            public partial ref readonly SpeedComponent Speed();
+
+            public partial ref readonly DirectionBasedOnSpeed DirBasedOnSpeed();
+
+            public partial ref readonly IsActiveTag IsActive();
+
+            public partial ref DirectionComponent Dir();
         }
 
         public void Run(EcsSystems systems)
         {
-  
-            var (speedPool, _, _) = _spec.IncludeReadonly;
-            var dirPool = _spec.Include.Pool1;
-
-            foreach (EcsUnsafeEntity ent in _spec.Filter)
+            foreach (Ent ent in _providers.EntProvider)
             {
-                ref readonly var currentSpeed = ref speedPool.Get(ent);
+                ref readonly var currentSpeed = ref ent.Speed();
                 if (currentSpeed.Speed != Int2.Zero)
                 {
-                    ref var dir = ref dirPool.Get(ent);
+                    ref var dir = ref ent.Dir();
                     dir.Direction = currentSpeed.Speed;
                 }
             }
         }
+
     }
 }

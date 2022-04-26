@@ -7,10 +7,11 @@ using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
 using PavEcsGame;
 using PavEcsGame.Utils;
+using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems.Renders
 {
-    public class PrepareForRenderSystem : IEcsRunSystem, IEcsSystemSpec
+    public partial class PrepareForRenderSystem : IEcsRunSystem, IEcsSystemSpec
     {
         private const string _lightShade = "░▒▓";
 
@@ -67,45 +68,57 @@ namespace PavEcsGame.Systems.Renders
 
         }
 
-
-
-
         private MapData<RenderItem> _bufferCurrentFrame;
         private MapData<RenderItem> _bufferPreviousFrame;
 
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
-        private readonly EcsFilterSpec
-            .Inc<EcsReadonlySpec<MapLoadedEvent>> _mapLoadedSpec;
-        private readonly EcsFilterSpec<
-            EcsReadonlySpec<PositionComponent, SymbolComponent>,
-            EcsReadonlySpec<MarkAsRenderedTag, SpeedComponent>, 
-            EcsSpec> _itemsToRenderSpec;
-        private readonly EcsFilterSpec<
-            EcsSpec<AreaResultComponent<LightValueComponent>>,
-            EcsSpec, 
-            EcsSpec> _lightToRenderSpec;
 
+        private Providers _providers;
 
-        private readonly EcsFilterSpec<
-            EcsReadonlySpec<AreaResultComponent<VisibilityType>>,
-            EcsSpec,
-            EcsSpec> _playerFieldOfViewSpec;
+        [Entity]
+        private partial struct MapLoadedEnt
+        {
+            public partial ref readonly MapLoadedEvent Loaded();
+        }
+
+        [Entity]
+        private partial struct ItemToRenderEnt
+        {
+            public partial ref readonly PositionComponent Pos();
+            public partial ref readonly SymbolComponent Symbol();
+
+            public partial OptionalComponent<MarkAsRenderedTag> MarkAsRendered();
+            public partial OptionalComponent<SpeedComponent> Speed();
+
+        }
+
+        [Entity]
+        private partial struct LightToRenderEnt
+        {
+            public partial RequiredComponent<AreaResultComponent<LightValueComponent>> LightData();
+        }
+
+        [Entity]
+        private partial struct FovEnt
+        {
+            public partial ref AreaResultComponent<VisibilityType> Data();
+        }
 
         private readonly EcsEntityFactorySpec<EcsSpec<RenderItemCommand>> _renderCommandFactory;
 
-        public PrepareForRenderSystem(EcsUniverse universe, MapData<EcsPackedEntityWithWorld> map)
+        [Entity(SkipFilter = true)]
+        private partial struct RenderCommandEnt
+        {
+            public partial ref RenderItemCommand RenderCommand();
+        }
+
+
+        public PrepareForRenderSystem(EcsSystems universe, MapData<EcsPackedEntityWithWorld> map)
+            :this(universe)
         {
             _map = map;
             _bufferCurrentFrame = new MapData<RenderItem>();
             _bufferPreviousFrame = new MapData<RenderItem>();
-
-            universe
-                .Register(this)
-                .Build(ref _mapLoadedSpec)
-                .Build(ref _itemsToRenderSpec)
-                .Build(ref _lightToRenderSpec)
-                .Build(ref _playerFieldOfViewSpec)
-                .Build(ref _renderCommandFactory);
         }
 
         public void Run(EcsSystems systems)
@@ -125,9 +138,9 @@ namespace PavEcsGame.Systems.Renders
 
             void InitBuffers()
             {
-                foreach (EcsUnsafeEntity ent in _mapLoadedSpec.Filter)
+                foreach (var ent in _providers.MapLoadedEntProvider)
                 {
-                    var size = _mapLoadedSpec.Include.Pool1.Get(ent).Size;
+                    var size = ent.Loaded().Size;
                     _bufferCurrentFrame.Init(size);
                     _bufferPreviousFrame.Init(size);
                 }
@@ -136,25 +149,24 @@ namespace PavEcsGame.Systems.Renders
 
             void PostEffects(IReadOnlyMapData<PositionComponent, VisibilityType> visibilityMap)
             {
-                var lightDataPool = _lightToRenderSpec.Include.Pool1;
-                Debug.Assert(_lightToRenderSpec.Filter.GetEntitiesCount() <= 1, "Only one light map is supported");
 
-                foreach (var ent in _lightToRenderSpec.Filter)
+                Debug.Assert(_providers.LightToRenderEntProvider.Filter.GetEntitiesCount() <= 1, "Only one light map is supported");
+
+                foreach (var ent in _providers.LightToRenderEntProvider)
                 {
-                    ref var lightData = ref lightDataPool.Get(ent);
+                    ref var lightData = ref ent.LightData().Get();
                     ApplyPostEffect(lightData.Data, visibilityMap);
                     //handle and delete this
-                    lightDataPool.Del(ent);
+                    ent.LightData().Remove();
                 }
             }
 
             IReadOnlyMapData<PositionComponent,VisibilityType>? TryGetVisibilityMap()
             {
-                var visibilityDataPool = _playerFieldOfViewSpec.Include.Pool1;
-                Debug.Assert(_playerFieldOfViewSpec.Filter.GetEntitiesCount() <= 1, "Only one visibility map is supported");
-                foreach (EcsUnsafeEntity ent in _playerFieldOfViewSpec.Filter)
+                Debug.Assert(_providers.FovEntProvider.Filter.GetEntitiesCount() <= 1, "Only one visibility map is supported");
+                foreach (var ent in _providers.FovEntProvider)
                 {
-                    ref readonly var visibilityComponent = ref visibilityDataPool.Get(ent);
+                    ref readonly var visibilityComponent = ref ent.Data();
                     return visibilityComponent.Data;
                 }
                 return null;
@@ -216,18 +228,17 @@ namespace PavEcsGame.Systems.Renders
             {
                 _bufferCurrentFrame.Clear();
 
-                var (posPool, symbolPool) = _itemsToRenderSpec.Include;
-                var speedPool = _itemsToRenderSpec.Optional.Pool2;
-                foreach (EcsUnsafeEntity ent in _itemsToRenderSpec.Filter)
+
+                foreach (var ent in _providers.ItemToRenderEntProvider)
                 {
-                    ref readonly var pos = ref posPool.Get(ent);
+                    ref readonly var pos = ref ent.Pos();
                     if (!visibilityMap.IsValid(pos))
                         continue;
                     var visibility = visibilityMap.Get(pos);
                     if (visibility.HasFlag(VisibilityType.Visible)
-                       || (!speedPool.Has(ent) && visibility.HasFlag(VisibilityType.Known))) 
+                       || (!ent.Speed().Has() && visibility.HasFlag(VisibilityType.Known)))
                     {
-                        ref readonly var symbol = ref symbolPool.Get(ent);
+                        ref readonly var symbol = ref ent.Symbol();
 
                         ref var renderItem = ref _bufferCurrentFrame.GetRef(pos);
                         renderItem.Merge(symbol);
@@ -244,15 +255,14 @@ namespace PavEcsGame.Systems.Renders
                     ref var prevRenderItem = ref _bufferPreviousFrame.GetRef(in pos);
                     if (prevRenderItem != (renderItem))
                     {
-                        _renderCommandFactory.NewUnsafeEntity()
-                            .Add(_renderCommandFactory.Pools,
-
-                                new RenderItemCommand()
-                                {
-                                    Symbol = renderItem.Symbol,
-                                    BackgroundColor = renderItem.BackgroundColor,
-                                    Position = pos,
-                                });
+                        _providers.RenderCommandEntProvider
+                            .New()
+                            .RenderCommand() = new RenderItemCommand()
+                            {
+                                Symbol = renderItem.Symbol,
+                                BackgroundColor = renderItem.BackgroundColor,
+                                Position = pos,
+                            };
                         redraws++;
                     }
                 }
