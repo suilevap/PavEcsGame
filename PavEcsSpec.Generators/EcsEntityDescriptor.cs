@@ -125,6 +125,9 @@ namespace PavEcsSpec.Generators
                     {
                         if (returnType.IsValueType)
                         {
+                            //if (returnType is ITypeParameterSymbol genericType)
+                            //    throw new InvalidOperationException($"Generic type {genericType} is not supported");
+
                             if (returnType
                                 .GetAttributes()
                                 .Any(x => x.AttributeClass.Name == nameof(EcsInfraTypes.EntityAttribute)))
@@ -156,6 +159,9 @@ namespace PavEcsSpec.Generators
                             namedType.Arity == 1)
                         {
                             var componentType = namedType.TypeArguments.First();
+
+                            //if (componentType is ITypeParameterSymbol genericType)
+                            //    throw new InvalidOperationException($"Generic type {genericType} is not supported");
 
                             if (componentType.IsValueType)
                             {

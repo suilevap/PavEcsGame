@@ -290,6 +290,12 @@ private readonly partial struct {name}
     public static Provider Create(Leopotam.EcsLite.EcsSystems systems{extraArgumentsDeclaration}) 
     {{
         const string worldName = ""{worldName}"";
+
+        return Create(worldName, systems{extraArgumentsPass});
+    }}
+
+    public static Provider Create(string worldName, Leopotam.EcsLite.EcsSystems systems{extraArgumentsDeclaration}) 
+    {{
         var world = systems.GetWorld(worldName);
         if (world == null)
         {{

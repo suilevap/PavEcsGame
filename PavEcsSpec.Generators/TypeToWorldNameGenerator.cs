@@ -27,6 +27,8 @@ namespace PavEcsSpec.Generators
                     if (type.DeclaredAccessibility == Accessibility.Private 
                         || type.ContainingType?.DeclaredAccessibility == Accessibility.Private) //todo: do we need to check more levels?
                         continue;
+                    if (type is ITypeParameterSymbol)
+                        continue;
                     
                     mapping.AppendLine($@"{{ typeof({typeAndWorld.Key}),""{typeAndWorld.Value}"" }},");
                 }
@@ -49,9 +51,9 @@ namespace PavEcsSpec.Generated
 
     public partial class TypeToWorldNameMap
     {{
-        public partial string GetWorldName<T>(string universeName) where T : struct
+        public static partial string GetWorldName<T>(string universeName) where T : struct
         {{
-            return GetMap(universeName).GetWorldName<T>();
+            return GetMap(universeName).GetWorld<T>();
         }}
 
         private static TypeToWorldNameMap GetMap(string universeName)

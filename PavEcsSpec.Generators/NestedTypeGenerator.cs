@@ -31,8 +31,13 @@ namespace PavEcsSpec.Generators
             {
                 StringBuilder sb = new StringBuilder();
                 var type = pair.Key;
+             
+                sb.Append($"partial {(type.IsReferenceType? "class": "struct")} {type.Name}" );
+                if (type is INamedTypeSymbol namedType && namedType.Arity > 0)
+                {
 
-                sb.AppendLine($"partial {(type.IsReferenceType? "class": "struct")} {type.Name}");
+                    sb.AppendLine($"<{(string.Join(",",namedType.TypeParameters))}>");
+                }
                 sb.AppendLine(@"{");
                 //todo intend
                 sb.AppendLine(pair.Value.ToString().PadLeftAllLines(4));

@@ -197,8 +197,8 @@ namespace PavEcsSpec.Generated
 {
     public partial class TypeToWorldNameMap
     {
-        public partial string GetWorldName<T>(string universeName) where T : struct;
-        public string GetWorldName<T>() where T : struct => GetWorldName<T>(null);
+        public static partial string GetWorldName<T>(string universeName) where T : struct;
+        public static string GetWorldName<T>() where T : struct => GetWorldName<T>(string.Empty);
 
     }
 }

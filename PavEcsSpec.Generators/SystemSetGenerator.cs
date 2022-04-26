@@ -110,6 +110,10 @@ namespace PavEcsSpec.Generators
                     {
                         foreach (var type in gr)
                         {
+                            if (type is ITypeParameterSymbol genericType)
+                            {
+                                continue;
+                            }
                             var worldName = $"GENERATED_{universe.Key}_{gr.Key}";
                             map[type] = worldName;
                         }
@@ -125,7 +129,12 @@ namespace PavEcsSpec.Generators
                 {
                     try
                     {
-                        var worldName = typeToWorldName[entity.Universe][entity.Components.First().ComponentType];
+                        var component = entity.Components.Select(x => x.ComponentType).FirstOrDefault(x => x is not ITypeParameterSymbol);
+                        string worldName = "UNDEFINED_WORLD";
+                        if (component != null)
+                        {
+                            worldName = typeToWorldName[entity.Universe][entity.Components.First().ComponentType];
+                        }
                         var code = provider.GenerateEntityCode(entity, worldName);
                         generatedCode.Add(entity.EntityType, code);
                     }
@@ -141,11 +150,40 @@ namespace PavEcsSpec.Generators
                         try
                         {
                             var providerCode = ProvidersGenerator.GenerateCode(gr);
-                            generatedCode.Add(parentType, providerCode);
+                            var field = parentType
+                                .GetMembers()
+                                .OfType<IFieldSymbol>()
+                                .FirstOrDefault(x => x.Type.Name == "Providers");
+
+
+                            var fieldCode = field == null ? "private readonly Providers _providers;" : string.Empty;
+                            string simpleCtor = string.Empty;
+                            if (providerCode.HasSimpleCtor)
+                            {
+                                var hasEmptyCtor = parentType
+                                  .GetMembers()
+                                  .OfType<IMethodSymbol>()
+                                  .FirstOrDefault(x => x.MethodKind == MethodKind.Constructor && x.Parameters.Length == 0 && !x.IsImplicitlyDeclared);
+                                //if (hasEmptyCtor != null)
+                                //{
+                                //    Debugger.Launch();
+                                //}
+                                simpleCtor = $@"
+public {parentType.Name}(Leopotam.EcsLite.EcsSystems systems) {(hasEmptyCtor != null ? " : this()" : string.Empty)}
+{{
+    {(field?.Name ?? "_providers")} = new Providers(systems);
+}}
+";
+                            }
+                            var ctorCode = $@"
+{fieldCode}
+{simpleCtor}
+";
+                            generatedCode.Add(parentType, ctorCode + providerCode.Code);
                         }
                         catch (Exception ex)
                         {
-                            ReportError(context, gr.FirstOrDefault().Declaration, $"Ex {parentType.Name} {ex.Message} {ex.StackTrace}");
+                            ReportError(context, gr.FirstOrDefault().Declaration, $"Ex {parentType.Name} {ex.Message} {ex.StackTrace.Replace("\n", "|")}");
                         }
                     }
                 }
