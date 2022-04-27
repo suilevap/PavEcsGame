@@ -104,7 +104,6 @@ namespace PavEcsGame.Systems.Renders
             public partial ref AreaResultComponent<VisibilityType> Data();
         }
 
-        private readonly EcsEntityFactorySpec<EcsSpec<RenderItemCommand>> _renderCommandFactory;
 
         [Entity(SkipFilter = true)]
         private partial struct RenderCommandEnt

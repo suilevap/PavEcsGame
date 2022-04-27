@@ -40,11 +40,12 @@ namespace PavEcsGame.GameLoop
             var map = new MapData<EcsPackedEntityWithWorld>();
 
             var turnManager = new TurnManager(_systems);
-
+            var cmdSystem = new CommandSystem(_systems);
             _systems
                 .MarkPerf(universe, "start")
                 .Add(turnManager)
-                .Add(new LoadMapSystem("Data/map1.txt", _systems, map))
+                .Add(cmdSystem)
+                .Add(new LoadMapSystem(_systems, map))
                 .Add(new SpawnEntitySystem(_systems))
                 //.Add(new LoadMapSystem("Data/lightTest.txt", universe, map))
                 .Add(new TileSystem(_systems, map))
@@ -96,6 +97,12 @@ namespace PavEcsGame.GameLoop
 
             _systems
                 .Init();
+
+            //cmdSystem.LoadMap("Data/map1.txt");
+            cmdSystem.LoadMap("Data/lightTest.txt");
+
+            //cmdSystem.GenerateMap("Data/lightTest.txt", "Data/wcf_pattern_test.txt");
+
 
             PrintUniverseInfo(universe);
         }

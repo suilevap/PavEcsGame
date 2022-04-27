@@ -70,15 +70,16 @@ namespace PavEcsGame.Components
         {
             readonly IReadOnlyMapData<PositionComponent, TV> _data;
             readonly int _w;
-            readonly int _h;
-            PositionComponent _pos;
+            readonly int _size;
+            int _index;
 
             public MapPosEnumerator(IReadOnlyMapData<PositionComponent, TV> data)
             {
                 _data = data;
-                _pos = new PositionComponent(new Int2(-1,0));
+                _index = -1;
                 _w = data.MaxPos.Value.X;
-                _h = data.MaxPos.Value.Y;
+                var h = data.MaxPos.Value.Y;
+                _size = _w * h;
             }
 
             public MapPosEnumerator<TV> GetEnumerator() => this;
@@ -86,19 +87,18 @@ namespace PavEcsGame.Components
             public (PositionComponent, TV) Current
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => (_pos,_data.Get(_pos));
+                get
+                {
+                    var pos = new PositionComponent(new Int2(_index % _w, _index / _w));
+                    return (pos, _data.Get(pos));
+                }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
-                var x = _pos.Value.X + 1;
-                _pos.Value.X = x % _w;
-                if (x >= _w)
-                {
-                    _pos.Value.Y++;
-                }
-                return _pos.Value.Y < _h;
+                _index++;
+                return _index < _size;
             }
 
         }

@@ -40,7 +40,7 @@ namespace PavEcsGame.Systems.Renders
             public partial ref AreaResultComponent<float> Result();
         }
 
-        private int _staticLightVersion = 0;
+        private int _staticLightVersion = -1;
 
         [Entity(SkipFilter = true)]
         private partial struct LightLayerEnt

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
@@ -11,10 +10,15 @@ using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    internal partial class LoadMapSystem : IEcsInitSystem, IEcsSystemSpec
+    internal partial class LoadMapSystem : IEcsRunSystem, IEcsSystemSpec
     {
-        private readonly string _fileName;
         private readonly IMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
+
+        [Entity]
+        private readonly partial struct MapDataEnt
+        {
+            public partial RequiredComponent<MapRawDataEvent> Event();
+        }
 
         [Entity(SkipFilter = true)]
         private readonly partial struct MapChangedEventEnt
@@ -30,21 +34,31 @@ namespace PavEcsGame.Systems
 
         }
 
-        public LoadMapSystem(string fileName, EcsSystems universe, IMapData<PositionComponent, EcsPackedEntityWithWorld> map)
+        public LoadMapSystem( EcsSystems universe, IMapData<PositionComponent, EcsPackedEntityWithWorld> map)
             : this(universe)
         {
-            _fileName = fileName;
             _map = map;
 
         }
 
-        public async void Init(EcsSystems systems)
+        public void Run(EcsSystems systems)
         {
-            var lines = await File.ReadAllLinesAsync(_fileName);
+            //var lines = await File.ReadAllLinesAsync(_fileName);
 
-            if (lines == null || lines.Length == 0)
-                return;
+            //if (lines == null || lines.Length == 0)
+            //    return;
 
+            foreach (var ent in _providers.MapDataEntProvider)
+            {
+                var lines = ent.Event().Get().Data;
+                BuildMap(lines);
+                ent.Event().Remove();
+            }
+
+        }
+
+        private void BuildMap(string[] lines)
+        {
             _map.Init(new PositionComponent(new Int2(lines.Max(x => x.Length), lines.Length)));
 
             _providers.MapChangedEventEntProvider
@@ -71,7 +85,6 @@ namespace PavEcsGame.Systems
 
                 pos.Value.Y++;
             }
-
         }
 
         private SpawnRequestComponent? TryGetSpawnRequest(char symbol)
@@ -124,5 +137,6 @@ namespace PavEcsGame.Systems
 
             return result;
         }
+
     }
 }

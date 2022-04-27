@@ -79,7 +79,7 @@ namespace PavEcsSpec.Generators
                                 ReportDiagnostic(context, entityDescr, declaration);
                                 return entityDescr;
                             }
-                            catch(Exception ex)
+                            catch (Exception ex)
                             {
                                 ReportError(context, declaration, $"Ex {symbol.Name} {ex.Message} {ex.StackTrace}");
                             }
@@ -250,6 +250,12 @@ public {parentType.Name}(Leopotam.EcsLite.EcsSystems systems) {(hasEmptyCtor != 
                         true),
                     declaration.GetLocation())
                 );
+#if DEBUG
+            if (!Debugger.IsAttached)
+            {
+                //Debugger.Launch();
+            }
+#endif 
         }
 
         class EntitySyntaxReceiver : ISyntaxReceiver

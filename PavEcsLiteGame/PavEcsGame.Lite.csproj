@@ -9,6 +9,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+
+  <ItemGroup>
+    <PackageReference Include="DeBroglie" Version="1.0.0" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\ecs-types\Leopotam.Ecs.Types.csproj" />
     <ProjectReference Include="..\ecslite\Leopotam.EcsLite.csproj" />
