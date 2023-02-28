@@ -15,7 +15,7 @@ namespace PavEcsSpec.EcsLite
         }
 
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             var pool = _spec.Include.Pool1;
             foreach (var entity in _spec.Filter)

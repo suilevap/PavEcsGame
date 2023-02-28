@@ -63,7 +63,7 @@ namespace PavEcsGame.Systems
                 .Build(_commonFactory, ref _dirTileFactory);
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             var spawnReqPool = _spawnResuestSpec.Include.Pool1;
 

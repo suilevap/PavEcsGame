@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ecs-types\Leopotam.Ecs.Types.csproj" />
+    <ProjectReference Include="..\leo\Leopotam.EcsLite.csproj" />
   </ItemGroup>
 
 </Project>

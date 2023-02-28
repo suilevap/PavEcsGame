@@ -28,7 +28,7 @@ namespace PavEcsGame.Systems
                 .Build(ref _destroyFactorySpec);
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             var (destroyReqPool, isActivePool) = _destroyFactorySpec.Pools;
             var collEventPool = _spec.Include.Pool1;

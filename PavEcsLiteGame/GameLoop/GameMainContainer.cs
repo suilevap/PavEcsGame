@@ -97,7 +97,7 @@ namespace PavEcsGame.GameLoop
             PrintUniverseInfo(universe);
         }
 
-        private void DebugInfo(EcsUniverse universe, EcsSystems systems)
+        private void DebugInfo(EcsUniverse universe, IEcsSystems systems)
         {
             var bytes = GC.GetTotalMemory(false);
             Debug.Print("Memory: {0} kb", bytes / 1024);

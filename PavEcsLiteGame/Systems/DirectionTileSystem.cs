@@ -21,7 +21,7 @@ namespace PavEcsGame.Systems
                 .Build(ref _spec);
         }
 
-        public void Init(EcsSystems systems)
+        public void Init(IEcsSystems systems)
         {
             //preload
             TryGetRule("direction_arrow_rule");
@@ -29,7 +29,7 @@ namespace PavEcsGame.Systems
             TryGetRule("direction_v_rule");
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             var (dirPool, tilePool) = _spec.IncludeReadonly;
             var symbolPool = _spec.Include.Pool1;

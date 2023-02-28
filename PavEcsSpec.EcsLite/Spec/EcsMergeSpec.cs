@@ -42,21 +42,21 @@ namespace PavEcsSpec.EcsLite
             private IEcsSpecBuilder<TSpec> _writeBuilder = new TSpec().GetBuilder();
 
 
-            public EcsFilter.Mask Include(EcsWorld world)
+            public EcsWorld.Mask Include(EcsWorld world)
             {
                 var result = _readBuilder.Include(world);
                 result = _writeBuilder.Include(result);
                 return result;
             }
 
-            public EcsFilter.Mask Include(EcsFilter.Mask mask)
+            public EcsWorld.Mask Include(EcsWorld.Mask mask)
             {
                 var result = _readBuilder.Include(mask);
                 result = _writeBuilder.Include(result);
                 return result;
             }
 
-            public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+            public EcsWorld.Mask Exclude(EcsWorld.Mask mask)
             {
                 Debug.Assert(true, "Should not be used in exclude section");
                 return mask;
@@ -81,7 +81,7 @@ namespace PavEcsSpec.EcsLite
                 }
             }
 
-            public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
+            public EcsWorld GetWorld(EcsUniverse universe, IEcsSystems systems)
             {
                 var world = _readBuilder.GetWorld(universe, systems);
                 Debug.Assert(world == _writeBuilder.GetWorld(universe, systems), "Read and write should use the same world");

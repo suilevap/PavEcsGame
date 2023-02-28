@@ -50,7 +50,7 @@ namespace PavEcsGame.Systems
             _hasObstacles = HasObstacle;
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
 
             var posPool = _filedOfViewSourcesSpec.IncludeReadonly.Pool1;

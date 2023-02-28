@@ -47,7 +47,7 @@ namespace PavEcsGame.Systems.Renders
             };
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             foreach (var ent in _mapLoadedSpec.Filter)
             {

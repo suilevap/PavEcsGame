@@ -23,16 +23,16 @@ namespace PavEcsSpec.EcsLite
 
         public struct Builder : IEcsSpecBuilder<EcsReadonlySpec>
         {
-            public EcsFilter.Mask Include(EcsWorld world)
+            public EcsWorld.Mask Include(EcsWorld world)
             {
                 throw new InvalidOperationException("Empty spec is impossible to use as include filter");
             }
-            public EcsFilter.Mask Include(EcsFilter.Mask mask)
+            public EcsWorld.Mask Include(EcsWorld.Mask mask)
             {
                 throw new InvalidOperationException("Empty spec is impossible to use as include filter");
             }
 
-            public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+            public EcsWorld.Mask Exclude(EcsWorld.Mask mask)
             {
                 return mask;
             }
@@ -42,7 +42,7 @@ namespace PavEcsSpec.EcsLite
                 return Enumerable.Empty<Type>();
             }
 
-            public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
+            public EcsWorld GetWorld(EcsUniverse universe, IEcsSystems systems)
             {
                 return null;
             }
@@ -90,18 +90,18 @@ namespace PavEcsSpec.EcsLite
         public class Builder : IEcsSpecBuilder<EcsReadonlySpec<T1>>
         {
             internal static Builder Instance { get; } = new Builder();
-            public EcsFilter.Mask Include(EcsWorld world)
+            public EcsWorld.Mask Include(EcsWorld world)
             {
                 return world.Filter<T1>();
             }
 
-            public EcsFilter.Mask Include(EcsFilter.Mask mask)
+            public EcsWorld.Mask Include(EcsWorld.Mask mask)
             {
                 return mask
                     .Inc<T1>();
             }
 
-            public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+            public EcsWorld.Mask Exclude(EcsWorld.Mask mask)
             {
                 return mask.Exc<T1>();
             }
@@ -116,7 +116,7 @@ namespace PavEcsSpec.EcsLite
                 yield return typeof(T1);
             }
 
-            public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
+            public EcsWorld GetWorld(EcsUniverse universe, IEcsSystems systems)
             {
                 return universe.GetWorld<T1>(systems);
             }
@@ -168,21 +168,21 @@ namespace PavEcsSpec.EcsLite
         {
             internal static Builder Instance { get; } = new Builder();
 
-            public EcsFilter.Mask Include(EcsWorld world)
+            public EcsWorld.Mask Include(EcsWorld world)
             {
                 return world
                     .Filter<T1>()
                     .Inc<T2>();
             }
 
-            public EcsFilter.Mask Include(EcsFilter.Mask mask)
+            public EcsWorld.Mask Include(EcsWorld.Mask mask)
             {
                 return mask
                     .Inc<T1>()
                     .Inc<T2>();
             }
 
-            public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+            public EcsWorld.Mask Exclude(EcsWorld.Mask mask)
             {
                 return mask
                     .Exc<T1>()
@@ -200,7 +200,7 @@ namespace PavEcsSpec.EcsLite
                 yield return typeof(T2);
             }
 
-            public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
+            public EcsWorld GetWorld(EcsUniverse universe, IEcsSystems systems)
             {
                 return universe.GetWorld<T1>(systems);
             }
@@ -251,7 +251,7 @@ namespace PavEcsSpec.EcsLite
         {
             internal static Builder Instance { get; } = new Builder();
 
-            public EcsFilter.Mask Include(EcsWorld world)
+            public EcsWorld.Mask Include(EcsWorld world)
             {
                 return world
                     .Filter<T1>()
@@ -259,7 +259,7 @@ namespace PavEcsSpec.EcsLite
                     .Inc<T3>();
             }
 
-            public EcsFilter.Mask Include(EcsFilter.Mask mask)
+            public EcsWorld.Mask Include(EcsWorld.Mask mask)
             {
                 return mask
                     .Inc<T1>()
@@ -267,7 +267,7 @@ namespace PavEcsSpec.EcsLite
                     .Inc<T3>();
             }
 
-            public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+            public EcsWorld.Mask Exclude(EcsWorld.Mask mask)
             {
                 return mask
                     .Exc<T1>()
@@ -286,7 +286,7 @@ namespace PavEcsSpec.EcsLite
                 yield return typeof(T3);
             }
 
-            public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
+            public EcsWorld GetWorld(EcsUniverse universe, IEcsSystems systems)
             {
                 return universe.GetWorld<T1>(systems);
             }
@@ -343,7 +343,7 @@ namespace PavEcsSpec.EcsLite
         {
             internal static Builder Instance { get; } = new Builder();
 
-            public EcsFilter.Mask Include(EcsWorld world)
+            public EcsWorld.Mask Include(EcsWorld world)
             {
                 return world
                     .Filter<T1>()
@@ -352,7 +352,7 @@ namespace PavEcsSpec.EcsLite
                     .Inc<T4>();
             }
 
-            public EcsFilter.Mask Include(EcsFilter.Mask mask)
+            public EcsWorld.Mask Include(EcsWorld.Mask mask)
             {
                 return mask
                     .Inc<T1>()
@@ -361,7 +361,7 @@ namespace PavEcsSpec.EcsLite
                     .Inc<T4>();
             }
 
-            public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+            public EcsWorld.Mask Exclude(EcsWorld.Mask mask)
             {
                 return mask
                     .Exc<T1>()
@@ -383,7 +383,7 @@ namespace PavEcsSpec.EcsLite
                 yield return typeof(T4);
             }
 
-            public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
+            public EcsWorld GetWorld(EcsUniverse universe, IEcsSystems systems)
             {
                 return universe.GetWorld<T1>(systems);
             }
@@ -446,7 +446,7 @@ namespace PavEcsSpec.EcsLite
         {
             internal static Builder Instance { get; } = new Builder();
 
-            public EcsFilter.Mask Include(EcsWorld world)
+            public EcsWorld.Mask Include(EcsWorld world)
             {
                 return world
                     .Filter<T1>()
@@ -456,7 +456,7 @@ namespace PavEcsSpec.EcsLite
                     .Inc<T5>();
             }
 
-            public EcsFilter.Mask Include(EcsFilter.Mask mask)
+            public EcsWorld.Mask Include(EcsWorld.Mask mask)
             {
                 return mask
                     .Inc<T1>()
@@ -466,7 +466,7 @@ namespace PavEcsSpec.EcsLite
                     .Inc<T5>();
             }
 
-            public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+            public EcsWorld.Mask Exclude(EcsWorld.Mask mask)
             {
                 return mask
                     .Exc<T1>()
@@ -490,7 +490,7 @@ namespace PavEcsSpec.EcsLite
                 yield return typeof(T5);
             }
 
-            public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
+            public EcsWorld GetWorld(EcsUniverse universe, IEcsSystems systems)
             {
                 return universe.GetWorld<T1>(systems);
             }
@@ -560,7 +560,7 @@ namespace PavEcsSpec.EcsLite
         {
             internal static Builder Instance { get; } = new Builder();
 
-            public EcsFilter.Mask Include(EcsWorld world)
+            public EcsWorld.Mask Include(EcsWorld world)
             {
                 return world
                     .Filter<T1>()
@@ -570,7 +570,7 @@ namespace PavEcsSpec.EcsLite
                     .Inc<T5>()
                     .Inc<T6>();
             }
-            public EcsFilter.Mask Include(EcsFilter.Mask mask)
+            public EcsWorld.Mask Include(EcsWorld.Mask mask)
             {
                 return mask
                     .Inc<T1>()
@@ -582,7 +582,7 @@ namespace PavEcsSpec.EcsLite
             }
 
 
-            public EcsFilter.Mask Exclude(EcsFilter.Mask mask)
+            public EcsWorld.Mask Exclude(EcsWorld.Mask mask)
             {
                 return mask
                     .Exc<T1>()
@@ -608,7 +608,7 @@ namespace PavEcsSpec.EcsLite
                 yield return typeof(T6);
             }
 
-            public EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems)
+            public EcsWorld GetWorld(EcsUniverse universe, IEcsSystems systems)
             {
                 return universe.GetWorld<T1>(systems);
             }

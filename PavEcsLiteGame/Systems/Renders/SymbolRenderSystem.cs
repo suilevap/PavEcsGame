@@ -29,12 +29,12 @@ namespace PavEcsGame.Systems.Renders
                 .Build(ref _updateCurrentPosSpec);
         }
 
-        public void Init(EcsSystems systems)
+        public void Init(IEcsSystems systems)
         {
             Console.CursorVisible = false;
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             ClearPreviousPos();
 

@@ -32,7 +32,7 @@ namespace PavEcsGame.Systems
                 .Build(ref _mapLoadedEventSpec);
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             Debug.Assert(_mapLoadedEventSpec.Filter.GetEntitiesCount() <= 1, 
                 $"{nameof(MapLoadedEvent)} is expected to be no more than one per cycle");

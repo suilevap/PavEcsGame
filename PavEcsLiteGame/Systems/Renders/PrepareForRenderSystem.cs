@@ -108,7 +108,7 @@ namespace PavEcsGame.Systems.Renders
                 .Build(ref _renderCommandFactory);
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             InitBuffers();
 

@@ -30,7 +30,7 @@ namespace PavEcsGame.Systems
                 .Build(ref _mapChangedEventFactory);
         }
 
-        public async void Init(EcsSystems systems)
+        public async void Init(IEcsSystems systems)
         {
             var lines = await File.ReadAllLinesAsync(_fileName);
 

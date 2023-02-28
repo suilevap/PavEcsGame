@@ -38,7 +38,7 @@ namespace PavEcsGame.Systems
                 .Build(ref _spec);
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             if (_turnManager.CurrentPhase != TurnManager.Phase.TickUpdate)
                 return;

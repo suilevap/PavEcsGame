@@ -29,12 +29,12 @@ namespace PavEcsGame.Systems
                 .Register(this)
                 .Build(ref _spec);
         }
-        public void Init(EcsSystems systems)
+        public void Init(IEcsSystems systems)
         {
             _reg = _turnManager.RegisterSimulationSystem(this);
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             bool hasWorkToDo = false;
             var (posPool, speedPool, _) = _spec.Include;

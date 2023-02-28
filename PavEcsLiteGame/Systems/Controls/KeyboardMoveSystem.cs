@@ -40,12 +40,12 @@ namespace PavEcsGame.Systems
                 }
             };
         }
-        public void Init(EcsSystems systems)
+        public void Init(IEcsSystems systems)
         {
             //var config1 = new Dictionary<ConsoleKey, PositionComponent>() { }
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             ConsoleKey key = default;
             if (!_waitKey && Console.KeyAvailable)

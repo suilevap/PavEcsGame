@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ecs-types\Leopotam.Ecs.Types.csproj" />
-    <ProjectReference Include="..\ecslite\Leopotam.EcsLite.csproj" />
+    <!--<ProjectReference Include="..\ecs-types\Leopotam.Ecs.Types.csproj" />-->
+    <ProjectReference Include="..\leo\Leopotam.EcsLite.csproj" />
     <ProjectReference Include="..\PavEcsGame.Components\PavEcsGame.Components.csproj" />
     <ProjectReference Include="..\PavEcsSpec.EcsLite\PavEcsSpec.EcsLite.csproj" />
     <ProjectReference Include="..\PavEcsGame.Common\PavEcsGame.Common.csproj" />

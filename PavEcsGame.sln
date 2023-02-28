@@ -1,21 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29519.87
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PavEcsGame", "PavEcsGame\PavEcsGame.csproj", "{58FD3603-DD1F-4E32-8F80-5E1912FFBC00}"
-	ProjectSection(ProjectDependencies) = postProject
-		{3BB4772A-FA8A-4889-9F77-C119B0758483} = {3BB4772A-FA8A-4889-9F77-C119B0758483}
-		{1A4ECFA2-77A9-4D40-A42D-8CC822A9FC0C} = {1A4ECFA2-77A9-4D40-A42D-8CC822A9FC0C}
-	EndProjectSection
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leopotam.Ecs", "ecs\Leopotam.Ecs.csproj", "{3BB4772A-FA8A-4889-9F77-C119B0758483}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leopotam.Ecs.Types", "ecs-types\Leopotam.Ecs.Types.csproj", "{1A4ECFA2-77A9-4D40-A42D-8CC822A9FC0C}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PavEcsGame.Components", "PavEcsGame.Components\PavEcsGame.Components.csproj", "{772CDD2E-EF65-44E5-9B43-A3D90453396F}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leopotam.EcsLite", "ecslite\Leopotam.EcsLite.csproj", "{C34FD364-10CC-4F6F-94C5-3DE775270F3C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PavEcsGame.Lite", "PavEcsLiteGame\PavEcsGame.Lite.csproj", "{6121D5D4-C92E-4D49-B670-DF877E7969D0}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -24,7 +12,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PavEcsGame.Lite", "PavEcsLi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PavEcsGame.Common", "PavEcsGame.Common\PavEcsGame.Common.csproj", "{7A3E2D62-BE03-45BF-945C-3C6562097AAA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PavEcsSpec.EcsLite", "PavEcsSpec.EcsLite\PavEcsSpec.EcsLite.csproj", "{DA6043CE-C521-4455-9866-5ECA013905C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PavEcsSpec.EcsLite", "PavEcsSpec.EcsLite\PavEcsSpec.EcsLite.csproj", "{DA6043CE-C521-4455-9866-5ECA013905C1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leopotam.EcsLite", "leo\Leopotam.EcsLite.csproj", "{1B045440-8FD8-4606-A5B9-504E253D858D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,26 +22,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{58FD3603-DD1F-4E32-8F80-5E1912FFBC00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{58FD3603-DD1F-4E32-8F80-5E1912FFBC00}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{58FD3603-DD1F-4E32-8F80-5E1912FFBC00}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{58FD3603-DD1F-4E32-8F80-5E1912FFBC00}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3BB4772A-FA8A-4889-9F77-C119B0758483}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3BB4772A-FA8A-4889-9F77-C119B0758483}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3BB4772A-FA8A-4889-9F77-C119B0758483}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3BB4772A-FA8A-4889-9F77-C119B0758483}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1A4ECFA2-77A9-4D40-A42D-8CC822A9FC0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1A4ECFA2-77A9-4D40-A42D-8CC822A9FC0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1A4ECFA2-77A9-4D40-A42D-8CC822A9FC0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1A4ECFA2-77A9-4D40-A42D-8CC822A9FC0C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{772CDD2E-EF65-44E5-9B43-A3D90453396F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{772CDD2E-EF65-44E5-9B43-A3D90453396F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{772CDD2E-EF65-44E5-9B43-A3D90453396F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{772CDD2E-EF65-44E5-9B43-A3D90453396F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C34FD364-10CC-4F6F-94C5-3DE775270F3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C34FD364-10CC-4F6F-94C5-3DE775270F3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C34FD364-10CC-4F6F-94C5-3DE775270F3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C34FD364-10CC-4F6F-94C5-3DE775270F3C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6121D5D4-C92E-4D49-B670-DF877E7969D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6121D5D4-C92E-4D49-B670-DF877E7969D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6121D5D4-C92E-4D49-B670-DF877E7969D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -64,6 +38,10 @@ Global
 		{DA6043CE-C521-4455-9866-5ECA013905C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA6043CE-C521-4455-9866-5ECA013905C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA6043CE-C521-4455-9866-5ECA013905C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B045440-8FD8-4606-A5B9-504E253D858D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B045440-8FD8-4606-A5B9-504E253D858D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B045440-8FD8-4606-A5B9-504E253D858D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B045440-8FD8-4606-A5B9-504E253D858D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

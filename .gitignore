@@ -12,3 +12,9 @@
 /PavEcsSpec.EcsLite/bin
 /PavEcsGame.Common/bin/
 /PavEcsGame.Common/obj/
+/obj/
+/PavEcsSpec.Generators/obj/
+/GenerateTest/obj/
+/leo/bin/
+/leo/ecs-types/*
+/leo/obj/

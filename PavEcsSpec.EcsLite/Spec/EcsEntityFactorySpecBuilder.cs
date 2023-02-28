@@ -17,7 +17,7 @@ namespace PavEcsSpec.EcsLite
         public EcsWorld World { get; private set; }
         public TPools Pools { get; private set; }
 
-        void IInitSpec.Init(EcsSystems systems)
+        void IInitSpec.Init(IEcsSystems systems)
         {
             var universe = _initData.Universe;
             var pools = _initData.Pools;

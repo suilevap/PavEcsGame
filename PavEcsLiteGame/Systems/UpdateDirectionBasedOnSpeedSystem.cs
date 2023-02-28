@@ -21,7 +21,7 @@ namespace PavEcsGame.Systems
                 .Build(ref _spec);
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
   
             var (speedPool, _, _) = _spec.IncludeReadonly;

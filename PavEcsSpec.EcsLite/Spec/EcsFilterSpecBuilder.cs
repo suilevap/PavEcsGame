@@ -23,7 +23,7 @@ namespace PavEcsSpec.EcsLite
 
         public EcsFilter Filter { get; private set; }
 
-        void IInitSpec.Init(EcsSystems systems)
+        void IInitSpec.Init(IEcsSystems systems)
         {
             var universe = _initData.Universe;
             var include = _initData.Include;

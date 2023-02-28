@@ -26,12 +26,12 @@ namespace PavEcsGame.Systems
                 .Build(ref _waitTokenSpec)
                 .Build(ref _withTokenSpec);
         }
-        public void Init(EcsSystems systems)
+        public void Init(IEcsSystems systems)
         {
             _previousRecharge = DateTime.UtcNow;
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             CleanupEmptyCommandTokens();
             if (_withTokenSpec.Filter.IsEmpty() || (DateTime.UtcNow - _previousRecharge) > _autoRechargeTime)

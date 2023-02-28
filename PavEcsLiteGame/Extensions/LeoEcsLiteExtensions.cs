@@ -11,7 +11,7 @@ namespace PavEcsGame
     public static class LeoEcsLiteExtensions
     {
 
-        public static EcsSystems SetSyncContext(this EcsSystems system)
+        public static IEcsSystems SetSyncContext(this IEcsSystems system)
         {
             return system.Add(new SynchronizationContextSystem());
         }

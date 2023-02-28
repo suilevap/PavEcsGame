@@ -25,7 +25,7 @@ namespace PavEcsGame.Systems
 
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             var lightDataPool = _lightsSpec.Include.Pool1;
             var eventPool = _lightsSpec.Optional.Pool1;

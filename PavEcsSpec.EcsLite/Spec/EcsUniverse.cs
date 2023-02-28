@@ -20,7 +20,7 @@ namespace PavEcsSpec.EcsLite
             _builder = new EcsUniverseBuilder(this);
         }
 
-        public void Init(EcsSystems systems)
+        public void Init(IEcsSystems systems)
         {
             _requiredTypeToWorldId = _builder.GetMapping();
             _builder = null;
@@ -36,7 +36,7 @@ namespace PavEcsSpec.EcsLite
             return _requiredTypeToWorldId[typeof(T)];
         }
 
-        internal EcsWorld GetWorld<T>(EcsSystems systems)
+        internal EcsWorld GetWorld<T>(IEcsSystems systems)
         {
             var key = GetKey<T>();
             var name = GetName(key);
@@ -56,7 +56,7 @@ namespace PavEcsSpec.EcsLite
             //return _worldUnion.GetAllRoots();
         }
 
-        public IEnumerable<IGrouping<EcsWorld, Type>> GetAllWorlds(EcsSystems systems)
+        public IEnumerable<IGrouping<EcsWorld, Type>> GetAllWorlds(IEcsSystems systems)
         {
             return _requiredTypeToWorldId
                 .GroupBy(

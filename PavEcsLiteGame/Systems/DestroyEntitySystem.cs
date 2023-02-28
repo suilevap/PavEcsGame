@@ -28,12 +28,12 @@ namespace PavEcsGame.Systems
                 .Build(ref _destroySpec)
                 .Build(ref _removeFormMapSpec);
         }
-        public void Init(EcsSystems systems)
+        public void Init(IEcsSystems systems)
         {
             _registration = _turnManager.RegisterSimulationSystem(this);
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             _registration.UpdateState(_removeFormMapSpec.Filter);
 

@@ -21,7 +21,7 @@ namespace PavEcsGame.Systems.Renders
                 .Register(this)
                 .Build(ref _playerFieldOfViewSpec);
         }
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             var (fovPool, _, dirPool, posPool) = _playerFieldOfViewSpec.Include;
             var resultPool = _playerFieldOfViewSpec.Optional.Pool1;

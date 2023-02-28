@@ -25,13 +25,13 @@ namespace PavEcsGame.Systems
                 .Build(ref _spec);
         }
 
-        public void Init(EcsSystems systems)
+        public void Init(IEcsSystems systems)
         {
             //preload
             TryGetRule("wall_rule");
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             var posPool = _spec.IncludeReadonly.Pool1;
             var (tilePool, symbolPool) = _spec.Include;

@@ -6,7 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ecslite\Leopotam.EcsLite.csproj" />
+    <!--<ProjectReference Include="..\ecslite\Leopotam.EcsLite.csproj" />-->
+    <ProjectReference Include="..\leo\Leopotam.EcsLite.csproj" />
   </ItemGroup>
 
 

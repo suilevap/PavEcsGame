@@ -57,7 +57,7 @@ namespace PavEcsGame.Systems.Managers
             return new TickSystemRegistration(result, this);
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             if (CurrentPhase == Phase.TickUpdate)
             {

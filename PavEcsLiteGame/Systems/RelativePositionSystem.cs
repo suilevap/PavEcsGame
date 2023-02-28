@@ -29,12 +29,12 @@ namespace PavEcsGame.Systems
             _turnManager = turnManager;
         }
 
-        public void Init(EcsSystems systems)
+        public void Init(IEcsSystems systems)
         {
             _reg = _turnManager.RegisterSimulationSystem(this);
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             var (relPosPool, parentPool) = _spec.Include;
             var (newPosPool, dirPool, posPool) = _spec.Optional;
