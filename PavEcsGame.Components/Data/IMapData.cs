@@ -11,7 +11,9 @@ namespace PavEcsGame.Components
         TP MaxPos { get; }
 
         TV Get(in TP pos);
-        TP GetSafePos(in TP value);
+        TP GetSafePos(in TP pos);
+
+        bool IsValid(in TP pos);
     }
 
     public interface IMapData<TP, TV> : IReadOnlyMapData<TP, TV>
@@ -45,22 +47,7 @@ namespace PavEcsGame.Components
         //        }
         //    }
         //}
-        public static IEnumerable<(PositionComponent pos, TV item)> GetAllOld<TV>(this IReadOnlyMapData<PositionComponent, TV> data)
-        {
-            PositionComponent pos = new PositionComponent();
-            for (pos.Value.Y = data.MinPos.Value.Y; pos.Value.Y < data.MaxPos.Value.Y; pos.Value.Y++)
-            {
-                for (pos.Value.X = data.MinPos.Value.X; pos.Value.X < data.MaxPos.Value.X; pos.Value.X++)
-                {
-                    var item = data.Get(pos);
-                    //if (item == default(TV))
-                    {
-                        yield return (pos, item);
-                    }
-                }
-            }
-        }
-
+   
         public static MapPosEnumerator<TV> GetAll<TV>(
             this IReadOnlyMapData<PositionComponent, TV> data)
         {
@@ -71,12 +58,12 @@ namespace PavEcsGame.Components
             readonly IReadOnlyMapData<PositionComponent, TV> _data;
             readonly int _w;
             readonly int _h;
-            PositionComponent _pos;
+            Int2 _pos;
 
             public MapPosEnumerator(IReadOnlyMapData<PositionComponent, TV> data)
             {
                 _data = data;
-                _pos = new PositionComponent(new Int2(-1,0));
+                _pos = new Int2(-1,0);
                 _w = data.MaxPos.Value.X;
                 _h = data.MaxPos.Value.Y;
             }
@@ -92,28 +79,28 @@ namespace PavEcsGame.Components
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
-                var x = _pos.Value.X + 1;
-                _pos.Value.X = x % _w;
+                var x = _pos.X + 1;
+                _pos.X = x % _w;
                 if (x >= _w)
                 {
-                    _pos.Value.Y++;
+                    _pos.Y++;
                 }
-                return _pos.Value.Y < _h;
+                return _pos.Y < _h;
             }
 
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsValid<TV>(this IReadOnlyMapData<PositionComponent, TV> data, in PositionComponent pos)
-        {
-            return (pos.Value.X >= 0 && pos.Value.Y >= 0 && pos.Value.X < data.MaxPos.Value.X && pos.Value.Y < data.MaxPos.Value.Y);
-        }
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public static bool IsValid<TV>(this IReadOnlyMapData<PositionComponent, TV> data, in PositionComponent pos)
+        //{
+        //    return (pos.Value.X >= 0 && pos.Value.Y >= 0 && pos.Value.X < data.MaxPos.Value.X && pos.Value.Y < data.MaxPos.Value.Y);
+        //}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsValid<TV>(this IReadOnlyMapData<Int2, TV> data, in Int2 pos)
-        {
-            return (pos.X >= 0 && pos.Y >= 0 && pos.X < data.MaxPos.X && pos.Y < data.MaxPos.Y);
-        }
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public static bool IsValid<TV>(this IReadOnlyMapData<Int2, TV> data, in Int2 pos)
+        //{
+        //    return (pos.X >= 0 && pos.Y >= 0 && pos.X < data.MaxPos.X && pos.Y < data.MaxPos.Y);
+        //}
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsHexPos(this in Int2 pos)
@@ -129,23 +116,25 @@ namespace PavEcsGame.Components
         {
             PositionComponent p = pos;
             TR result = initValue;
-            p = pos + new PositionComponent(0, -1);
+            p = pos.Add(0, -1);
             if (data.IsValid(p))
             {
                 result = mergeFunc(result, p, data.Get(p));
             }
-            p = pos + new PositionComponent(-1, 0);
+            
+            p = pos.Add(-1, 0);
             if (data.IsValid(p))
             {
                 result = mergeFunc(result, p, data.Get(p));
             }
 
-            p = pos + new PositionComponent(1, 0);
+            p = pos.Add(1, 0);
             if (data.IsValid(p))
             {
                 result = mergeFunc(result, p, data.Get(p));
             }
-            p = pos + new PositionComponent(0, 1);
+
+            p = pos.Add(0, 1);
             if (data.IsValid(p))
             {
                 result = mergeFunc(result, p, data.Get(p));

@@ -46,10 +46,10 @@ namespace PavEcsGame.Systems
                         Size = _map.MaxPos.Value - _map.MinPos.Value
                     });
 
-            var pos = new PositionComponent();
+            var pos = new Int2();
             foreach (var line in lines)
             {
-                pos.Value.X = 0;
+                pos.X = 0;
                 foreach (var c in line)
                 {
                     if (TryGetSpawnRequest(c).TryGet(out var request))
@@ -65,10 +65,10 @@ namespace PavEcsGame.Systems
                             );
                     }
 
-                    pos.Value.X++;
+                    pos.X++;
                 }
 
-                pos.Value.Y++;
+                pos.Y++;
             }
 
         }

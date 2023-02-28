@@ -94,10 +94,10 @@ namespace PavEcsGame
 
         public void Merge<TC, T2>(IReadOnlyMapData<PositionComponent, T2> data2, in TC context, MergeDelegate<TC, PositionComponent, T, T2> mergeFunc)
         {
-            PositionComponent pos = new PositionComponent();
-            for (pos.Value.Y = MinPos.Y; pos.Value.Y < MaxPos.Y; pos.Value.Y++)
+            Int2 pos;
+            for (pos.Y = MinPos.Y; pos.Y < MaxPos.Y; pos.Y++)
             {
-                for (pos.Value.X = MinPos.X; pos.Value.X < MaxPos.X; pos.Value.X++)
+                for (pos.X = MinPos.X; pos.X < MaxPos.X; pos.X++)
                 {
                      mergeFunc(in context, pos, ref GetRef(pos), data2.Get(pos));
                 }
@@ -133,6 +133,16 @@ namespace PavEcsGame
         public void CopyFrom(MapData<T> fromData)
         {
             Array.Copy(fromData._data, _data, _data.Length);
+        }
+
+        public bool IsValid(in Int2 pos)
+        {
+            return (pos.X >= 0 && pos.Y >= 0 && pos.X <Width && pos.Y < Height);
+        }
+
+        public bool IsValid(in PositionComponent pos)
+        {
+            return (pos.Value.X >= 0 && pos.Value.Y >= 0 && pos.Value.X < Width && pos.Value.Y < Height);
         }
     }
 

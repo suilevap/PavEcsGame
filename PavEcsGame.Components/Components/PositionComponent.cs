@@ -7,10 +7,10 @@ using Leopotam.Ecs.Types;
 
 namespace PavEcsGame.Components
 {
-    public struct PositionComponent : IEquatable<PositionComponent>
+    public readonly struct PositionComponent : IEquatable<PositionComponent>
     {
 
-        public Int2 Value;
+        public readonly Int2 Value;
 
         public PositionComponent(Int2 value)
         {
@@ -26,55 +26,49 @@ namespace PavEcsGame.Components
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PositionComponent operator +(in PositionComponent lhs, in PositionComponent rhs)
         {
-            PositionComponent res;
-            res.Value.X = lhs.Value.X + rhs.Value.X;
-            res.Value.Y = lhs.Value.Y + rhs.Value.Y;
-            return res;
+            var x = lhs.Value.X + rhs.Value.X;
+            var y = lhs.Value.Y + rhs.Value.Y;
+            return new PositionComponent(x, y);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PositionComponent operator -(in PositionComponent lhs, in PositionComponent rhs)
         {
-            PositionComponent res;
-            res.Value.X = lhs.Value.X - rhs.Value.X;
-            res.Value.Y = lhs.Value.Y - rhs.Value.Y;
-            return res;
+            var x = lhs.Value.X - rhs.Value.X;
+            var y = lhs.Value.Y - rhs.Value.Y;
+            return new PositionComponent(x, y);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PositionComponent operator *(in PositionComponent lhs, in PositionComponent rhs)
         {
-            PositionComponent res;
-            res.Value.X = lhs.Value.X * rhs.Value.X;
-            res.Value.Y = lhs.Value.Y * rhs.Value.Y;
-            return res;
+            var x = lhs.Value.X * rhs.Value.X;
+            var y = lhs.Value.Y * rhs.Value.Y;
+            return new PositionComponent(x,y);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PositionComponent operator *(in PositionComponent lhs, int rhs)
         {
-            PositionComponent res;
-            res.Value.X = lhs.Value.X * rhs;
-            res.Value.Y = lhs.Value.Y * rhs;
-            return res;
+            var x = lhs.Value.X * rhs;
+            var y = lhs.Value.Y * rhs;
+            return new PositionComponent(x, y);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PositionComponent operator /(in PositionComponent lhs, int rhs)
         {
-            PositionComponent res;
-            res.Value.X = lhs.Value.X / rhs;
-            res.Value.Y = lhs.Value.Y / rhs;
-            return res;
+            var x = lhs.Value.X / rhs;
+            var y = lhs.Value.Y / rhs;
+            return new PositionComponent(x, y);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PositionComponent operator -(in PositionComponent lhs)
         {
-            PositionComponent res;
-            res.Value.X = -lhs.Value.X;
-            res.Value.Y = -lhs.Value.Y;
-            return res;
+            var x = -lhs.Value.X;
+            var y = -lhs.Value.Y;
+            return new PositionComponent(x, y);
         }
 
 
@@ -124,6 +118,12 @@ namespace PavEcsGame.Components
         public bool Equals(PositionComponent other)
         {
             return Value.Equals(other.Value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public PositionComponent Add(int x, int y)
+        {
+            return new PositionComponent(Value.X + x, Value.Y + y);
         }
     }
 }
