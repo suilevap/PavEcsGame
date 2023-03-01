@@ -3,7 +3,7 @@ using Leopotam.Ecs.Types;
 
 namespace PavEcsGame.Components
 {
-    internal struct RenderItemCommand
+    public struct RenderItemCommand
     {
         public SymbolComponent Symbol;
         public ConsoleColor BackgroundColor;

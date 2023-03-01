@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+	<ItemGroup>
+		<!--<ProjectReference Include="..\ecs-types\Leopotam.Ecs.Types.csproj" />-->
+		<ProjectReference Include="..\leo\Leopotam.EcsLite.csproj" />
+		<ProjectReference Include="..\PavEcsGame.Components\PavEcsGame.Components.csproj" />
+		<ProjectReference Include="..\PavEcsSpec.EcsLite\PavEcsSpec.EcsLite.csproj" />
+		<ProjectReference Include="..\PavEcsGame.Common\PavEcsGame.Common.csproj" />
+		<ProjectReference Include="..\PavEcsLiteGame\PavEcsGame.Lite.csproj" />
+	</ItemGroup>
+</Project>
