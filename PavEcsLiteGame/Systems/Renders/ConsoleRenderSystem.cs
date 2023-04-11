@@ -16,7 +16,7 @@ namespace PavEcsGame.Systems.Renders
             .Inc<EcsSpec<RenderItemCommand>> _renderCommandSpec;
 
 
-        private List<EcsUnsafeEntity>[] _groupedbyColor = new List<EcsUnsafeEntity>[16];
+        private readonly List<EcsUnsafeEntity>[] _groupedbyColor = new List<EcsUnsafeEntity>[16];
         public ConsoleRenderSystem(EcsUniverse universe)
         {
             universe

@@ -1,4 +1,6 @@
-﻿GameMainContainer game = new GameMainContainer();
+﻿using Tetris;
+
+GameMainContainer game = new GameMainContainer();
 
 game.Start();
 while (game.IsAlive)

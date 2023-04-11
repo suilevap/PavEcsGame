@@ -6,6 +6,11 @@ namespace PavEcsGame.Components
     public struct DirectionComponent : IEquatable<DirectionComponent>
     {
         public Int2 Direction; //todo use byte
+
+        public DirectionComponent(int x, int y)
+        {
+            Direction = new Int2(x, y);
+        }
         public bool Equals(DirectionComponent other)
         {
             return Direction == other.Direction;

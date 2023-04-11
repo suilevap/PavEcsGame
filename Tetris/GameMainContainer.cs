@@ -1,10 +1,13 @@
 ﻿using System.Diagnostics;
+using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
 using PavEcsGame;
 using PavEcsGame.Components;
 using PavEcsGame.Components.Events;
 using PavEcsGame.Systems.Renders;
 using PavEcsSpec.EcsLite;
+using Tetris.Components;
+using Tetris.Systems;
 
 namespace Tetris
 {
@@ -25,7 +28,23 @@ namespace Tetris
                 .AddUniverse(out var universe);
             _universe = universe;
             var map = new MapData<EcsPackedEntityWithWorld>();
+            Int2 screenSize = new Int2(32, 20);
+            int mapWidth = 12;
             _systems
+                .Add(new GenerateSystem<MapComponent>(universe, 
+                    ()=> new MapComponent()
+                    {
+                        Data = GenerateBorder(mapWidth, 20),
+                        Width = mapWidth,
+                    }))
+                .Add(new GenerateFigureSystem(universe, (int)(DateTime.UtcNow.Ticks & 0xFF)))
+                .Add(new KeyboardMoveSystem(universe))
+                .Add(new RotateSystem(universe))
+                .Add(new MoveSystem(universe))
+                .Add(new AttachSystem(universe))
+                .Add(new FigureRenderSystem(universe))
+                .Add(new MapRenderSystem(universe))
+                .Add(new DoubleBufferRenderSystem(universe, screenSize))
                 .Add(new ConsoleRenderSystem(universe));
 //            var turnManager = new TurnManager(universe);
 
@@ -67,7 +86,7 @@ namespace Tetris
             //            _systems
             //                .Add(new LightRenderSystem(universe))
             //                .Add(new PlayerFieldOfViewSystem(universe))
-            //                .Add(new PrepareForRenderSystem(universe, map))
+            //                .Add(new DoubleBufferRenderSystem(universe, map))
             //                .Add(new ConsoleRenderSystem(universe))
             //                //.Add(new SymbolRenderSystem(map, universe))
             //                ;
@@ -86,6 +105,22 @@ namespace Tetris
                 .Init();
 
             PrintUniverseInfo(universe);
+        }
+
+        private uint[] GenerateBorder(int width, int height)
+        {
+            uint[] data = new uint[height];
+            var offset = 32 - width;
+            data[0] = (0xFFFFFFFF >> offset) << offset;
+            data[^1] = (0xFFFFFFFF >> offset) << offset;
+
+            uint border = ((uint)0x1 << 31) | (uint)(0x1 << offset);
+            for (int y = 1; y < data.Length - 1; y++)
+            {
+                data[y] = border;
+            }
+
+            return data;
         }
 
         private void DebugInfo(EcsUniverse universe, IEcsSystems systems)

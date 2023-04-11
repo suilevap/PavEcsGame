@@ -125,5 +125,12 @@ namespace PavEcsGame.Components
         {
             return new PositionComponent(Value.X + x, Value.Y + y);
         }
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public PositionComponent Add(in Int2 v)
+        {
+            return new PositionComponent(Value.X + v.X, Value.Y + v.Y);
+        }
     }
 }
