@@ -53,4 +53,39 @@ internal class MapRenderSystem : IEcsRunSystem, IEcsSystemSpec
             }
         }
     }
+
+    internal class MapLineRemoveSystem : IEcsRunSystem, IEcsSystemSpec
+    {
+        private readonly EcsFilterSpec
+            .Inc<EcsSpec<MapComponent>> _mapSpec;
+
+
+        public MapLineRemoveSystem(EcsUniverse universe)
+        {
+            universe.Register(this)
+                .Build(ref _mapSpec);
+        }
+
+        public void Run(IEcsSystems systems)
+        {
+            var mapPool = _mapSpec.Include.Pool1;
+            foreach (EcsUnsafeEntity ent in _mapSpec.Filter)
+            {
+                ref readonly var map = ref mapPool.Get(ent);
+                int targetY = map.Data.Length - 2;
+                for (int y = map.Data.Length - 2; y >= 1; y--)
+                {
+                    if (map.Data[y] != map.FullLine)
+                    {
+                        targetY--;
+                    }
+
+                    if (targetY != y)
+                    {
+                        map.Data[y] = map.Data[targetY];
+                    }
+                }
+            }
+        }
+    }
 }

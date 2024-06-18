@@ -8,6 +8,7 @@ using PavEcsGame.Systems.Renders;
 using PavEcsSpec.EcsLite;
 using Tetris.Components;
 using Tetris.Systems;
+using static Tetris.Systems.MapRenderSystem;
 
 namespace Tetris
 {
@@ -36,12 +37,15 @@ namespace Tetris
                     {
                         Data = GenerateBorder(mapWidth, 20),
                         Width = mapWidth,
+                        FullLine = GetFullLine(mapWidth),
+                        Border = GetFullLine(mapWidth)
                     }))
                 .Add(new GenerateFigureSystem(universe, (int)(DateTime.UtcNow.Ticks & 0xFF)))
                 .Add(new KeyboardMoveSystem(universe))
                 .Add(new RotateSystem(universe))
                 .Add(new MoveSystem(universe))
-                .Add(new AttachSystem(universe))
+                .Add(new MapLineRemoveSystem(universe))
+                //.Add(new AttachSystem(universe))
                 .Add(new FigureRenderSystem(universe))
                 .Add(new MapRenderSystem(universe))
                 .Add(new DoubleBufferRenderSystem(universe, screenSize))
@@ -107,14 +111,27 @@ namespace Tetris
             PrintUniverseInfo(universe);
         }
 
+        private uint GetBorder(int width)
+        {
+            var offset = 32 - width;
+            uint border = ((uint)0x1 << 31) | (uint)(0x1 << offset);
+            return border;
+        }
+
+        private uint GetFullLine(int width)
+        {
+            var offset = 32 - width;
+
+            return (0xFFFFFFFF >> offset) << offset;
+        }
         private uint[] GenerateBorder(int width, int height)
         {
             uint[] data = new uint[height];
-            var offset = 32 - width;
-            data[0] = (0xFFFFFFFF >> offset) << offset;
-            data[^1] = (0xFFFFFFFF >> offset) << offset;
-
-            uint border = ((uint)0x1 << 31) | (uint)(0x1 << offset);
+            var fullLine = GetFullLine(width);
+            data[0] = fullLine;
+            data[^1] = fullLine;
+            
+            uint border = GetBorder(width);//((uint)0x1 << 31) | (uint)(0x1 << offset);
             for (int y = 1; y < data.Length - 1; y++)
             {
                 data[y] = border;
