@@ -1,12 +1,6 @@
 ﻿using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsSpec.EcsLite;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using PavEcsGame.Utils;
 using Tetris.Components;
 
 namespace Tetris.Systems
@@ -41,7 +35,7 @@ namespace Tetris.Systems
         //    new[]
         //    {
         //        0b0000_0110_0110_0000, //O
-        //    }, 
+        //    },
         //    new[]
         //    {
         //        0b0100_0100_0100_0100, //I
@@ -68,7 +62,7 @@ namespace Tetris.Systems
         //    new[]
         //    {
         //        0b0000_0110_0011_0000, //Z
-        //        0b0010_0110_0100_0000, 
+        //        0b0010_0110_0100_0000,
         //    },
         //    new []
         //    {

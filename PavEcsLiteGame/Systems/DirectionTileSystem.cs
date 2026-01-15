@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using Leopotam.Ecs.Types;
-using Leopotam.EcsLite;
 using PavEcsGame.Components;
+using Leopotam.EcsLite;
 using PavEcsSpec.EcsLite;
 using PavEcsGame.Tiles;
 

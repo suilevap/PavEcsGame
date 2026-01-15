@@ -1,8 +1,4 @@
-﻿using Leopotam.Ecs.Types;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
+﻿using System.Diagnostics;
 
 namespace PavEcsGame.Components
 {

@@ -1,4 +1,3 @@
-﻿using Leopotam.Ecs.Types;
 using System;
 
 namespace PavEcsGame.Components

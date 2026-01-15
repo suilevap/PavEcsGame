@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
+﻿using PavEcsGame.Components;
 using Leopotam.EcsLite;
-using PavEcsGame.Components;
-using PavEcsGame.Components.SystemComponents;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
 
@@ -48,7 +42,7 @@ namespace PavEcsGame.Systems
                     ref readonly PositionComponent pos = ref posPool.Get(ent);
 
                     newPosPool.Set(
-                        ent, 
+                        ent,
                         new NewPositionComponent()
                         {
                             Value = new PositionComponent(pos.Value + speed.Speed)

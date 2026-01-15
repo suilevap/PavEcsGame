@@ -1,4 +1,4 @@
-﻿using Leopotam.Ecs;
+﻿
 using PavEcsGame.Components;
 
 namespace PavEcsGame.Extensions

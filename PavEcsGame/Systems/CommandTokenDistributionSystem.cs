@@ -1,5 +1,5 @@
 using System;
-using Leopotam.Ecs;
+
 using PavEcsGame.Components;
 using PavEcsGame.Extensions;
 using PavEcsGame.Systems.Managers;
@@ -16,7 +16,7 @@ namespace PavEcsGame.Systems
 
         public CommandTokenDistributionSystem(TimeSpan autoRechargeTime)
         {
-            _autoRechargeTime = autoRechargeTime;   
+            _autoRechargeTime = autoRechargeTime;
         }
         public void Init()
         {

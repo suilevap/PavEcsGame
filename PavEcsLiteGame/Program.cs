@@ -1,5 +1,4 @@
-﻿using System;
-using PavEcsGame.GameLoop;
+﻿using PavEcsGame.GameLoop;
 
 namespace PavEcsGame
 {

@@ -1,12 +1,9 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
-using Leopotam.Ecs.Types;
-using Leopotam.EcsLite;
 using PavEcsGame.Components;
+using Leopotam.EcsLite;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
-using PavEcsGame;
 
 namespace PavEcsGame.Systems
 {
@@ -15,7 +12,7 @@ namespace PavEcsGame.Systems
         private readonly string _fileName;
         private readonly IMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
         private readonly EcsEntityFactorySpec<EcsSpec<MapLoadedEvent>> _mapChangedEventFactory;
-        
+
         private readonly EcsEntityFactorySpec<
             EcsSpec<NewPositionComponent, SpawnRequestComponent>> _spawnSpec;
 

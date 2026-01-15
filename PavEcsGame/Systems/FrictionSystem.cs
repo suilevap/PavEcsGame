@@ -1,6 +1,6 @@
 using System;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
+
+using PavEcsGame.Components;
 using PavEcsGame.Components;
 using PavEcsGame.Systems.Managers;
 

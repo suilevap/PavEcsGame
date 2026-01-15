@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
+
+using PavEcsGame.Components;
 using PavEcsGame.GameLoop;
 using PavEcsGame.Components;
 using PavEcsGame.Extensions;
@@ -22,7 +22,7 @@ namespace PavEcsGame.Systems
         private EcsFilter<PositionComponent, NewPositionComponent> _movePosFilter;
 
         private EcsFilter<NewPositionComponent> _newPosFilter;
-        
+
         [EcsIgnoreInject]
         private EcsEntity _systemEnt;
         private TurnManager.SimSystemRegistration _registration;
@@ -45,7 +45,7 @@ namespace PavEcsGame.Systems
                 {
                     //update new pos to safe one
                     newPosComponent.Value = nextPos = _map.GetSafePos(nextPos);
-                    
+
                     ref var otherEnt = ref _map.GetRef(nextPos);
                     if (!otherEnt.IsAlive())//free space
                     {

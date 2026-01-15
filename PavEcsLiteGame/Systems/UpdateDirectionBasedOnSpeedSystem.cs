@@ -1,9 +1,5 @@
-﻿using Leopotam.Ecs.Types;
-using System;
-using System.Collections.Generic;
+﻿using PavEcsGame.Components;
 using Leopotam.EcsLite;
-using PavEcsGame.Components;
-using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
@@ -23,7 +19,7 @@ namespace PavEcsGame.Systems
 
         public void Run(IEcsSystems systems)
         {
-  
+
             var (speedPool, _, _) = _spec.IncludeReadonly;
             var dirPool = _spec.Include.Pool1;
 

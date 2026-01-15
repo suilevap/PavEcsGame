@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
-using Leopotam.Ecs.Types;
-using Leopotam.EcsLite;
 using PavEcsGame.Components;
+using Leopotam.EcsLite;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
-using PavEcsGame;
 
 namespace PavEcsGame.Systems.Renders
 {
@@ -87,7 +83,7 @@ namespace PavEcsGame.Systems.Renders
                     {
                         Data = _lightMap
                     });
-           
+
         }
         private void CalculateLightMap(EcsFilter ecsFilter, MapData<LightValueComponent> lightMap)
         {
@@ -103,7 +99,7 @@ namespace PavEcsGame.Systems.Renders
                 //int radiusSq = (lightData.Radius + 1) * (lightData.Radius + 1);
                 //float invRadiusSq = 1.0f / radiusSq;
                 var context = new LightDataContext(in lightData, center);
-                IMapData<PositionComponent, LightValueComponent> m = lightMap; 
+                IMapData<PositionComponent, LightValueComponent> m = lightMap;
                 m.Merge(lightResult.Data, context, _lightMergeDelegate);
             }
         }

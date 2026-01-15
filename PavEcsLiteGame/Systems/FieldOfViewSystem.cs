@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Leopotam.Ecs.Types;
-using Leopotam.EcsLite;
 using PavEcsGame.Components;
-using PavEcsGame.Components.Events;
+using Leopotam.EcsLite;
 using PavEcsSpec.EcsLite;
 using PavEcsGame;
 using PavEcsGame.Area;
@@ -13,7 +9,7 @@ namespace PavEcsGame.Systems
 {
     class FieldOfViewSystem : IEcsRunSystem, IEcsSystemSpec
     {
-        private struct FieldOfViewCalculated 
+        private struct FieldOfViewCalculated
         {
             public PositionComponent Position;
             public FieldOfViewRequestEvent Request;
@@ -22,8 +18,8 @@ namespace PavEcsGame.Systems
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
         //private readonly EcsFilterSpec<
-        //    EcsReadonlySpec<PositionComponent, FieldOfViewRequestEvent>, 
-        //    EcsSpec<AreaResultComponent<float>, FieldOfViewCalculated>, 
+        //    EcsReadonlySpec<PositionComponent, FieldOfViewRequestEvent>,
+        //    EcsSpec<AreaResultComponent<float>, FieldOfViewCalculated>,
         //    EcsSpec> _filedOfViewSourcesSpec;
         private readonly EcsFilterSpec
             .Inc<EcsReadonlySpec<PositionComponent>, EcsSpec<FieldOfViewRequestEvent>>
@@ -69,7 +65,7 @@ namespace PavEcsGame.Systems
                     var radius = request.Radius;
                     prevInput.Position = pos;
                     prevInput.Request = request;
-                    
+
                     UpdateFieldOfViewData(ent, pos, radius);
                 }
 
@@ -94,7 +90,7 @@ namespace PavEcsGame.Systems
                 _fieldOfView.Compute(pos.Value, radius, _hasObstacles, ref _fieldOfViewResult, out var count);
                 for (int i = 0; i < count; i++)
                 {
-                    ref var item = ref _fieldOfViewResult[i]; 
+                    ref var item = ref _fieldOfViewResult[i];
                     var p = pos.Value + item.delta;
                     if (_map.IsValid(p))
                     {

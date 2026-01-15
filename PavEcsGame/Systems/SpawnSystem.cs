@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
+
+using PavEcsGame.Components;
 using PavEcsGame.Components;
 using PavEcsGame.GameLoop;
 
 namespace PavEcsGame.Systems
 {
-    class SpawnSystem : IEcsRunSystem 
+    class SpawnSystem : IEcsRunSystem
     {
         private EcsWorld _world = null;
         private IMapData<PositionComponent, EcsEntity> _map;

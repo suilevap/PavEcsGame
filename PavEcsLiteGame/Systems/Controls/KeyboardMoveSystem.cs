@@ -1,11 +1,8 @@
-﻿using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
+﻿
+using PavEcsGame.Components;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Leopotam.EcsLite;
-using PavEcsGame.Components;
-using PavEcsGame.Components.SystemComponents;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
 
@@ -56,7 +53,7 @@ namespace PavEcsGame.Systems
                 return;
             if (_spec.Filter.IsEmpty())
                 return;
-            
+
             if (_waitKey)
             {
                 key = Console.ReadKey(true).Key;

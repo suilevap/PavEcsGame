@@ -1,11 +1,6 @@
 ﻿using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsSpec.EcsLite;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using PavEcsGame;
 using Tetris.Components;
 

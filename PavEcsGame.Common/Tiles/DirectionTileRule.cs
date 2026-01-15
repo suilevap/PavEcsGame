@@ -1,5 +1,4 @@
-﻿using Leopotam.Ecs.Types;
-using PavEcsGame.Components;
+﻿using PavEcsGame.Components;
 using System.Diagnostics;
 using System.IO;
 
@@ -54,7 +53,7 @@ namespace PavEcsGame.Tiles
                     if (c == '.')
                         continue;
                     var dir = new Int2(x - centerX, y - centerY).ToDirection();
-                    result[(int)dir] = c;  
+                    result[(int)dir] = c;
                 }
             }
             return new DirectionTileRule(result);

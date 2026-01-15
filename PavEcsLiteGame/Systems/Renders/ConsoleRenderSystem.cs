@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
-using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
-using PavEcsGame;
-using PavEcsGame.Utils;
 
 namespace PavEcsGame.Systems.Renders
 {
@@ -32,6 +29,8 @@ namespace PavEcsGame.Systems.Renders
         public void Init(IEcsSystems systems)
         {
             Console.CursorVisible = false;
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.Clear();
         }
         public void Run(IEcsSystems systems)
         {

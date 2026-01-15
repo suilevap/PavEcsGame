@@ -1,11 +1,6 @@
-﻿using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
+﻿
 using PavEcsGame.Components;
-using PavEcsGame.GameLoop;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using Leopotam.EcsLite;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
@@ -34,7 +29,7 @@ namespace PavEcsGame.Systems
 
         public void Run(IEcsSystems systems)
         {
-            Debug.Assert(_mapLoadedEventSpec.Filter.GetEntitiesCount() <= 1, 
+            Debug.Assert(_mapLoadedEventSpec.Filter.GetEntitiesCount() <= 1,
                 $"{nameof(MapLoadedEvent)} is expected to be no more than one per cycle");
 
 
@@ -51,7 +46,7 @@ namespace PavEcsGame.Systems
             {
                 if (!ent.IsAlive())
                     continue;
-                
+
                 Debug.Assert(ent.IsBelongTo(_spec), $"Stored entity from different world: {ent}");
 
                 if (ent.Unpack(out _, out EcsUnsafeEntity entId))

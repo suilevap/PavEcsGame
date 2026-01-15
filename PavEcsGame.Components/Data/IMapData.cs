@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Leopotam.Ecs.Types;
 
 namespace PavEcsGame.Components
 {
@@ -47,13 +45,13 @@ namespace PavEcsGame.Components
         //        }
         //    }
         //}
-   
+
         public static MapPosEnumerator<TV> GetAll<TV>(
             this IReadOnlyMapData<PositionComponent, TV> data)
         {
             return new MapPosEnumerator<TV>(data);
         }
-        public struct MapPosEnumerator<TV> 
+        public struct MapPosEnumerator<TV>
         {
             readonly IReadOnlyMapData<PositionComponent, TV> _data;
             readonly int _w;
@@ -109,9 +107,9 @@ namespace PavEcsGame.Components
         }
 
         public static TR CheckNeighbours<TV,TR>(
-            this IReadOnlyMapData<PositionComponent, TV> data, 
-            in TR initValue, 
-            PositionComponent pos, 
+            this IReadOnlyMapData<PositionComponent, TV> data,
+            in TR initValue,
+            PositionComponent pos,
             Func<TR, PositionComponent, TV, TR> mergeFunc)
         {
             PositionComponent p = pos;
@@ -121,7 +119,7 @@ namespace PavEcsGame.Components
             {
                 result = mergeFunc(result, p, data.Get(p));
             }
-            
+
             p = pos.Add(-1, 0);
             if (data.IsValid(p))
             {

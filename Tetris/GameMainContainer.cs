@@ -1,14 +1,11 @@
 ﻿using System.Diagnostics;
-using Leopotam.Ecs.Types;
+using PavEcsGame.Components;
 using Leopotam.EcsLite;
 using PavEcsGame;
-using PavEcsGame.Components;
-using PavEcsGame.Components.Events;
 using PavEcsGame.Systems.Renders;
 using PavEcsSpec.EcsLite;
 using Tetris.Components;
 using Tetris.Systems;
-using static Tetris.Systems.MapRenderSystem;
 
 namespace Tetris
 {
@@ -32,7 +29,7 @@ namespace Tetris
             Int2 screenSize = new Int2(32, 20);
             int mapWidth = 12;
             _systems
-                .Add(new GenerateSystem<MapComponent>(universe, 
+                .Add(new GenerateSystem<MapComponent>(universe,
                     ()=> new MapComponent()
                     {
                         Data = GenerateBorder(mapWidth, 20),
@@ -44,7 +41,7 @@ namespace Tetris
                 .Add(new KeyboardMoveSystem(universe))
                 .Add(new RotateSystem(universe))
                 .Add(new MoveSystem(universe))
-                .Add(new MapLineRemoveSystem(universe))
+                //.Add(new MapLineRemoveSystem(universe))
                 //.Add(new AttachSystem(universe))
                 .Add(new FigureRenderSystem(universe))
                 .Add(new MapRenderSystem(universe))
@@ -130,7 +127,7 @@ namespace Tetris
             var fullLine = GetFullLine(width);
             data[0] = fullLine;
             data[^1] = fullLine;
-            
+
             uint border = GetBorder(width);//((uint)0x1 << 31) | (uint)(0x1 << offset);
             for (int y = 1; y < data.Length - 1; y++)
             {

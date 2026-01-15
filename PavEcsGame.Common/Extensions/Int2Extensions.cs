@@ -1,6 +1,5 @@
-﻿using System;
-using System.Diagnostics;
-using Leopotam.Ecs.Types;
+﻿using System.Diagnostics;
+using PavEcsGame.Components;
 
 namespace PavEcsGame
 {

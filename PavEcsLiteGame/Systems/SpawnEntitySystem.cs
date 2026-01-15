@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using Leopotam.Ecs.Types;
-using Leopotam.EcsLite;
 using PavEcsGame.Components;
-using PavEcsGame.Components.Events;
+using Leopotam.EcsLite;
 using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
@@ -155,11 +150,11 @@ namespace PavEcsGame.Systems
                     //_playerFactory.Pools.Pool2.Add(linkedEnt) = new SpeedComponent();
 
                     //TrySpawnEntity(
-                    //    linkedEnt, 
+                    //    linkedEnt,
                     //    new SpawnRequestComponent()
                     //    {
                     //        Type = EntityType.Light
-                    //    }, 
+                    //    },
                     //    rnd);
 
                     _lightSourceFactory.Pools.Pool1.Add(ent) = new LightSourceComponent()

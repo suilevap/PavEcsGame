@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Leopotam.Ecs.Types;
-using Leopotam.EcsLite;
+﻿using System.Collections.Generic;
 using PavEcsGame.Components;
+using Leopotam.EcsLite;
 using PavEcsSpec.EcsLite;
 using PavEcsGame.Tiles;
 
@@ -14,7 +11,7 @@ namespace PavEcsGame.Systems
         private readonly IReadOnlyMapData<Int2, EcsPackedEntityWithWorld> _map;
         private readonly EcsFilterSpec
             .Inc<EcsReadonlySpec<PositionComponent>, EcsSpec<TileComponent, SymbolComponent>> _spec;
-        
+
         private readonly Dictionary<string, TileRule> _rules = new Dictionary<string, TileRule>();
 
         public TileSystem(EcsUniverse universe, IReadOnlyMapData<Int2, EcsPackedEntityWithWorld> map)

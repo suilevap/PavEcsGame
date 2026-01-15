@@ -1,8 +1,6 @@
-using Leopotam.Ecs;
+
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
-using PavEcsGame.Components.SystemComponents;
-using PavEcsGame.GameLoop;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
 
@@ -15,7 +13,7 @@ namespace PavEcsGame.Systems
         private readonly EcsFilterSpec
             .Inc<EcsReadonlySpec<DestroyRequestTag>>
             .Exc<EcsReadonlySpec<PositionComponent, MarkAsRenderedTag>> _destroySpec;
-        
+
         private readonly EcsFilterSpec
             .Inc<EcsReadonlySpec<PositionComponent, DestroyRequestTag>>
             .Opt<EcsSpec<NewPositionComponent>> _removeFormMapSpec;

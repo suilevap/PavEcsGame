@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Text;
-using Leopotam.Ecs.Types;
+
 
 namespace PavEcsGame.Components
 {
@@ -27,10 +27,10 @@ namespace PavEcsGame.Components
             _packedValue = packedValue;
         }
 
-        public Color(Float4 color)
-            : this((int)(color.X * 255), (int)(color.Y * 255), (int)(color.Z * 255), (int)(color.W * 255))
-        {
-        }
+        // public Color(Float4 color)
+        //     : this((int)(color.X * 255), (int)(color.Y * 255), (int)(color.Z * 255), (int)(color.W * 255))
+        // {
+        // }
 
         public Color(Float3 color)
             : this((color.X * 255), (int)(color.Y * 255), (int)(color.Z * 255))
@@ -232,10 +232,10 @@ namespace PavEcsGame.Components
             return new Float3(R / 255.0f, G / 255.0f, B / 255.0f);
         }
 
-        public Float4 ToVector4()
-        {
-            return new Float4(R / 255.0f, G / 255.0f, B / 255.0f, A / 255.0f);
-        }
+        // public Float4 ToVector4()
+        // {
+        //     return new Float4(R / 255.0f, G / 255.0f, B / 255.0f, A / 255.0f);
+        // }
 
         /// <summary>
         /// Gets or sets packed value of this <see cref="Color"/>.
@@ -264,11 +264,11 @@ namespace PavEcsGame.Components
             return sb.ToString();
         }
 
-  
-        public static Color FromNonPremultiplied(Float4 vector)
-        {
-            return new Color(vector.X * vector.W, vector.Y * vector.W, vector.Z * vector.W, vector.W);
-        }
+
+        // public static Color FromNonPremultiplied(Float4 vector)
+        // {
+        //     return new Color(vector.X * vector.W, vector.Y * vector.W, vector.Z * vector.W, vector.W);
+        // }
 
         public static Color FromNonPremultiplied(int r, int g, int b, int a)
         {
@@ -299,7 +299,7 @@ namespace PavEcsGame.Components
             b = B / 255f;
         }
 
- 
+
         public void Deconstruct(out byte r, out byte g, out byte b, out byte a)
         {
             r = R;

@@ -1,10 +1,6 @@
 ﻿using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsSpec.EcsLite;
-using PavEcsGame;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace PavEcsGame.Systems.Renders
 {
@@ -59,10 +55,10 @@ namespace PavEcsGame.Systems.Renders
         private static void VisibilityMerge(
             in EntityData data,
             in PositionComponent pos,
-            ref VisibilityType sourceValue, 
+            ref VisibilityType sourceValue,
             in float targetValue)
         {
-            if (targetValue > 0.1 
+            if (targetValue > 0.1
                 )//&& PositionComponent.ScalarMul(pos - data.Position, data.Direction.Direction) >= 0)//todo proper angle check
             {
                 sourceValue |= VisibilityType.Visible | VisibilityType.Known;

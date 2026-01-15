@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace PavEcsSpec.EcsLite
@@ -58,7 +57,7 @@ namespace PavEcsSpec.EcsLite
         }
 
 
-        public bool IsConnected(T p, T q) 
+        public bool IsConnected(T p, T q)
         {
             return Root(p) == Root(q);
         }

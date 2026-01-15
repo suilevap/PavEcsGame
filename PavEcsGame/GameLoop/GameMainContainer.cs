@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
+
+using PavEcsGame.Components;
 using PavEcsGame.Components;
 using PavEcsGame.Extensions;
 using PavEcsGame.Systems;
@@ -37,7 +37,7 @@ namespace PavEcsGame.GameLoop
                 .Add(new KeyboardMoveSystem(waitKey: false))
                 .Add(new RandomMovementSystem());
 
-            var tickSystems = new EcsSystems(_world,"Tick")   
+            var tickSystems = new EcsSystems(_world,"Tick")
                 .Add(new MovementSystem())
                 .Add(new FrictionSystem());
 

@@ -1,11 +1,6 @@
-﻿using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
+﻿
 using PavEcsGame.Components;
-using PavEcsGame.Components.SystemComponents;
 using PavEcsGame.Systems.Managers;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Leopotam.EcsLite;
 using PavEcsSpec.EcsLite;
 using PavEcsGame.Utils;
@@ -16,10 +11,10 @@ namespace PavEcsGame.Systems
     {
         private readonly PositionComponent[] _moves = new[]
         {
-            new PositionComponent(0, 0), 
-            new PositionComponent(1, 0), 
-            new PositionComponent(-1, 0), 
-            new PositionComponent(0, 1), 
+            new PositionComponent(0, 0),
+            new PositionComponent(1, 0),
+            new PositionComponent(-1, 0),
+            new PositionComponent(0, 1),
             new PositionComponent(0, -1)
         };
 

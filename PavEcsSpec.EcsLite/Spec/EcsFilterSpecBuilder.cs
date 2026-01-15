@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Leopotam.EcsLite;
 
 namespace PavEcsSpec.EcsLite
@@ -52,7 +51,7 @@ namespace PavEcsSpec.EcsLite
         )
         {
             builder.RegisterSet(
-                include.GetArgTypes(), 
+                include.GetArgTypes(),
             Enumerable.Concat(
                     optional.GetArgTypes(),
                     exclude.GetArgTypes()));

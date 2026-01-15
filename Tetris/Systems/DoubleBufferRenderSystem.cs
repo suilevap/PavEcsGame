@@ -1,15 +1,9 @@
 ﻿using PavEcsGame.Components;
 using PavEcsGame;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using PavEcsSpec.EcsLite;
 using Leopotam.EcsLite;
 using PavEcsGame.Utils;
 using System.Diagnostics;
-using Leopotam.Ecs.Types;
 
 namespace Tetris.Systems
 {

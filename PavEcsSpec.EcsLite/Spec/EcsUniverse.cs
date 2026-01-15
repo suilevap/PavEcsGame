@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using Leopotam.EcsLite;
 
 namespace PavEcsSpec.EcsLite
@@ -60,7 +59,7 @@ namespace PavEcsSpec.EcsLite
         {
             return _requiredTypeToWorldId
                 .GroupBy(
-                    p => systems.GetWorld(GetName(p.Value)), 
+                    p => systems.GetWorld(GetName(p.Value)),
                     p => p.Key);
         }
 

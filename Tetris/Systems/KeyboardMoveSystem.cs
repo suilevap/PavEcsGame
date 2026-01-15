@@ -1,7 +1,6 @@
 ﻿using Leopotam.EcsLite;
 using PavEcsGame;
 using PavEcsGame.Components;
-using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
 using Tetris.Components;
 
@@ -22,7 +21,7 @@ class KeyboardMoveSystem : IEcsRunSystem, IEcsSystemSpec
         universe
             .Register(this)
             .Build(ref _spec);
-        
+
         _moveConfigs =
             new Dictionary<ConsoleKey, DirectionComponent>(){
                 { ConsoleKey.UpArrow, new DirectionComponent(0, -1) },
@@ -44,6 +43,7 @@ class KeyboardMoveSystem : IEcsRunSystem, IEcsSystemSpec
         {
             key = Console.ReadKey(true).Key;
         }
+        //key = (ConsoleKey)Console.In.Peek();
 
         if (_spec.Filter.IsEmpty())
             return;

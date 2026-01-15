@@ -1,4 +1,4 @@
-﻿using Leopotam.Ecs;
+﻿
 
 namespace PavEcsGame.Components
 {

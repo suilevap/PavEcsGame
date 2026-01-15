@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Text;
-using Leopotam.Ecs.Types;
 
 namespace PavEcsGame.Components
 {
@@ -117,7 +113,7 @@ namespace PavEcsGame.Components
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(PositionComponent other)
         {
-            return Value.Equals(other.Value);
+            return Int2.Equals(Value, other.Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

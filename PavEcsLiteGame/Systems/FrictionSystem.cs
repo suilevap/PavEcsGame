@@ -1,8 +1,7 @@
 using System;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
-using Leopotam.EcsLite;
+
 using PavEcsGame.Components;
+using Leopotam.EcsLite;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
 
@@ -13,8 +12,8 @@ namespace PavEcsGame.Systems
         private readonly TurnManager _turnManager;
         private TurnManager.SimSystemRegistration _reg;
         private readonly EcsFilterSpec<
-            EcsSpec<SpeedComponent, MoveFrictionComponent>, 
-            EcsSpec, 
+            EcsSpec<SpeedComponent, MoveFrictionComponent>,
+            EcsSpec,
             EcsSpec> _spec;
 
         public FrictionSystem(TurnManager turnManager, EcsUniverse universe)

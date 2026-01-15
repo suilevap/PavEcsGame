@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
+﻿using PavEcsGame.Components;
 using Leopotam.EcsLite;
-using PavEcsGame.Components;
 using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.Systems
@@ -13,7 +8,7 @@ namespace PavEcsGame.Systems
     {
         private EcsFilterSpec<
             EcsReadonlySpec<CollisionEvent<EcsEntity>>,
-            EcsSpec, 
+            EcsSpec,
             EcsSpec> _spec;
 
         private EcsEntityFactorySpec<EcsSpec<DestroyRequestTag, IsActiveTag>> _destroyFactorySpec;

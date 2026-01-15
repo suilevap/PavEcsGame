@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
-using Leopotam.Ecs.Types;
-using Leopotam.EcsLite;
 using PavEcsGame.Components;
+using Leopotam.EcsLite;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
-using PavEcsGame;
 using PavEcsGame.Utils;
 
 namespace PavEcsGame.Systems.Renders
@@ -55,7 +53,7 @@ namespace PavEcsGame.Systems.Renders
             {
                 return Symbol.ToString();
             }
-            
+
             public bool Equals(RenderItem other) => this == other;
 
             public override bool Equals(object? obj) => obj is RenderItem other && Equals(other);
@@ -78,11 +76,11 @@ namespace PavEcsGame.Systems.Renders
             .Inc<EcsReadonlySpec<MapLoadedEvent>> _mapLoadedSpec;
         private readonly EcsFilterSpec<
             EcsReadonlySpec<PositionComponent, SymbolComponent>,
-            EcsReadonlySpec<MarkAsRenderedTag, SpeedComponent>, 
+            EcsReadonlySpec<MarkAsRenderedTag, SpeedComponent>,
             EcsSpec> _itemsToRenderSpec;
         private readonly EcsFilterSpec<
             EcsSpec<AreaResultComponent<LightValueComponent>>,
-            EcsSpec, 
+            EcsSpec,
             EcsSpec> _lightToRenderSpec;
 
 
@@ -204,8 +202,8 @@ namespace PavEcsGame.Systems.Renders
                         item.Symbol.MainColor = lightColor;
                     }
 
-                    //item.BackgroundColor = visibility.HasFlag(VisibilityType.Visible) 
-                    //    ? ConsoleColor.Blue 
+                    //item.BackgroundColor = visibility.HasFlag(VisibilityType.Visible)
+                    //    ? ConsoleColor.Blue
                     //    : ConsoleColor.DarkBlue;
 
                     return item;
@@ -225,7 +223,7 @@ namespace PavEcsGame.Systems.Renders
                         continue;
                     var visibility = visibilityMap.Get(pos);
                     if (visibility.HasFlag(VisibilityType.Visible)
-                       || (!speedPool.Has(ent) && visibility.HasFlag(VisibilityType.Known))) 
+                       || (!speedPool.Has(ent) && visibility.HasFlag(VisibilityType.Known)))
                     {
                         ref readonly var symbol = ref symbolPool.Get(ent);
 
@@ -277,7 +275,7 @@ namespace PavEcsGame.Systems.Renders
         // 8   1000  bright black(dark grey)
         // 9   1001  bright blue
         //10   1010  bright green
-        //11   1011  bright cyan    
+        //11   1011  bright cyan
         //12   1100  bright red
         //13   1101  bright purple
         //14   1110  bright yellow

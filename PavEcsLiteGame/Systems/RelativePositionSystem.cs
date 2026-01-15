@@ -2,10 +2,6 @@
 using PavEcsGame.Components;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
-using PavEcsGame;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace PavEcsGame.Systems
 {

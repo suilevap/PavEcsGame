@@ -1,19 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
-using Leopotam.EcsLite;
+
 using PavEcsGame.Components;
+using Leopotam.EcsLite;
 using PavEcsGame.Components.Events;
 using PavEcsGame.Systems;
 using PavEcsGame.Systems.Managers;
 using PavEcsGame.Systems.Renders;
 using PavEcsSpec.EcsLite;
-using PavEcsGame;
 
 namespace PavEcsGame.GameLoop
 {
@@ -41,7 +36,7 @@ namespace PavEcsGame.GameLoop
             _systems
                 .MarkPerf(universe, "start")
                 .Add(turnManager)
-                .Add(new LoadMapSystem("Data/map1.txt", universe, map))
+                .Add(new LoadMapSystem("./Data/map1.txt", universe, map))
                 .Add(new SpawnEntitySystem(universe))
                 //.Add(new LoadMapSystem("Data/lightTest.txt", universe, map))
                 .Add(new TileSystem(universe, map))
