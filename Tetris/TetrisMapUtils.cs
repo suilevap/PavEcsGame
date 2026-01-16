@@ -11,11 +11,6 @@ namespace Tetris
             //var f3 = (figureData & 0b1111 << 8) >> 8;
             //var f2 = (figureData & 0b1111 << 4) >> 4;
             //var f1 = (figureData & 0b1111 << 0) >> 0;
-            if (yOffset + figure.Length > map.Data.Length)
-            {
-                return false;
-            }
-
             for (int i = 0; i < figure.Length; i++)
             {
                 var f = figure[i];
