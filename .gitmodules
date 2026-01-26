@@ -8,3 +8,7 @@
 	path = ecslite
 	url = https://github.com/Leopotam/ecslite.git
 	branch = develop
+[submodule "bt-tree"]
+	path = bt-tree
+	url = https://github.com/suilevap/bt-tree.git
+	branch = master

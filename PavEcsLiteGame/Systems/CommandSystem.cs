@@ -6,6 +6,7 @@ using DeBroglie.Topo;
 using Leopotam.EcsLite;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.Generated;
+using System.Linq;
 
 namespace PavEcsGame.Systems
 {
@@ -57,7 +58,7 @@ namespace PavEcsGame.Systems
             CreateMapDataComponent(fileName, lines);
         }
 
-        public async void GenerateMap(string fileName, string pattern)
+        public async void GenerateMap(string fileName, string patternFilename)
         {
             var lines = await File.ReadAllLinesAsync(fileName);
 
@@ -66,20 +67,38 @@ namespace PavEcsGame.Systems
             var width = lines[0].Length;
             var height = lines.Length;
             // Define some sample data
-            ITopoArray<char> sample = TopoArray.Create(new[]
-            {
-                new[]{ 'x', 'x', 'x'},
-                new[]{ '.', '.', 'x'},
-                new[]{ '.', '.', '.'},
-            }, periodic: false);
-            
+            var patternLines = (await File.ReadAllLinesAsync(patternFilename))
+                .Select(x=>x.ToArray())
+                .ToArray();
+
+            ITopoArray<char> sample = TopoArray.Create(patternLines, periodic: false);
+
+            //ITopoArray<char> sample = TopoArray.Create(new[]
+            //{
+            //    new[]{ '.', '.', 'x','.'},
+            //    new[]{ 'x', 'x', 'x','.'},
+            //    new[]{ 'x', '.', 'x','x'},
+            //    //fnew[]{ 'x', '.', '.','.'},
+
+            //}, periodic: false);
+
             // Specify the model used for generation
-            var model = new AdjacentModel(sample.ToTiles());
+            var tiles = sample.ToTiles();
+            //var model = new AdjacentModel(tiles);
+            var model = new OverlappingModel(2);
+            model.AddSample(tiles);
+
             // Set the output dimensions
             var topology = new GridTopology(width, height, periodic: false);
             // Acturally run the algorithm
             var propagator = new TilePropagator(model, topology);
             var status = propagator.Run();
+            int iterations = 0;
+            while(iterations++ < 100 && status != Resolution.Decided)
+            {
+                status = propagator.Run();
+            }
+
             if (status != Resolution.Decided) throw new InvalidDataException("Undecided");
             var output = propagator.ToValueArray<char>();
             // Display the results

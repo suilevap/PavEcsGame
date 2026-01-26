@@ -54,7 +54,10 @@ namespace PavEcsGame
 
         public void Clear()
         {
-            Array.Clear(_data, 0, _data.Length);
+            if (_data != null)
+            {
+                Array.Clear(_data, 0, _data.Length);
+            }
         }
         public void Fill(in T value)
         {
@@ -132,7 +135,10 @@ namespace PavEcsGame
 
         public void CopyFrom(MapData<T> fromData)
         {
-            Array.Copy(fromData._data, _data, _data.Length);
+            if (_data != null && fromData != null)
+            {
+                Array.Copy(fromData._data, _data, _data.Length);
+            }
         }
     }
 

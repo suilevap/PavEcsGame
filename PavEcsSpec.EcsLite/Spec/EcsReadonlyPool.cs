@@ -29,6 +29,21 @@ namespace PavEcsSpec.EcsLite
         }
     }
 
+    public readonly struct EcsAddOnlyPool<T>
+        where T : struct
+    {
+        private readonly EcsPool<T> _pool;
+
+        public EcsAddOnlyPool(EcsPool<T> pool)
+        {
+            _pool = pool;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref T Add(EcsUnsafeEntity entity) => ref _pool.Add(entity);
+
+    }
+
     //public readonly struct EcsWritePool<T>
     //    where T : struct
     //{

@@ -69,7 +69,7 @@ namespace PavEcsGame.GameLoop
 #if DEBUG
                 .Add(new VerifyMapSystem(_systems, map))
 #endif
-                //.Add(new DamageOnCollisionSystem(universe))
+                .Add(new DamageOnCollisionSystem(_systems))
                 .Add(new DestroyEntitySystem(turnManager, _systems))
                 .Add(new DirectionTileSystem(_systems))
 
@@ -99,9 +99,9 @@ namespace PavEcsGame.GameLoop
                 .Init();
 
             //cmdSystem.LoadMap("Data/map1.txt");
-            cmdSystem.LoadMap("Data/lightTest.txt");
+            //cmdSystem.LoadMap("Data/lightTest.txt");
 
-            //cmdSystem.GenerateMap("Data/lightTest.txt", "Data/wcf_pattern_test.txt");
+            cmdSystem.GenerateMap("Data/lightTest.txt", "Data/wcf_pattern_test.txt");
 
 
             PrintUniverseInfo(universe);
