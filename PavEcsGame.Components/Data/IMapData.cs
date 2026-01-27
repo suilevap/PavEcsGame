@@ -125,23 +125,24 @@ namespace PavEcsGame.Components
             return (pos.X + pos.Y % 2) % 2 == 0;
         }
 
-        public static TR CheckNeighbours<TV, TR>(
+        public static TR CheckNeighbours<TV, TR, TContent>(
             this IReadOnlyMapData<PositionComponent, TV> data,
             in TR initValue,
-            PositionComponent pos,
-            Func<TR, PositionComponent, TV, TR> mergeFunc)
+            in PositionComponent pos,
+            in TContent content,
+            Func<TR, PositionComponent, TV, TContent, TR> mergeFunc)
         {
             var p = pos;
             var result = initValue;
             p = pos + new PositionComponent(0, -1);
-            if (data.IsValid(p)) result = mergeFunc(result, p, data.Get(p));
+            if (data.IsValid(p)) result = mergeFunc(result, p, data.Get(p), content);
             p = pos + new PositionComponent(-1, 0);
-            if (data.IsValid(p)) result = mergeFunc(result, p, data.Get(p));
+            if (data.IsValid(p)) result = mergeFunc(result, p, data.Get(p), content);
 
             p = pos + new PositionComponent(1, 0);
-            if (data.IsValid(p)) result = mergeFunc(result, p, data.Get(p));
+            if (data.IsValid(p)) result = mergeFunc(result, p, data.Get(p), content);
             p = pos + new PositionComponent(0, 1);
-            if (data.IsValid(p)) result = mergeFunc(result, p, data.Get(p));
+            if (data.IsValid(p)) result = mergeFunc(result, p, data.Get(p), content);
 
             return result;
         }

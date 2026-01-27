@@ -92,9 +92,9 @@ namespace PavEcsGame.GameLoop
                 .Init();
 
             //cmdSystem.LoadMap("Data/map1.txt");
-            //cmdSystem.LoadMap("Data/lightTest.txt");
+            cmdSystem.LoadMap("Data/lightTest.txt");
 
-            cmdSystem.GenerateMap("Data/lightTest.txt", "Data/wcf_pattern_test.txt");
+            //cmdSystem.GenerateMap("Data/lightTest.txt", "Data/wcf_pattern_test.txt");
 
 
             PrintUniverseInfo(universe);
