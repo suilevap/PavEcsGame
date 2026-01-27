@@ -260,17 +260,16 @@ namespace PavEcsGame.Systems.Renders
                     var visibility = visibilityMap.Get(pos);
                     var light = lightValue;
 
-                    if (visibility.HasFlag(VisibilityType.Known))
+                    if ((visibility & VisibilityType.Known) != 0)
                     {
                         renderItem = Light(ref renderItem, ref light, visibility, in pos);
                     }
                     else
                     {
-                        if (visibilityMap.CheckNeighbours(
-                                false,
-                                pos,
-                                (r, p, v) => r || (v.HasFlag(VisibilityType.Known) &&
-                                                   _bufferCurrentFrame.GetRef(p).Symbol.Depth == Depth.Back)))
+                        if (visibilityMap.CheckNeighbours(false, pos, _bufferCurrentFrame, 
+                                (result, p, value, buffer) => 
+                                    result || (value & VisibilityType.Known) != 0 &&
+                                           buffer.GetRef(p).Symbol.Depth == Depth.Back))
                             renderItem = new RenderItem('?', ConsoleColor.DarkRed);
                     }
                 }

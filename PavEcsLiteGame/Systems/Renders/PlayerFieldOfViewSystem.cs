@@ -47,7 +47,19 @@ namespace PavEcsGame.Systems.Renders
                     result.Revision = fovComponent.Revision;
                     var data = new EntityData(ent.Pos(), ent.Dir());
 
-                    result.Data.Merge(filedOfView, data, VisibilityMerge);
+                    result.Data.Merge(filedOfView, data,
+                        (
+                            in EntityData d,
+                            in PositionComponent pos,
+                            ref VisibilityType sourceValue,
+                            in float targetValue) =>
+                        {
+                            if (targetValue > 0.1
+                               ) //&& PositionComponent.ScalarMul(pos - data.Position, data.Direction.Direction) >= 0)//todo proper angle check
+                                sourceValue |= VisibilityType.Visible | VisibilityType.Known;
+                            else
+                                sourceValue &= ~VisibilityType.Visible;
+                        });
                 }
             }
         }
