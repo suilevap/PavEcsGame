@@ -113,7 +113,7 @@ namespace PavEcsGame.Systems.Renders
             {
                 var lightValue = (byte)(targetValue * (1 - sqD * c.InvRadiusSq) * c.BasicParameters.Value);
 
-                if (sourceValue.LightType.HasFlag(c.BasicParameters.LightType))
+                if ((sourceValue.LightType & c.BasicParameters.LightType) != 0)
                 {
                     sourceValue.Value = (byte)Math.Min((sourceValue.Value + lightValue), 255);
                 }

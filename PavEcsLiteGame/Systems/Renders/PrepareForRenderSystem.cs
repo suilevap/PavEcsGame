@@ -167,7 +167,7 @@ namespace PavEcsGame.Systems.Renders
                     var visibility = visibilityMap.Get(pos);
                     var light = lightValue;
 
-                    if (visibility.HasFlag(VisibilityType.Known))
+                    if ((visibility & VisibilityType.Known) != 0)
                     {
                         renderItem = Light(ref renderItem, ref light, visibility, in pos);
                     }
@@ -176,7 +176,10 @@ namespace PavEcsGame.Systems.Renders
                         if (visibilityMap.CheckNeighbours(
                             false,
                             pos,
-                            (r, p, v) => r || (v.HasFlag(VisibilityType.Known) && _bufferCurrentFrame.GetRef(p).Symbol.Depth == Depth.Back)))
+                            _bufferCurrentFrame,
+                            (r, p, v, buffer) 
+                                => r || (((v & VisibilityType.Known) != 0) && 
+                                         buffer.GetRef(p).Symbol.Depth == Depth.Back)))
                         {
                             renderItem = new RenderItem('?', ConsoleColor.DarkRed);
                         }
@@ -191,7 +194,7 @@ namespace PavEcsGame.Systems.Renders
 
                     if (item.Symbol.IsEmpty)
                     {
-                        if (visibility.HasFlag(VisibilityType.Visible) || pos.Value.IsHexPos())
+                        if ((visibility & VisibilityType.Visible) != 0 || pos.Value.IsHexPos())
                         {
                             item.Symbol.Value = '.';
                             item.Symbol.MainColor = lightColor;
@@ -202,7 +205,7 @@ namespace PavEcsGame.Systems.Renders
                         item.Symbol.MainColor = lightColor;
                     }
 
-                    //item.BackgroundColor = visibility.HasFlag(VisibilityType.Visible)
+                    //item.BackgroundColor = (visibility & VisibilityType.Visible) != 0
                     //    ? ConsoleColor.Blue
                     //    : ConsoleColor.DarkBlue;
 
@@ -222,8 +225,8 @@ namespace PavEcsGame.Systems.Renders
                     if (!visibilityMap.IsValid(pos))
                         continue;
                     var visibility = visibilityMap.Get(pos);
-                    if (visibility.HasFlag(VisibilityType.Visible)
-                       || (!speedPool.Has(ent) && visibility.HasFlag(VisibilityType.Known)))
+                    if ((visibility & VisibilityType.Visible) != 0
+                       || (!speedPool.Has(ent) && (visibility & VisibilityType.Known) != 0))
                     {
                         ref readonly var symbol = ref symbolPool.Get(ent);
 
@@ -349,15 +352,15 @@ namespace PavEcsGame.Systems.Renders
                 return ConsoleColor.Black;
 
             int color = 0;
-            if (lightValue.LightType.HasFlag(LightType.Fire))
+            if ((lightValue.LightType & LightType.Fire) != 0)
             {
                 color |= (int)_fireColors.GetByRate(lightValue.Value);
             }
-            if (lightValue.LightType.HasFlag(LightType.Electricity))
+            if ((lightValue.LightType & LightType.Electricity) != 0)
             {
                 color |= (int)_electroColors.GetByRate(lightValue.Value);
             }
-            if (lightValue.LightType.HasFlag(LightType.Acid))
+            if ((lightValue.LightType & LightType.Acid) != 0)
             {
                 color |= (int)_acidColors.GetByRate(lightValue.Value);
             }
