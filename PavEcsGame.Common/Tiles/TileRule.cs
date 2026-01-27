@@ -4,20 +4,18 @@ namespace PavEcsGame.Tiles
 {
     public class TileRule
     {
-        public readonly char[] Symbols;
-
         public static TileRule Wall = new TileRule(
-            new byte[]{ (byte)'X', 210, 198, 201, 208, 186, 200, 204, 181, 187, 205, 203, 188, 185, 202, 206 });
+            new byte[] { (byte)'X', 210, 198, 201, 208, 186, 200, 204, 181, 187, 205, 203, 188, 185, 202, 206 });
+
+        public readonly char[] Symbols;
 
         public TileRule(byte[] symbols)
         {
             //Symbols = symbols;
             Symbols = new char[symbols.Length];
-            for (int i = 0; i < symbols.Length; i++)
-            {
-                Symbols[i] = (char) symbols[i];
-            }
+            for (var i = 0; i < symbols.Length; i++) Symbols[i] = (char)symbols[i];
         }
+
         public TileRule(char[] symbols)
         {
             Symbols = symbols;
@@ -35,35 +33,32 @@ namespace PavEcsGame.Tiles
                 return null;
             var lines = File.ReadAllLines(filename);
 
-            int[,] mask = new int[lines[0].Length, lines.Length];
-            char[] result = new char[16];
+            var mask = new int[lines[0].Length, lines.Length];
+            var result = new char[16];
 
-            for (int y = 0; y < lines.Length - 1; y++)
+            for (var y = 0; y < lines.Length - 1; y++)
+            for (var x = 0; x < lines[y].Length - 1; x++)
             {
-                for (int x = 0; x < lines[y].Length - 1; x++)
+                if (lines[y][x] == '.')
+                    continue;
+                ;
+                if (lines[y][x + 1] != '.')
                 {
-                    
-                    if (lines[y][x] == '.')
-                        continue;
-                    ;
-                    if (lines[y][x + 1] != '.')
-                    {
-                        mask[x, y] |= 1 << 0;
-                        mask[x + 1, y] |= 1<<2;
-                    }
-
-                    if (lines[y + 1][x] != '.')
-                    {
-                        mask[x, y] |= 1<<1;
-                        mask[x, y + 1] |= 1 << 3;
-                    }
-
-                    var m = mask[x, y];
-                    result[m] = lines[y][x];
+                    mask[x, y] |= 1 << 0;
+                    mask[x + 1, y] |= 1 << 2;
                 }
-            }
-            return new TileRule(result);
 
+                if (lines[y + 1][x] != '.')
+                {
+                    mask[x, y] |= 1 << 1;
+                    mask[x, y + 1] |= 1 << 3;
+                }
+
+                var m = mask[x, y];
+                result[m] = lines[y][x];
+            }
+
+            return new TileRule(result);
         }
     }
 }

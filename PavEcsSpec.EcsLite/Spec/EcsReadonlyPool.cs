@@ -1,8 +1,5 @@
-﻿using Leopotam.EcsLite;
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
+﻿using System.Runtime.CompilerServices;
+using Leopotam.EcsLite;
 
 namespace PavEcsSpec.EcsLite
 {
@@ -17,10 +14,16 @@ namespace PavEcsSpec.EcsLite
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref readonly T Get(EcsUnsafeEntity entity) => ref _pool.Get(entity);
+        public ref readonly T Get(EcsUnsafeEntity entity)
+        {
+            return ref _pool.Get(entity);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Has(EcsUnsafeEntity entity) => _pool.Has(entity);
+        public bool Has(EcsUnsafeEntity entity)
+        {
+            return _pool.Has(entity);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator EcsReadonlyPool<T>(in EcsPool<T> pool)
@@ -40,8 +43,10 @@ namespace PavEcsSpec.EcsLite
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref T Add(EcsUnsafeEntity entity) => ref _pool.Add(entity);
-
+        public ref T Add(EcsUnsafeEntity entity)
+        {
+            return ref _pool.Add(entity);
+        }
     }
 
     //public readonly struct EcsWritePool<T>

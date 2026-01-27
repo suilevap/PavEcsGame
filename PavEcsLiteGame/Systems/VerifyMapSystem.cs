@@ -1,19 +1,13 @@
-﻿using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
-using PavEcsGame.Components;
-using PavEcsGame.GameLoop;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using Leopotam.EcsLite;
+using PavEcsGame.Components;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
 using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    partial class VerifyMapSystem : IEcsRunSystem, IEcsSystemSpec
+    internal partial class VerifyMapSystem : IEcsRunSystem, IEcsSystemSpec
     {
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
@@ -22,8 +16,8 @@ namespace PavEcsGame.Systems
         {
             public partial ref readonly PositionComponent Pos();
             public partial ref readonly ColliderComponent Collider();
-
         }
+
         [Entity]
         private readonly partial struct MapLoaded
         {
@@ -36,11 +30,11 @@ namespace PavEcsGame.Systems
             _map = map;
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             Debug.Assert(_providers.MapLoadedProvider.Filter.GetEntitiesCount() <= 1,
                 "Too many",
-               "{0} is expected to be no more than one per cycle", nameof(MapLoadedEvent));
+                "{0} is expected to be no more than one per cycle", nameof(MapLoadedEvent));
 
             foreach (var ent in _providers.EntProvider)
             {
@@ -49,6 +43,7 @@ namespace PavEcsGame.Systems
 
                 Debug.Assert(mapEnt.EqualsTo(ent.Id), "Not stored entity", "Expected: {0}, Actual:{1}", ent.Id, mapEnt);
             }
+
             foreach (var (pos, ent) in _map.GetAll())
             {
                 if (!ent.IsAlive())
@@ -61,6 +56,5 @@ namespace PavEcsGame.Systems
                     "Stored ent without required components", "ent:{0}", ent);
             }
         }
-
     }
 }

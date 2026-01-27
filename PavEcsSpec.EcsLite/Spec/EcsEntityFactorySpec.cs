@@ -9,16 +9,20 @@ namespace PavEcsSpec.EcsLite
 
         public EcsWorld World => _main.World;
         public TPools Pools => _main.Pools;
+
         public EcsUnsafeEntity NewUnsafeEntity()
         {
             return new EcsUnsafeEntity(World.NewEntity());
         }
-        public bool IsBelongToWorld(EcsWorld world) => World == world;
+
+        public bool IsBelongToWorld(EcsWorld world)
+        {
+            return World == world;
+        }
 
         internal EcsEntityFactorySpec(EcsEntityFactorySpecBuilder<TPools> main)
         {
             _main = main;
         }
-
     }
 }

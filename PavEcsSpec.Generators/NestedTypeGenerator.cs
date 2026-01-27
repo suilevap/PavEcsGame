@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 
 namespace PavEcsSpec.Generators
 {
@@ -10,9 +9,9 @@ namespace PavEcsSpec.Generators
     {
         public static Dictionary<ITypeSymbol, string> WrapNestedTypes(Dictionary<ITypeSymbol, string> generatedCode)
         {
-            Dictionary<ITypeSymbol, StringBuilder> parents = new Dictionary<ITypeSymbol, StringBuilder>(SymbolEqualityComparer.IncludeNullability);
+            var parents = new Dictionary<ITypeSymbol, StringBuilder>(SymbolEqualityComparer.IncludeNullability);
 
-            foreach (KeyValuePair<ITypeSymbol, string> pair in generatedCode)
+            foreach (var pair in generatedCode)
             {
                 var parentType = pair.Key.ContainingType ?? pair.Key;
                 if (!parents.TryGetValue(parentType, out var sb))
@@ -24,20 +23,17 @@ namespace PavEcsSpec.Generators
                 sb.AppendLine(pair.Value);
             }
 
-            Dictionary<ITypeSymbol, string> result = new Dictionary<ITypeSymbol, string>(SymbolEqualityComparer.IncludeNullability);
+            var result = new Dictionary<ITypeSymbol, string>(SymbolEqualityComparer.IncludeNullability);
 
 
-            foreach (KeyValuePair<ITypeSymbol, StringBuilder> pair in parents)
+            foreach (var pair in parents)
             {
-                StringBuilder sb = new StringBuilder();
+                var sb = new StringBuilder();
                 var type = pair.Key;
-             
-                sb.Append($"partial {(type.IsReferenceType? "class": "struct")} {type.Name}" );
-                if (type is INamedTypeSymbol namedType && namedType.Arity > 0)
-                {
 
-                    sb.AppendLine($"<{(string.Join(",",namedType.TypeParameters))}>");
-                }
+                sb.Append($"partial {(type.IsReferenceType ? "class" : "struct")} {type.Name}");
+                if (type is INamedTypeSymbol namedType && namedType.Arity > 0)
+                    sb.AppendLine($"<{string.Join(",", namedType.TypeParameters)}>");
                 sb.AppendLine(@"{");
                 //todo intend
                 sb.AppendLine(pair.Value.ToString().PadLeftAllLines(4));
@@ -45,16 +41,16 @@ namespace PavEcsSpec.Generators
 
                 if (type.ContainingType == null)
                 {
-                    StringBuilder finalSb = new StringBuilder();
+                    var finalSb = new StringBuilder();
                     var ns = type.ContainingNamespace.ToString();
                     //todo append usings
-                    
+
                     finalSb.AppendLine(@"
 using System;
 using System.Runtime.CompilerServices;
 ");
 
-                    finalSb.AppendLine((String.IsNullOrWhiteSpace(ns) ? null : $"namespace {ns}"));
+                    finalSb.AppendLine(string.IsNullOrWhiteSpace(ns) ? null : $"namespace {ns}");
                     finalSb.AppendLine(@"{");
                     finalSb.AppendLine(sb.ToString().PadLeftAllLines(4));
                     finalSb.AppendLine(@"}");
@@ -88,8 +84,5 @@ using System.Runtime.CompilerServices;
 
             return result;
         }
-        
     }
-
-   
 }

@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 
 namespace PavEcsGame.Components
 {
-
     public struct SymbolComponent
     {
-        public static readonly SymbolComponent Empty = new SymbolComponent() { Value = ' ' };
+        public static readonly SymbolComponent Empty = new() { Value = ' ' };
 
         public char Value;
         public Depth Depth;
@@ -22,9 +18,12 @@ namespace PavEcsGame.Components
             MainColor = ConsoleColor.White;
         }
 
-        public bool IsEmpty => Value == SymbolComponent.Empty.Value || Value == default;
+        public bool IsEmpty => Value == Empty.Value || Value == default;
 
-        public override string ToString() =>$"Symbol:{Value}";
+        public override string ToString()
+        {
+            return $"Symbol:{Value}";
+        }
     }
 
     public enum Depth

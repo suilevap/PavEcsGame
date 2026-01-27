@@ -1,29 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.SymbolStore;
 using System.Linq;
 using System.Text;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace PavEcsSpec.Generators
 {
     internal class EntityProviderGenerator
     {
-
         public string GenerateEntityCode(EcsEntityDescriptor entityDescr, string worldName)
         {
+            var accessToDataCode = new StringBuilder();
+            var providerFieldsCode = new StringBuilder();
+            var initFieldsCode = new StringBuilder();
+            var extraArgumentsDeclaration = new StringBuilder();
+            var extraArgumentsPass = new StringBuilder();
 
-            StringBuilder accessToDataCode = new StringBuilder();
-            StringBuilder providerFieldsCode = new StringBuilder();
-            StringBuilder initFieldsCode = new StringBuilder();
-            StringBuilder extraArgumentsDeclaration = new StringBuilder();
-            StringBuilder extraArgumentsPass = new StringBuilder();
+            var initRequiredComponents = new StringBuilder();
+            var ensureRequiredComponents = new StringBuilder();
 
-            StringBuilder initRequiredComponents = new StringBuilder();
-            StringBuilder ensureRequiredComponents = new StringBuilder();
-
-            StringBuilder checkRequiredComponentsFormat = new StringBuilder();
+            var checkRequiredComponentsFormat = new StringBuilder();
 
 
             foreach (var baseEntityDescriptor in entityDescr.BaseEntities)
@@ -48,7 +42,8 @@ public  {baseEntityDescriptor.EntityType} DEBUG_{baseEntityDescriptor.Method.Nam
                 accessToDataCode.AppendLine(debugProp);
 
 
-                providerFieldsCode.AppendLine($"public readonly {baseEntityDescriptor.EntityType}.Provider {providerFieldName};");
+                providerFieldsCode.AppendLine(
+                    $"public readonly {baseEntityDescriptor.EntityType}.Provider {providerFieldName};");
 
                 extraArgumentsDeclaration.Append($", {baseEntityDescriptor.EntityType}.Provider {providerName}");
                 extraArgumentsPass.Append($", {providerName}");
@@ -59,7 +54,6 @@ public  {baseEntityDescriptor.EntityType} DEBUG_{baseEntityDescriptor.Method.Nam
                 ensureRequiredComponents.AppendLine($"{providerFieldName}.Ensure(entId);");
 
                 checkRequiredComponentsFormat.AppendLine($"if (!{providerFieldName}.Is(entId)) {{0}}");
-
             }
 
 
@@ -69,7 +63,9 @@ public  {baseEntityDescriptor.EntityType} DEBUG_{baseEntityDescriptor.Method.Nam
                 if (componentDescriptor.ReturnType == null)
                 {
                     var readonlyReturn =
-                    componentDescriptor.AccessKind == ComponentDescriptorAccessKind.IncludeReadonly ? "readonly" : string.Empty;
+                        componentDescriptor.AccessKind == ComponentDescriptorAccessKind.IncludeReadonly
+                            ? "readonly"
+                            : string.Empty;
                     var methodDeclaration = $@"
 public partial ref {readonlyReturn} {componentDescriptor.ComponentType} {componentDescriptor.Method.Name}()
 {{
@@ -86,7 +82,6 @@ public {componentDescriptor.ComponentType} Debug_{componentDescriptor.Method.Nam
 ";
                     accessToDataCode.AppendLine(methodDeclaration);
                     accessToDataCode.AppendLine(property);
-
                 }
                 else
                 {
@@ -109,20 +104,26 @@ public {componentDescriptor.ReturnType} Debug_{componentDescriptor.Method.Name}
                     accessToDataCode.AppendLine(property);
                 }
 
-                providerFieldsCode.AppendLine($"public readonly Leopotam.EcsLite.EcsPool<{componentDescriptor.ComponentType}> {poolName};");
+                providerFieldsCode.AppendLine(
+                    $"public readonly Leopotam.EcsLite.EcsPool<{componentDescriptor.ComponentType}> {poolName};");
 
 
                 initFieldsCode.AppendLine($"{poolName} = world.GetPool<{componentDescriptor.ComponentType}>();");
-
             }
 
-            static string GetPoolName(in ComponentDescriptor componentDescriptor) => $"_{componentDescriptor.Method.Name.ToLowerInvariant()}Pool";
+            static string GetPoolName(in ComponentDescriptor componentDescriptor)
+            {
+                return $"_{componentDescriptor.Method.Name.ToLowerInvariant()}Pool";
+            }
 
-            static string GetProviderName(in BaseEntityDescriptor baseEntDescriptor) => $"{baseEntDescriptor.Method.Name.ToLowerInvariant()}Provider";
+            static string GetProviderName(in BaseEntityDescriptor baseEntDescriptor)
+            {
+                return $"{baseEntDescriptor.Method.Name.ToLowerInvariant()}Provider";
+            }
 
 
             var name = entityDescr.EntityType.Name;
-            StringBuilder providerMethods = new StringBuilder();
+            var providerMethods = new StringBuilder();
             if (!entityDescr.SkipFilter)
             {
                 providerFieldsCode.AppendLine("private readonly Leopotam.EcsLite.EcsFilter _filter;");
@@ -165,6 +166,7 @@ public struct Enumerator : IDisposable
 }}
 ");
             }
+
             string providerCode;
 
 
@@ -178,8 +180,8 @@ public struct Enumerator : IDisposable
 
                     initRequiredComponents.AppendLine(add);
                     checkRequiredComponentsFormat.AppendLine(check);
-                    
-                    ensureRequiredComponents.AppendLine(String.Format(check, add));
+
+                    ensureRequiredComponents.AppendLine(string.Format(check, add));
                 }
                 else if (componentDescriptor.AccessKind == ComponentDescriptorAccessKind.Exclude)
                 {
@@ -267,7 +269,7 @@ public struct Enumerator : IDisposable
 
             var result = @$"
 /* 
-{entityDescr.ToString()}
+{entityDescr}
 */
 private readonly partial struct {name}
 {{
@@ -287,14 +289,14 @@ private readonly partial struct {name}
 
     public Leopotam.EcsLite.EcsPackedEntityWithWorld Id => Leopotam.EcsLite.EcsEntityExtensions.PackEntityWithWorld(_provider._world, _ent);
 
-    public static Provider Create(Leopotam.EcsLite.EcsSystems systems{extraArgumentsDeclaration}) 
+    public static Provider Create(Leopotam.EcsLite.IEcsSystems systems{extraArgumentsDeclaration}) 
     {{
         const string worldName = ""{worldName}"";
 
         return Create(worldName, systems{extraArgumentsPass});
     }}
 
-    public static Provider Create(string worldName, Leopotam.EcsLite.EcsSystems systems{extraArgumentsDeclaration}) 
+    public static Provider Create(string worldName, Leopotam.EcsLite.IEcsSystems systems{extraArgumentsDeclaration}) 
     {{
         var world = systems.GetWorld(worldName);
         if (world == null)
@@ -321,26 +323,22 @@ private readonly partial struct {name}
         private static string GetFilterCode(EcsEntityDescriptor entityDescr)
         {
             var includes = entityDescr.Components.Where(x => x.AccessKind == ComponentDescriptorAccessKind.Include
-                                              || x.AccessKind == ComponentDescriptorAccessKind.IncludeReadonly)
+                                                             || x.AccessKind == ComponentDescriptorAccessKind
+                                                                 .IncludeReadonly)
                 .ToArray();
             var excludes = entityDescr.Components.Where(x => x.AccessKind == ComponentDescriptorAccessKind.Exclude)
                 .ToArray();
             if (!includes.Any())
-            {
-                throw new InvalidOperationException($"Entity {entityDescr.EntityType} should have at leas one required component");
-            }
-            StringBuilder filterCode = new StringBuilder();
+                throw new InvalidOperationException(
+                    $"Entity {entityDescr.EntityType} should have at leas one required component");
+            var filterCode = new StringBuilder();
 
             filterCode.Append($"world.Filter<{includes.First().ComponentType}>()");
             foreach (var componentDescriptor in includes.Skip(1))
-            {
                 filterCode.Append($".Inc<{componentDescriptor.ComponentType}>()");
-            }
             foreach (var componentDescriptor in excludes)
-            {
                 filterCode.Append($".Exc<{componentDescriptor.ComponentType}>()");
-            }
-            filterCode.Append($".End()");
+            filterCode.Append(".End()");
             return filterCode.ToString();
         }
     }

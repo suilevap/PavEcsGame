@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System;
 
 namespace PavEcsGame.Utils
 {
@@ -8,7 +6,7 @@ namespace PavEcsGame.Utils
     {
         public static void Swap<T>(ref T a, ref T b)
         {
-            T tmp = a;
+            var tmp = a;
             a = b;
             b = tmp;
         }
@@ -17,6 +15,7 @@ namespace PavEcsGame.Utils
         {
             return data[rnd.Next(data.Length)];
         }
+
         public static T GetByRate<T>(this T[] data, float rate)
         {
             return data[(int)(data.Length * rate - 0.5f)];
@@ -24,19 +23,17 @@ namespace PavEcsGame.Utils
 
         public static T GetByRate<T>(this T[] data, byte rate)
         {
-            return data[(data.Length * rate / 256)];
+            return data[data.Length * rate / 256];
         }
+
         public static char GetByRate(this string data, byte rate)
         {
-            return data[(data.Length * rate / 256)];
+            return data[data.Length * rate / 256];
         }
 
         public static void EnsureSize<T>(ref T[] result, int totalSize) where T : struct
         {
-            if (result == null || result.Length < totalSize)
-            {
-                Array.Resize(ref result, totalSize);
-            }
+            if (result == null || result.Length < totalSize) Array.Resize(ref result, totalSize);
         }
     }
 }

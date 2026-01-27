@@ -1,7 +1,6 @@
-﻿using Microsoft.CodeAnalysis;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
+using Microsoft.CodeAnalysis;
 
 namespace PavEcsSpec.Generators
 {
@@ -17,21 +16,23 @@ namespace PavEcsSpec.Generators
                 var universeName = pair.Key;
                 var fieldName = !string.IsNullOrEmpty(universeName) ? universeName : "Default";
 
-                universeSwitch.AppendLine($@"case ""{universeName ?? String.Empty}"" :");
+                universeSwitch.AppendLine($@"case ""{universeName ?? string.Empty}"" :");
                 universeSwitch.AppendLine($@"   return {fieldName};");
-                StringBuilder mapping = new StringBuilder();
+                var mapping = new StringBuilder();
                 foreach (var typeAndWorld in pair.Value)
                 {
                     var type = typeAndWorld.Key;
 
-                    if (type.DeclaredAccessibility == Accessibility.Private 
-                        || type.ContainingType?.DeclaredAccessibility == Accessibility.Private) //todo: do we need to check more levels?
+                    if (type.DeclaredAccessibility == Accessibility.Private
+                        || type.ContainingType?.DeclaredAccessibility ==
+                        Accessibility.Private) //todo: do we need to check more levels?
                         continue;
                     if (type is ITypeParameterSymbol)
                         continue;
-                    
+
                     mapping.AppendLine($@"{{ typeof({typeAndWorld.Key}),""{typeAndWorld.Value}"" }},");
                 }
+
                 mapsCode.AppendLine($@"
 public static TypeToWorldNameMap {fieldName} = new TypeToWorldNameMap()
 {{
@@ -41,6 +42,7 @@ public static TypeToWorldNameMap {fieldName} = new TypeToWorldNameMap()
     }}
 }};");
             }
+
             return $@"
 #nullable disable
 using System;
@@ -67,15 +69,17 @@ namespace PavEcsSpec.Generated
         }}
 
 {mapsCode.ToString().PadLeftAllLines(4 * 2)}" +
-        (wolrdNameMap.Count != 0 ? @"
+                   (wolrdNameMap.Count != 0
+                       ? @"
         private Dictionary<Type, string> _map;
         public string GetWorld<T>() where T : struct => _map[typeof(T)];
 
-        " : @"
+        "
+                       : @"
         public string GetWorld<T>() where T : struct => null;") +
-        @$"
-    }}
-}}";
+                   @"
+    }
+}";
         }
     }
 }

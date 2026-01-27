@@ -1,9 +1,5 @@
-﻿using System;
-using System.Diagnostics;
-using Leopotam.EcsLite;
-using PavEcsGame;
+﻿using Leopotam.EcsLite;
 using PavEcsGame.Components;
-using PavEcsGame.Components.Events;
 using PavEcsGame.Systems;
 using PavEcsSpec.Generated;
 
@@ -11,31 +7,19 @@ namespace GenerateTest
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            GameMainContainer game = new GameMainContainer();
+            var game = new GameMainContainer();
             game.Start();
-            while (game.IsAlive)
-            {
-                game.Update();
-            }
+            while (game.IsAlive) game.Update();
         }
     }
 
     internal partial class GameMainContainer
     {
-        private readonly EcsWorld _world;
-        private readonly EcsSystems _systems;
         private readonly Providers _providers;
-
-        public bool IsAlive => _world?.IsAlive() ?? false;
-
-        public GameMainContainer()
-        {
-            _world = new EcsWorld();
-            _systems = new EcsSystems(_world, "Root");
-            _providers = new Providers(_systems);
-        }
+        private readonly EcsSystems _systems;
+        private readonly EcsWorld _world;
 
         [Entity]
         private partial struct SpawEnt
@@ -44,10 +28,18 @@ namespace GenerateTest
             public partial OptionalComponent<SpeedComponent> Speed();
         }
 
+        public GameMainContainer()
+        {
+            _world = new EcsWorld();
+            _systems = new EcsSystems(_world, "Root");
+            _providers = new Providers(_systems);
+        }
+
+        public bool IsAlive => _world?.IsAlive() ?? false;
+
         public void Start()
         {
-
-            _systems.Add(new EmptySystem(_systems));
+            _systems.Add(new EmptySystem());
             _systems.Add(new TestSystem(_systems));
 
             _systems
@@ -55,17 +47,14 @@ namespace GenerateTest
 
             //var factory = SpawEnt.Create(_systems);
 
-            for (int i = 0; i < 100000; i++)
+            for (var i = 0; i < 100000; i++)
             {
                 //var newEnt = _world.NewEntity();
                 //_world.GetPool<PositionComponent>().Add(newEnt).Value = new (i,1)
                 var ent = _providers.SpawEntProvider.New();
-                ent.Pos().Value = new(i, 1);
-                if (i % 4 == 0)
-                {
-                    ent.Speed().Ensure() = new(i, 1);
-                    //_world.GetPool<SpeedComponent>().Add(newEnt) = new(i, 1);
-                }
+                ent.Pos().Value = new Int2(i, 1);
+                if (i % 4 == 0) ent.Speed().Ensure() = new SpeedComponent(i, 1);
+                //_world.GetPool<SpeedComponent>().Add(newEnt) = new(i, 1);
             }
         }
 
@@ -74,6 +63,5 @@ namespace GenerateTest
         {
             _systems.Run();
         }
-
     }
 }

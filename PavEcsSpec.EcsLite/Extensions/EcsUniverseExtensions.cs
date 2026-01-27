@@ -1,21 +1,11 @@
-﻿using System.Diagnostics;
-using System.Text;
-using System.Linq;
-
-
-namespace PavEcsSpec.EcsLite
+﻿namespace PavEcsSpec.EcsLite
 {
     public static class EcsUniverseExtensions
     {
-        public static EcsSystemSpecRegister Register(this EcsUniverse universe, IEcsSystemSpec system)
-        {
-            return new EcsSystemSpecRegister(universe, system);
-        }
-
         public class EcsSystemSpecRegister
         {
-            private IEcsSystemSpec _system;
-            private EcsUniverse _universe;
+            private readonly IEcsSystemSpec _system;
+            private readonly EcsUniverse _universe;
 
             public EcsSystemSpecRegister(EcsUniverse universe, IEcsSystemSpec system)
             {
@@ -25,7 +15,6 @@ namespace PavEcsSpec.EcsLite
 
             public EcsSystemSpecRegister Build<TInclude, TOptional, TExclude>(
                 ref EcsFilterSpec<TInclude, TOptional, TExclude> spec)
-
                 where TInclude : struct, IHasBuilder<TInclude>, IEcsSpec
                 where TOptional : struct, IHasBuilder<TOptional>, IEcsSpec
                 where TExclude : struct, IHasBuilder<TExclude>, IEcsSpec
@@ -41,9 +30,9 @@ namespace PavEcsSpec.EcsLite
                 where TOptional : struct, IHasBuilder<TOptional>
                 where TExclude : struct, IHasBuilder<TExclude>
             {
-                var includeBuilder = (new TInclude()).GetBuilder();
-                var optionalBuilder = (new TOptional()).GetBuilder();
-                var excludeBuilder = (new TExclude()).GetBuilder();
+                var includeBuilder = new TInclude().GetBuilder();
+                var optionalBuilder = new TOptional().GetBuilder();
+                var excludeBuilder = new TExclude().GetBuilder();
                 var main = _universe.CreateFilterSpec(_system, includeBuilder, optionalBuilder, excludeBuilder);
                 return main;
             }
@@ -68,7 +57,6 @@ namespace PavEcsSpec.EcsLite
             }
 
             public EcsSystemSpecRegister Build<TInclude, TOptional, TExclude>(
-
                 ref EcsFilterSpec.Inc<TInclude>.Opt<TOptional>.Exc<TExclude> spec)
                 where TInclude : struct, IHasBuilder<TInclude>, IEcsSpec
                 where TOptional : struct, IHasBuilder<TOptional>, IEcsSpec
@@ -80,7 +68,6 @@ namespace PavEcsSpec.EcsLite
             }
 
             public EcsSystemSpecRegister Build<TInclude, TExclude>(
-
                 ref EcsFilterSpec.Inc<TInclude>.Exc<TExclude> spec)
                 where TInclude : struct, IHasBuilder<TInclude>, IEcsSpec
                 where TExclude : struct, IHasBuilder<TExclude>, IEcsSpec
@@ -91,7 +78,6 @@ namespace PavEcsSpec.EcsLite
             }
 
             public EcsSystemSpecRegister Build<TReadonlyInclude, TInclude>(
-
                 ref EcsFilterSpec.Inc<TReadonlyInclude, TInclude> spec)
                 where TReadonlyInclude : struct, IHasBuilder<TReadonlyInclude>, IEcsReadonlySpec
                 where TInclude : struct, IHasBuilder<TInclude>, IEcsSpec
@@ -102,7 +88,6 @@ namespace PavEcsSpec.EcsLite
             }
 
             public EcsSystemSpecRegister Build<TReadonlyInclude, TInclude, TOptional>(
-
                 ref EcsFilterSpec.Inc<TReadonlyInclude, TInclude>.Opt<TOptional> spec)
                 where TReadonlyInclude : struct, IHasBuilder<TReadonlyInclude>, IEcsReadonlySpec
                 where TInclude : struct, IHasBuilder<TInclude>, IEcsSpec
@@ -114,7 +99,6 @@ namespace PavEcsSpec.EcsLite
             }
 
             public EcsSystemSpecRegister Build<TReadonlyInclude, TInclude, TOptional, TExclude>(
-
                 ref EcsFilterSpec.Inc<TReadonlyInclude, TInclude>.Opt<TOptional>.Exc<TExclude> spec)
                 where TReadonlyInclude : struct, IHasBuilder<TReadonlyInclude>, IEcsReadonlySpec
                 where TInclude : struct, IHasBuilder<TInclude>, IEcsSpec
@@ -127,7 +111,6 @@ namespace PavEcsSpec.EcsLite
             }
 
             public EcsSystemSpecRegister Build<TReadonlyInclude, TInclude, TExclude>(
-
                 ref EcsFilterSpec.Inc<TReadonlyInclude, TInclude>.Exc<TExclude> spec)
                 where TReadonlyInclude : struct, IHasBuilder<TReadonlyInclude>, IEcsReadonlySpec
                 where TInclude : struct, IHasBuilder<TInclude>, IEcsSpec
@@ -140,25 +123,23 @@ namespace PavEcsSpec.EcsLite
 
 
             public EcsSystemSpecRegister Build<TPools>(
-
                 ref EcsEntityFactorySpec<TPools> spec)
                 where TPools : struct, IHasBuilder<TPools>
             {
-                var poolsBuilder = (new TPools()).GetBuilder();
+                var poolsBuilder = new TPools().GetBuilder();
                 var main = _universe.CreateEntityFactorySpec(_system, poolsBuilder);
                 spec = new EcsEntityFactorySpec<TPools>(main);
                 return this;
             }
 
             public EcsSystemSpecRegister Build<TPools, TPools2>(
-
                 in EcsEntityFactorySpec<TPools2> parentSpec,
                 ref EcsEntityFactorySpec<TPools> spec)
                 where TPools : struct, IHasBuilder<TPools>
                 where TPools2 : struct, IHasBuilder<TPools2>
             {
-                var poolsBuilder = (new TPools()).GetBuilder();
-                var parentPoolsBuilder = (new TPools2()).GetBuilder();
+                var poolsBuilder = new TPools().GetBuilder();
+                var parentPoolsBuilder = new TPools2().GetBuilder();
                 var main = _universe.CreateEntityFactorySpec(_system, poolsBuilder, parentPoolsBuilder);
                 spec = new EcsEntityFactorySpec<TPools>(main);
 
@@ -166,5 +147,9 @@ namespace PavEcsSpec.EcsLite
             }
         }
 
+        public static EcsSystemSpecRegister Register(this EcsUniverse universe, IEcsSystemSpec system)
+        {
+            return new EcsSystemSpecRegister(universe, system);
+        }
     }
 }

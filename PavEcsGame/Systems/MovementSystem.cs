@@ -1,9 +1,8 @@
-﻿using System;
+using PavEcsGame.Components;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
-using PavEcsGame.Components;
+
 using PavEcsGame.Components.SystemComponents;
 using PavEcsGame.Systems.Managers;
 

@@ -1,6 +1,6 @@
-﻿using Leopotam.Ecs;
-
-namespace PavEcsGame.Components
+﻿namespace PavEcsGame.Components
 {
-    public struct MarkAsRenderedTag : IEcsIgnoreInFilter { };
+    public struct MarkAsRenderedTag : IEcsIgnoreInFilter
+    {
+    }
 }

@@ -7,7 +7,6 @@ namespace PavEcsGame
 {
     public readonly struct EcsEntity : IEntity, IEquatable<EcsEntity>
     {
-
         private readonly EcsPackedEntityWithWorld _ent;
 
         public EcsEntity(EcsPackedEntityWithWorld ent)
@@ -26,14 +25,21 @@ namespace PavEcsGame
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(in EcsEntity ent1, in EcsEntity ent2) =>
-            Leopotam.EcsLite.EcsEntityExtensions.EqualsTo(ent1, ent2);
+        public static bool operator ==(in EcsEntity ent1, in EcsEntity ent2)
+        {
+            return EcsEntityExtensions.EqualsTo(ent1, ent2);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(in EcsEntity ent1, in EcsEntity ent2) =>
-            !Leopotam.EcsLite.EcsEntityExtensions.EqualsTo(ent1, ent2);
+        public static bool operator !=(in EcsEntity ent1, in EcsEntity ent2)
+        {
+            return !EcsEntityExtensions.EqualsTo(ent1, ent2);
+        }
 
-        public override string ToString() => _ent.ToString() ?? "<empty>";
+        public override string ToString()
+        {
+            return _ent.ToString() ?? "<empty>";
+        }
 
         public bool Equals(EcsEntity other)
         {
@@ -49,6 +55,5 @@ namespace PavEcsGame
         {
             return _ent.GetHashCode();
         }
-
     }
 }

@@ -1,7 +1,6 @@
-﻿
-namespace PavEcsGame.Components
+﻿namespace PavEcsGame.Components
 {
-    interface IEcsIgnoreInFilter : ITag
+    internal interface IEcsIgnoreInFilter : ITag
     {
     }
 }

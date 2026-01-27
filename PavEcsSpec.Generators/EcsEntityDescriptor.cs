@@ -1,9 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace PavEcsSpec.Generators
 {
@@ -21,6 +21,7 @@ namespace PavEcsSpec.Generators
         Filter,
         Factory
     }
+
     public readonly struct ComponentDescriptor
     {
         public ITypeSymbol ComponentType { get; }
@@ -42,6 +43,7 @@ namespace PavEcsSpec.Generators
             AccessKind = accessType;
             ReturnType = returnType;
         }
+
         public override string ToString()
         {
             return $"{ReturnType} {ComponentType} {AccessKind} {Method}";
@@ -61,6 +63,7 @@ namespace PavEcsSpec.Generators
             EntityType = type;
             Method = method;
         }
+
         public override string ToString()
         {
             return $"{EntityType} {Method}";
@@ -69,9 +72,8 @@ namespace PavEcsSpec.Generators
 
     internal class EcsEntityDescriptor
     {
-        private readonly List<ComponentDescriptor> _components = new List<ComponentDescriptor>();
-
-        private readonly List<BaseEntityDescriptor> _baseEntitiesDescriptors = new List<BaseEntityDescriptor>();
+        private readonly List<BaseEntityDescriptor> _baseEntitiesDescriptors = new();
+        private readonly List<ComponentDescriptor> _components = new();
         public StructDeclarationSyntax Declaration;
 
         public ITypeSymbol EntityType { get; private set; }
@@ -82,6 +84,7 @@ namespace PavEcsSpec.Generators
 
 
         public string Universe { get; private set; }
+
         //public IMethodSymbol GetIdMethod { get; private set; }
         //public IMethodSymbol ProviderMethod { get; private set; }
         //public EntityKind Kind { get; private set; }
@@ -91,32 +94,25 @@ namespace PavEcsSpec.Generators
 
         public override string ToString()
         {
-            StringBuilder result = new StringBuilder();
+            var result = new StringBuilder();
 
             result.AppendLine($"{EntityType}/{Universe} ");
-            foreach (var component in _components)
-            {
-                result.AppendLine(component.ToString());
-            }
-            foreach (var ent in _baseEntitiesDescriptors)
-            {
-                result.AppendLine(ent.ToString());
-            }
+            foreach (var component in _components) result.AppendLine(component.ToString());
+            foreach (var ent in _baseEntitiesDescriptors) result.AppendLine(ent.ToString());
             //result.AppendLine($"Provider {ProviderMethod?.Name}, Id: {GetIdMethod?.Name} ");
 
             return result.ToString();
         }
 
 
-        public static EcsEntityDescriptor Create(ITypeSymbol type, Microsoft.CodeAnalysis.CSharp.Syntax.StructDeclarationSyntax declaration)
+        public static EcsEntityDescriptor Create(ITypeSymbol type, StructDeclarationSyntax declaration)
         {
-            EcsEntityDescriptor result = new EcsEntityDescriptor();
+            var result = new EcsEntityDescriptor();
             result.Declaration = declaration;
             result.EntityType = type;
             ParseAttributes(type, result);
 
-            foreach (ISymbol member in type.GetMembers())
-            {
+            foreach (var member in type.GetMembers())
                 if (member is IMethodSymbol methodSymbol &&
                     methodSymbol.IsPartialDefinition)
                 {
@@ -127,34 +123,28 @@ namespace PavEcsSpec.Generators
                         {
                             //if (returnType is ITypeParameterSymbol genericType)
                             //    throw new InvalidOperationException($"Generic type {genericType} is not supported");
-
                             if (returnType
                                 .GetAttributes()
                                 .Any(x => x.AttributeClass.Name == nameof(EcsInfraTypes.EntityAttribute)))
-                            {
                                 result._baseEntitiesDescriptors.Add(
                                     new BaseEntityDescriptor(returnType, methodSymbol));
-                            }
                             else if (methodSymbol.ReturnsByRefReadonly) //include readonly
-                            {
                                 result._components.Add(
                                     new ComponentDescriptor(returnType,
-                                    methodSymbol,
+                                        methodSymbol,
                                         ComponentDescriptorAccessKind.IncludeReadonly));
-                            }
                             else if (methodSymbol.ReturnsByRef) //include
-                            {
                                 result._components.Add(
                                     new ComponentDescriptor(
                                         returnType,
                                         methodSymbol,
                                         ComponentDescriptorAccessKind.Include));
-                            }
                             //else if (returnType.SpecialType == SpecialType.System_Int32)
                             //{
                             //    result.GetIdMethod = methodSymbol;
                             //}
                         }
+
                         if (returnType.IsRefLikeType && returnType is INamedTypeSymbol namedType &&
                             namedType.Arity == 1)
                         {
@@ -162,36 +152,28 @@ namespace PavEcsSpec.Generators
 
                             //if (componentType is ITypeParameterSymbol genericType)
                             //    throw new InvalidOperationException($"Generic type {genericType} is not supported");
-
                             if (componentType.IsValueType)
                             {
                                 ComponentDescriptorAccessKind kind;
                                 if (namedType.Name == "OptionalComponent")
-                                {
                                     kind = ComponentDescriptorAccessKind.Optional;
-                                }
                                 else if (namedType.Name == "ExcludeComponent")
-                                {
                                     kind = ComponentDescriptorAccessKind.Exclude;
-                                }
                                 else if (namedType.Name == "RequiredComponent")
-                                {
                                     kind = ComponentDescriptorAccessKind.Include;
-                                }
                                 else
-                                {
                                     throw new InvalidOperationException($"unexpected return type {namedType}");
-                                }
                                 result._components.Add(
-                                       new ComponentDescriptor(
-                                           componentType,
-                                           methodSymbol,
-                                           kind,
-                                           namedType));
+                                    new ComponentDescriptor(
+                                        componentType,
+                                        methodSymbol,
+                                        kind,
+                                        namedType));
                             }
                             else
                             {
-                                throw new InvalidOperationException($"unexpected non value return type {componentType}");
+                                throw new InvalidOperationException(
+                                    $"unexpected non value return type {componentType}");
                             }
                         }
                     }
@@ -203,7 +185,6 @@ namespace PavEcsSpec.Generators
                     //        var generictType = namedType.TypeArguments.First();
                     //        if (!SymbolEqualityComparer.Default.Equals(generictType, type))
                     //            throw new InvalidOperationException($"unexpected return type {generictType}");
-
                     //        if (namedType.Name == "IEntityProvider")
                     //        {
                     //            result.Kind = EntityKind.Filter;
@@ -218,12 +199,10 @@ namespace PavEcsSpec.Generators
                     //        {
                     //            throw new InvalidOperationException($"unexpected return type {namedType}");
                     //        }
-
                     //    }
                     //}
                     //else if (methodSymbol.ReturnType.) 
                 }
-            }
 
             return result;
         }
@@ -238,12 +217,12 @@ namespace PavEcsSpec.Generators
                 var universeProp = entityAttribute
                     .NamedArguments
                     .FirstOrDefault(x => x.Key == "Universe");
-                result.Universe = universeProp.Value.Value?.ToString() ?? String.Empty;
+                result.Universe = universeProp.Value.Value?.ToString() ?? string.Empty;
 
                 var isFilterProp = entityAttribute
                     .NamedArguments
                     .FirstOrDefault(x => x.Key == "SkipFilter");
-                result.SkipFilter = (isFilterProp.Value.Value as bool?) ?? false;
+                result.SkipFilter = isFilterProp.Value.Value as bool? ?? false;
             }
             else
             {
@@ -251,5 +230,4 @@ namespace PavEcsSpec.Generators
             }
         }
     }
-
 }

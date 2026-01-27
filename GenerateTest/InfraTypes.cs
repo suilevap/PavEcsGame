@@ -1,7 +1,4 @@
-﻿#nullable disable
-using Leopotam.EcsLite;
-using System;
-using System.Collections.Generic;
+﻿using Leopotam.EcsLite;
 
 //namespace PavEcsSpec.Generated
 //{
@@ -25,7 +22,11 @@ namespace PavEcsSpec.Generated2
             _pool = pool;
             _ent = ent;
         }
-        public void Remove() => _pool.Del(_ent);
+
+        public void Remove()
+        {
+            _pool.Del(_ent);
+        }
 
         public ref T Ensure(out bool isNew)
         {
@@ -34,20 +35,21 @@ namespace PavEcsSpec.Generated2
                 isNew = false;
                 return ref _pool.Get(_ent);
             }
+
             isNew = true;
             return ref _pool.Add(_ent);
         }
 
         public ref T Ensure()
         {
-            if (_pool.Has(_ent))
-            {
-                return ref _pool.Get(_ent);
-            }
+            if (_pool.Has(_ent)) return ref _pool.Get(_ent);
             return ref _pool.Add(_ent);
         }
 
-        public bool Has() => _pool.Has(_ent);
+        public bool Has()
+        {
+            return _pool.Has(_ent);
+        }
     }
 
     public readonly ref struct RequredComponent<T> where T : struct
@@ -60,10 +62,17 @@ namespace PavEcsSpec.Generated2
             _pool = pool;
             _ent = ent;
         }
-        public void Remove() => _pool.Del(_ent);
+
+        public void Remove()
+        {
+            _pool.Del(_ent);
+        }
 
 
-        public ref T Get() => ref _pool.Get(_ent);
+        public ref T Get()
+        {
+            return ref _pool.Get(_ent);
+        }
     }
     //public partial class TypeToWorldName
     //{
@@ -151,5 +160,3 @@ namespace PavEcsSpec.Generated2
 //        }
 //    }
 //}
-
-

@@ -1,12 +1,10 @@
-﻿using Microsoft.CodeAnalysis;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.CodeAnalysis;
 
 namespace PavEcsSpec.Generators
 {
-
     internal static class ProvidersGenerator
     {
         public readonly struct Result
@@ -20,7 +18,6 @@ namespace PavEcsSpec.Generators
                 Code = code;
                 HasSimpleCtor = hasSimpleCtor;
             }
-
         }
 
         public static Result GenerateCode(IEnumerable<EcsEntityDescriptor> entities)
@@ -30,7 +27,7 @@ namespace PavEcsSpec.Generators
             var simpleConstructorSigntature = new StringBuilder();
             var simpleConstructorCode = new StringBuilder();
 
-            bool hasSimpleCtor = false;
+            var hasSimpleCtor = false;
 
             foreach (var entity in entities)
             {
@@ -38,8 +35,8 @@ namespace PavEcsSpec.Generators
                 {
                     thisConstructor.Append(",");
                     simpleConstructorSigntature.Append(",");
-
                 }
+
                 var name = entity.EntityType.Name;
                 props.AppendLine($"public {name}.Provider {name}Provider {{ get; }}");
                 thisConstructor.Append($"{name}.Create(systems)");
@@ -48,14 +45,15 @@ namespace PavEcsSpec.Generators
                 simpleConstructorSigntature.Append($"{name}.Provider {argName}");
                 simpleConstructorCode.AppendLine($"{name}Provider = {argName};");
             }
-            string defaultCtr = String.Empty;
+
+            var defaultCtr = string.Empty;
             if (entities.All(x => !x.ExtraArgs.Any())
                 && entities.All(x => x.Components.All(c => c.ComponentType is not ITypeParameterSymbol)))
             {
                 hasSimpleCtor = true;
                 defaultCtr = $@"
-public Providers(Leopotam.EcsLite.EcsSystems systems)
-    : this({thisConstructor.ToString()})
+public Providers(Leopotam.EcsLite.IEcsSystems systems)
+    : this({thisConstructor})
 {{
 }}
 ";
@@ -68,7 +66,7 @@ private readonly struct Providers
 
 {defaultCtr.PadLeftAllLines(4 * 1)}
 
-    public Providers({simpleConstructorSigntature.ToString()})
+    public Providers({simpleConstructorSigntature})
     {{
 {simpleConstructorCode.ToString().PadLeftAllLines(4 * 2)}
     }}

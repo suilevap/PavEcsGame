@@ -1,14 +1,12 @@
-using Leopotam.Ecs;
-
 namespace PavEcsGame.Components
 {
-    public readonly struct WaitCommandTokenComponent 
+    public readonly struct WaitCommandTokenComponent
     {
         public readonly CommandTokenComponent RechargeValue;
 
-        public WaitCommandTokenComponent(int rechargeValue) 
+        public WaitCommandTokenComponent(int rechargeValue)
         {
-            RechargeValue = new CommandTokenComponent()
+            RechargeValue = new CommandTokenComponent
             {
                 ActionCount = rechargeValue
             };

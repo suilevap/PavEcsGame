@@ -1,4 +1,3 @@
-﻿using Leopotam.Ecs.Types;
 using System;
 
 namespace PavEcsGame.Components
@@ -6,6 +5,7 @@ namespace PavEcsGame.Components
     public struct DirectionComponent : IEquatable<DirectionComponent>
     {
         public Int2 Direction; //todo use byte
+
         public bool Equals(DirectionComponent other)
         {
             return Direction == other.Direction;
@@ -32,25 +32,18 @@ namespace PavEcsGame.Components
             if (Math.Abs(dir.X) > Math.Abs(dir.Y))
             {
                 if (dir.X > 0)
-                {
                     result = Direction.Right;
-                }
                 else
-                {
                     result = Direction.Left;
-                }
             }
             else
             {
                 if (dir.Y > 0)
-                {
                     result = Direction.Up;
-                }
                 else
-                {
                     result = Direction.Down;
-                }
             }
+
             return result;
         }
     }

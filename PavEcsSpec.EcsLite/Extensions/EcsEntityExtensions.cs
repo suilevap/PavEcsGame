@@ -313,25 +313,21 @@ namespace PavEcsSpec.EcsLite
         public static bool Unpack(this in EcsPackedEntityWithWorld? entity, out EcsWorld world,
             out EcsUnsafeEntity unsafeEnt)
         {
-            if (entity.TryGet(out var ent))
-            {
-                return ent.Unpack(out world, out unsafeEnt);
-            }
-            else
-            {
-                world = null;
-                unsafeEnt = default;
-                return false;
-            }
+            if (entity.TryGet(out var ent)) return ent.Unpack(out world, out unsafeEnt);
+
+            world = null;
+            unsafeEnt = default;
+            return false;
         }
 
         public static bool IsSame(this EcsPackedEntityWithWorld ent, EcsUnsafeEntity unsafeId)
         {
-            return ent.Unpack(out _, out EcsUnsafeEntity id) && id == unsafeId;
+            return ent.Unpack(out _, out var id) && id == unsafeId;
         }
+
         public static bool IsBelongTo(this EcsPackedEntityWithWorld ent, IEcsLinkedToWorld worldContainer)
         {
-            return ent.Unpack(out var world, out EcsUnsafeEntity _) 
+            return ent.Unpack(out var world, out _)
                    && worldContainer.IsBelongToWorld(world);
         }
 
@@ -342,9 +338,10 @@ namespace PavEcsSpec.EcsLite
             {
                 object[] components = null;
 
-                world.GetComponents(id,  ref components);
-                return $"Ent:{id} ->" + string.Join("|", components.Where(x=>x!= null).Select(x => x.ToString()));
+                world.GetComponents(id, ref components);
+                return $"Ent:{id} ->" + string.Join("|", components.Where(x => x != null).Select(x => x.ToString()));
             }
+
             return "Ent: -destroyed-";
         }
 

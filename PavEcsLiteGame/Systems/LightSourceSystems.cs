@@ -7,7 +7,6 @@ namespace PavEcsGame.Systems
 {
     internal partial class LightSourceSystems : IEcsRunSystem, IEcsSystemSpec
     {
-
         [Entity]
         private readonly partial struct LightEnt
         {
@@ -23,23 +22,16 @@ namespace PavEcsGame.Systems
             public partial OptionalComponent<FieldOfViewRequestEvent> FovRequest();
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
-            foreach(var ent in _providers.LightEntProvider)
+            foreach (var ent in _providers.LightEntProvider)
             {
                 var radius = ent.Source().Radius;
                 ref var ev = ref ent.FovRequest().Ensure(out var isNew);
-                if (isNew || ev.Radius < radius)
-                {
-                    ev.Radius = radius;
-                }
+                if (isNew || ev.Radius < radius) ev.Radius = radius;
             }
 
-            foreach (var ent in _providers.PlayerEntProvider)
-            {
-                ent.FovRequest().Ensure().Radius = ent.Sensor().Radius;
-            }
-
+            foreach (var ent in _providers.PlayerEntProvider) ent.FovRequest().Ensure().Radius = ent.Sensor().Radius;
         }
     }
 }

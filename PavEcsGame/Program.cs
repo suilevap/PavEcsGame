@@ -1,4 +1,5 @@
-﻿using PavEcsGame.GameLoop;
+using PavEcsGame.Components;
+using PavEcsGame.GameLoop;
 using System;
 using System.Threading;
 

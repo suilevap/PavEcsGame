@@ -1,18 +1,12 @@
-﻿using Leopotam.Ecs.Types;
-using System;
-using System.Collections.Generic;
-using Leopotam.EcsLite;
+﻿using Leopotam.EcsLite;
 using PavEcsGame.Components;
-using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
 using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    partial class UpdateDirectionBasedOnSpeedSystem : IEcsRunSystem, IEcsSystemSpec//, IEcsInitSystem
+    internal partial class UpdateDirectionBasedOnSpeedSystem : IEcsRunSystem, IEcsSystemSpec //, IEcsInitSystem
     {
-
-
         [Entity]
         private readonly partial struct Ent
         {
@@ -25,9 +19,9 @@ namespace PavEcsGame.Systems
             public partial ref DirectionComponent Dir();
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
-            foreach (Ent ent in _providers.EntProvider)
+            foreach (var ent in _providers.EntProvider)
             {
                 ref readonly var currentSpeed = ref ent.Speed();
                 if (currentSpeed.Speed != Int2.Zero)
@@ -37,6 +31,5 @@ namespace PavEcsGame.Systems
                 }
             }
         }
-
     }
 }

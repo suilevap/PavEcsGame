@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using Leopotam.EcsLite;
 
 namespace PavEcsSpec.EcsLite
@@ -20,14 +19,11 @@ namespace PavEcsSpec.EcsLite
             _builder = new EcsUniverseBuilder(this);
         }
 
-        public void Init(EcsSystems systems)
+        public void Init(IEcsSystems systems)
         {
             _requiredTypeToWorldId = _builder.GetMapping();
             _builder = null;
-            foreach (var initSpec in _registeredSpec)
-            {
-                initSpec.Init(systems);
-            }
+            foreach (var initSpec in _registeredSpec) initSpec.Init(systems);
             _registeredSpec.Clear();
         }
 
@@ -36,7 +32,7 @@ namespace PavEcsSpec.EcsLite
             return _requiredTypeToWorldId[typeof(T)];
         }
 
-        internal EcsWorld GetWorld<T>(EcsSystems systems)
+        internal EcsWorld GetWorld<T>(IEcsSystems systems)
         {
             var key = GetKey<T>();
             var name = GetName(key);
@@ -56,11 +52,11 @@ namespace PavEcsSpec.EcsLite
             //return _worldUnion.GetAllRoots();
         }
 
-        public IEnumerable<IGrouping<EcsWorld, Type>> GetAllWorlds(EcsSystems systems)
+        public IEnumerable<IGrouping<EcsWorld, Type>> GetAllWorlds(IEcsSystems systems)
         {
             return _requiredTypeToWorldId
                 .GroupBy(
-                    p => systems.GetWorld(GetName(p.Value)), 
+                    p => systems.GetWorld(GetName(p.Value)),
                     p => p.Key);
         }
 
@@ -115,6 +111,5 @@ namespace PavEcsSpec.EcsLite
             _registeredSpec.Add(result);
             return result;
         }
-
     }
 }

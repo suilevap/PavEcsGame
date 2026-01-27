@@ -2,16 +2,14 @@
 using PavEcsGame.Components;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
-using PavEcsGame;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
     internal partial class RelativePositionSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
+        private readonly TurnManager _turnManager;
+        private TurnManager.SimSystemRegistration _reg;
 
         [Entity]
         private readonly partial struct Ent
@@ -22,7 +20,6 @@ namespace PavEcsGame.Systems
             public partial OptionalComponent<NewPositionComponent> NewPos();
             public partial OptionalComponent<DirectionComponent> Dir();
             public partial OptionalComponent<PositionComponent> Pos();
-
         }
 
         [Entity(SkipFilter = true)]
@@ -33,23 +30,20 @@ namespace PavEcsGame.Systems
             public partial ref readonly DirectionComponent Dir();
         }
 
-        private readonly TurnManager _turnManager;
-        private TurnManager.SimSystemRegistration _reg;
-
         public RelativePositionSystem(TurnManager turnManager, EcsSystems universe)
             : this(universe)
         {
             _turnManager = turnManager;
         }
 
-        public void Init(EcsSystems systems)
+        public void Init(IEcsSystems systems)
         {
             _reg = _turnManager.RegisterSimulationSystem(this);
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
-            bool hasWorkTodo = false;
+            var hasWorkTodo = false;
             foreach (var ent in _providers.EntProvider)
             {
                 var parentId = ent.LinkTo().TargetEntity;
@@ -58,16 +52,18 @@ namespace PavEcsGame.Systems
                     ref readonly var relPos = ref ent.RelativePos();
                     var newPos = GetPos(relPos, parentEnt.Pos(), parentEnt.Dir());
                     var pos = ent.Pos();
-                    if (!pos.Has() || pos.Ensure() != newPos)//todo: add try get for optional?
+                    if (!pos.Has() || pos.Ensure() != newPos) //todo: add try get for optional?
                     {
                         var isNewPos = ent.NewPos().Ensure().Value.TrySet(newPos);
                         hasWorkTodo = hasWorkTodo || isNewPos;
                     }
+
                     var dir = relPos.RelativeDirection.Direction.Rotate(parentEnt.Dir().Direction);
-                    var isNewDir = ent.Dir().Ensure().TrySet(new DirectionComponent() { Direction = dir });
+                    var isNewDir = ent.Dir().Ensure().TrySet(new DirectionComponent { Direction = dir });
                     hasWorkTodo = hasWorkTodo || isNewDir;
                 }
             }
+
             _reg.UpdateState(hasWorkTodo);
         }
 

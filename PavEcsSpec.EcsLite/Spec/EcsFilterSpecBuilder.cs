@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Leopotam.EcsLite;
 
 namespace PavEcsSpec.EcsLite
@@ -10,6 +9,14 @@ namespace PavEcsSpec.EcsLite
         where TExclude : struct
     {
         private InitData _initData;
+
+        private class InitData
+        {
+            public IEcsSpecBuilder<TExclude> Exclude;
+            public IEcsSpecBuilder<TIncl> Include;
+            public IEcsSpecBuilder<TOptional> Optional;
+            public EcsUniverse Universe;
+        }
 
         private EcsFilterSpecBuilder(InitData initData)
         {
@@ -23,7 +30,12 @@ namespace PavEcsSpec.EcsLite
 
         public EcsFilter Filter { get; private set; }
 
-        void IInitSpec.Init(EcsSystems systems)
+        public bool IsBelongToWorld(EcsWorld world)
+        {
+            return World == world;
+        }
+
+        void IInitSpec.Init(IEcsSystems systems)
         {
             var universe = _initData.Universe;
             var include = _initData.Include;
@@ -52,10 +64,8 @@ namespace PavEcsSpec.EcsLite
         )
         {
             builder.RegisterSet(
-                include.GetArgTypes(), 
-            Enumerable.Concat(
-                    optional.GetArgTypes(),
-                    exclude.GetArgTypes()));
+                include.GetArgTypes(),
+                optional.GetArgTypes().Concat(exclude.GetArgTypes()));
 
             var initData = new InitData
             {
@@ -67,15 +77,5 @@ namespace PavEcsSpec.EcsLite
 
             return new EcsFilterSpecBuilder<TIncl, TOptional, TExclude>(initData);
         }
-
-        private class InitData
-        {
-            public IEcsSpecBuilder<TExclude> Exclude;
-            public IEcsSpecBuilder<TIncl> Include;
-            public IEcsSpecBuilder<TOptional> Optional;
-            public EcsUniverse Universe;
-        }
-
-        public bool IsBelongToWorld(EcsWorld world) => World == world;
     }
 }

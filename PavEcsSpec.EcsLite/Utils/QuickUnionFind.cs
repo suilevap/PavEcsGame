@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace PavEcsSpec.EcsLite
@@ -12,7 +11,7 @@ namespace PavEcsSpec.EcsLite
 
         private readonly List<int> _size = new List<int>();
 
-        private int _superSetCount = 0;
+        private int _superSetCount;
         public int Count => _map.Count;
 
         private int GetId(T item)
@@ -29,12 +28,18 @@ namespace PavEcsSpec.EcsLite
             return id;
         }
 
-        public IEnumerable<IGrouping<int, T>> GetAllGroups() => _map
-            .Select(p => (item: p.Key, root: RootInternal(p.Value)))
-            .GroupBy(x => x.root, x => x.item);
+        public IEnumerable<IGrouping<int, T>> GetAllGroups()
+        {
+            return _map
+                .Select(p => (item: p.Key, root: RootInternal(p.Value)))
+                .GroupBy(x => x.root, x => x.item);
+        }
 
-        public IEnumerable<(int key, T item)> GetAll() => _map
-            .Select(p => ( key: RootInternal(p.Value), item: p.Key));
+        public IEnumerable<(int key, T item)> GetAll()
+        {
+            return _map
+                .Select(p => (key: RootInternal(p.Value), item: p.Key));
+        }
 
         public int Root(T item)
         {
@@ -54,11 +59,12 @@ namespace PavEcsSpec.EcsLite
 
                 parentId = _parentId[parentId];
             }
+
             return id;
         }
 
 
-        public bool IsConnected(T p, T q) 
+        public bool IsConnected(T p, T q)
         {
             return Root(p) == Root(q);
         }
@@ -72,8 +78,8 @@ namespace PavEcsSpec.EcsLite
 
         private void UnionInternal(int id1, int id2)
         {
-            int rootId1 = RootInternal(id1);
-            int rootId2 = RootInternal(id2);
+            var rootId1 = RootInternal(id1);
+            var rootId2 = RootInternal(id2);
 
             if (rootId1 == rootId2) return;
 
@@ -94,27 +100,22 @@ namespace PavEcsSpec.EcsLite
         public void Union(IReadOnlyList<T> items)
         {
             var id1 = GetId(items[0]);
-            for (int i = 1; i < items.Count; i++)
-            {
-                UnionInternal(id1, GetId(items[i]));
-            }
-        }
-        public void Union(IEnumerable<T> items)
-        {
-            int id1 = -1;
-            foreach (var item in items)
-            {
-                if (id1 >= 0)
-                {
-                    UnionInternal(id1, GetId(item));
-                }
-                else
-                {
-                    id1 = GetId(item);
-                }
-            }
+            for (var i = 1; i < items.Count; i++) UnionInternal(id1, GetId(items[i]));
         }
 
-        public IEnumerable<int> GetAllRoots() => _parentId.Distinct();
+        public void Union(IEnumerable<T> items)
+        {
+            var id1 = -1;
+            foreach (var item in items)
+                if (id1 >= 0)
+                    UnionInternal(id1, GetId(item));
+                else
+                    id1 = GetId(item);
+        }
+
+        public IEnumerable<int> GetAllRoots()
+        {
+            return _parentId.Distinct();
+        }
     }
 }

@@ -9,6 +9,12 @@ namespace PavEcsSpec.EcsLite
     {
         private InitData _initData;
 
+        private class InitData
+        {
+            public IEcsSpecBuilder<TPools> Pools;
+            public EcsUniverse Universe;
+        }
+
         private EcsEntityFactorySpecBuilder(InitData initData)
         {
             _initData = initData;
@@ -17,7 +23,12 @@ namespace PavEcsSpec.EcsLite
         public EcsWorld World { get; private set; }
         public TPools Pools { get; private set; }
 
-        void IInitSpec.Init(EcsSystems systems)
+        public bool IsBelongToWorld(EcsWorld world)
+        {
+            return World == world;
+        }
+
+        void IInitSpec.Init(IEcsSystems systems)
         {
             var universe = _initData.Universe;
             var pools = _initData.Pools;
@@ -40,7 +51,6 @@ namespace PavEcsSpec.EcsLite
         {
             return new EcsUnsafeEntity(World.NewEntity());
         }
-        public bool IsBelongToWorld(EcsWorld world) => World == world;
 
         internal static EcsEntityFactorySpecBuilder<TPools> Create(
             EcsUniverseBuilder builder,
@@ -66,10 +76,8 @@ namespace PavEcsSpec.EcsLite
         )
             where TParentPools : struct
         {
-            var required = 
-                Enumerable.Concat(
-                    pools.GetArgTypes(),
-                    parentPools.GetArgTypes());
+            var required =
+                pools.GetArgTypes().Concat(parentPools.GetArgTypes());
             builder.RegisterSet(required, Enumerable.Empty<Type>());
 
             var initData = new InitData
@@ -79,12 +87,6 @@ namespace PavEcsSpec.EcsLite
             };
 
             return new EcsEntityFactorySpecBuilder<TPools>(initData);
-        }
-
-        private class InitData
-        {
-            public IEcsSpecBuilder<TPools> Pools;
-            public EcsUniverse Universe;
         }
     }
 }

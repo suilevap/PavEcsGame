@@ -1,11 +1,8 @@
-﻿using System;
-using System.Linq;
-using Leopotam.Ecs.Types;
+﻿using System.Linq;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
-using PavEcsGame;
 using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
@@ -31,17 +28,15 @@ namespace PavEcsGame.Systems
         {
             public partial ref NewPositionComponent NewPos();
             public partial ref SpawnRequestComponent Request();
-
         }
 
-        public LoadMapSystem( EcsSystems universe, IMapData<PositionComponent, EcsPackedEntityWithWorld> map)
+        public LoadMapSystem(EcsSystems universe, IMapData<PositionComponent, EcsPackedEntityWithWorld> map)
             : this(universe)
         {
             _map = map;
-
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             //var lines = await File.ReadAllLinesAsync(_fileName);
 
@@ -54,7 +49,6 @@ namespace PavEcsGame.Systems
                 BuildMap(lines);
                 ent.Event().Remove();
             }
-
         }
 
         private void BuildMap(string[] lines)
@@ -95,40 +89,40 @@ namespace PavEcsGame.Systems
                 //wall
                 case 'X':
                 case 'x':
-                    result = new SpawnRequestComponent()
+                    result = new SpawnRequestComponent
                     {
                         Type = EntityType.Wall
                     };
                     break;
                 //player
                 case 'p':
-                    result = new SpawnRequestComponent()
+                    result = new SpawnRequestComponent
                     {
                         Type = EntityType.Player
                     };
                     break;
                 //enemy
                 case 'e':
-                    result = new SpawnRequestComponent()
+                    result = new SpawnRequestComponent
                     {
                         Type = EntityType.Enemy
                     };
                     break;
 
                 case '~':
-                    result = new SpawnRequestComponent()
+                    result = new SpawnRequestComponent
                     {
                         Type = EntityType.Electricity
                     };
                     break;
                 case 'i':
-                    result = new SpawnRequestComponent()
+                    result = new SpawnRequestComponent
                     {
                         Type = EntityType.Light
                     };
                     break;
                 case '%':
-                    result = new SpawnRequestComponent()
+                    result = new SpawnRequestComponent
                     {
                         Type = EntityType.Acid
                     };
@@ -137,6 +131,5 @@ namespace PavEcsGame.Systems
 
             return result;
         }
-
     }
 }

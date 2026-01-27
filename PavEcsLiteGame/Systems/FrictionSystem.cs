@@ -1,6 +1,4 @@
 using System;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Systems.Managers;
@@ -26,39 +24,33 @@ namespace PavEcsGame.Systems
         {
             _turnManager = turnManager;
         }
-        public void Init(EcsSystems systems)
+
+        public void Init(IEcsSystems systems)
         {
             _reg = _turnManager.RegisterSimulationSystem(this);
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
-            bool hasWorkToDo = false;
+            var hasWorkToDo = false;
             foreach (var ent in _providers.EntProvider)
             {
-                ref var speed = ref  ent.Speed();
+                ref var speed = ref ent.Speed();
                 var friction = ent.Friction().FrictionValue;
                 if (speed.Speed != Int2.Zero && friction != 0)
                 {
                     hasWorkToDo = true;
                     if (Math.Abs(speed.Speed.X) > friction)
-                    {
                         speed.Speed.X -= Math.Sign(speed.Speed.X) * friction;
-                    }
                     else
-                    {
                         speed.Speed.X = 0;
-                    }
                     if (Math.Abs(speed.Speed.Y) > friction)
-                    {
                         speed.Speed.Y -= Math.Sign(speed.Speed.Y) * friction;
-                    }
                     else
-                    {
                         speed.Speed.Y = 0;
-                    }
                 }
             }
+
             _reg.UpdateState(hasWorkToDo);
         }
     }

@@ -5,6 +5,17 @@ namespace PavEcsGame.Utils
 {
     public class RangesCollectionV2
     {
+        //class CompareRange : IComparer<Range>
+        //{
+        //    public int Compare(Range x, Range y) => Range.Compare(x, y);
+        //}
+
+        //private SortedSet<Range> _data;
+        private readonly bool _circular;
+        private readonly LinkedList<Range> _data;
+
+        private readonly Stack<LinkedListNode<Range>> _emptyNodes = new Stack<LinkedListNode<Range>>(15);
+
         public struct Range
         {
             public float Start;
@@ -20,6 +31,7 @@ namespace PavEcsGame.Utils
             {
                 return End - Start;
             }
+
             public override string ToString()
             {
                 return $"[{Start}-{End}]";
@@ -27,29 +39,13 @@ namespace PavEcsGame.Utils
 
             public static int Compare(ref Range x, ref Range y)
             {
-                int result = 0;
+                var result = 0;
                 if (x.End < y.Start)
-                {
                     result = -1;
-                }
-                else if (x.Start > y.End)
-                {
-                    result = 1;
-                }
+                else if (x.Start > y.End) result = 1;
                 return result;
             }
         }
-
-        //class CompareRange : IComparer<Range>
-        //{
-        //    public int Compare(Range x, Range y) => Range.Compare(x, y);
-        //}
-
-        //private SortedSet<Range> _data;
-        private readonly bool _circular;
-        private readonly LinkedList<Range> _data;
-
-        private Stack<LinkedListNode<Range>> _emptyNodes = new Stack<LinkedListNode<Range>>(15);
 
         public RangesCollectionV2(bool circular = false)
         {
@@ -61,6 +57,7 @@ namespace PavEcsGame.Utils
             //    _emptyNodes.Push(new LinkedListNode<Range>(default));
             //}
         }
+
         public void AddRange(float start, float end)
         {
             AddRange(new Range(start, end));
@@ -72,14 +69,14 @@ namespace PavEcsGame.Utils
             {
                 if (range.Start < 0)
                 {
-                    Range subRange = new Range(range.Start + 1, 1);
+                    var subRange = new Range(range.Start + 1, 1);
                     AddRangeInternal(subRange);
                     range.Start = 0;
                 }
 
                 if (range.End > 1)
                 {
-                    Range subRange = new Range(0, range.End - 1);
+                    var subRange = new Range(0, range.End - 1);
                     AddRangeInternal(subRange);
                     range.End = 1;
                 }
@@ -92,7 +89,7 @@ namespace PavEcsGame.Utils
         {
             //if (_data.Count != 0)
             //{
-            var node = _data.First;//todo: use previous
+            var node = _data.First; //todo: use previous
             var startNode = node;
             LinkedListNode<Range> insertBefore = null;
             while (node != null)
@@ -116,16 +113,11 @@ namespace PavEcsGame.Utils
                 {
                     if (compare > 0)
                     {
-                        if (insertBefore == null)
-                        {
-                            insertBefore = node;
-                        }
+                        if (insertBefore == null) insertBefore = node;
                         break;
                     }
-                    else
-                    {
-                        node = node.Next;
-                    }
+
+                    node = node.Next;
                 }
             }
 
@@ -141,13 +133,9 @@ namespace PavEcsGame.Utils
             }
 
             if (insertBefore != null)
-            {
                 _data.AddBefore(insertBefore, newNode);
-            }
             else
-            {
                 _data.AddLast(newNode);
-            }
         }
 
 
@@ -158,14 +146,14 @@ namespace PavEcsGame.Utils
             {
                 if (range.Start < 0)
                 {
-                    Range subRange = new Range(range.Start + 1, 1);
+                    var subRange = new Range(range.Start + 1, 1);
                     result += IntersectLengthInternal(subRange);
                     range.Start = 0;
                 }
 
                 if (range.End > 1)
                 {
-                    Range subRange = new Range(0, range.End - 1);
+                    var subRange = new Range(0, range.End - 1);
                     result += IntersectLengthInternal(subRange);
                     range.End = 1;
                 }
@@ -178,7 +166,7 @@ namespace PavEcsGame.Utils
         private float IntersectLengthInternal(Range range)
         {
             float result = 0;
-            var node = _data.First;//todo: use previous
+            var node = _data.First; //todo: use previous
 
             while (node != null)
             {
@@ -192,11 +180,9 @@ namespace PavEcsGame.Utils
                 }
                 else
                 {
-                    if (compare > 0)
-                    {
-                        break;
-                    }
+                    if (compare > 0) break;
                 }
+
                 node = node.Next;
             }
             //var ranges = GetViewBetween(range);
@@ -212,19 +198,20 @@ namespace PavEcsGame.Utils
 
         public void Clear()
         {
-            var node = _data.First;//todo: use previous
+            var node = _data.First; //todo: use previous
 
             while (node != null)
             {
                 _emptyNodes.Push(node);
                 node = node.Next;
             }
+
             _data.Clear();
         }
 
         public override string ToString()
         {
-            return String.Join(",", _data);
+            return string.Join(",", _data);
         }
     }
 }

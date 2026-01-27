@@ -17,13 +17,17 @@ namespace PavEcsSpec.EcsLite
 
         public EcsFilter Filter => _main.Filter;
 
-        public bool IsBelongToWorld(EcsWorld world) => _main.IsBelongToWorld(world);
+        public bool IsBelongToWorld(EcsWorld world)
+        {
+            return _main.IsBelongToWorld(world);
+        }
 
         internal EcsFilterSpec(EcsFilterSpecBuilder<TIncl, TOptional, TExclude> main)
         {
             _main = main;
         }
     }
+
     public readonly struct EcsFilterSpec
     {
         public readonly struct Inc<TIncl> : IEcsLinkedToWorld
@@ -36,7 +40,10 @@ namespace PavEcsSpec.EcsLite
 
             public EcsFilter Filter => _main.Filter;
 
-            public bool IsBelongToWorld(EcsWorld world) => _main.IsBelongToWorld(world);
+            public bool IsBelongToWorld(EcsWorld world)
+            {
+                return _main.IsBelongToWorld(world);
+            }
 
             internal Inc(EcsFilterSpecBuilder<TIncl, EcsSpec, EcsSpec> main)
             {
@@ -54,7 +61,10 @@ namespace PavEcsSpec.EcsLite
 
                 public EcsFilter Filter => _main.Filter;
 
-                public bool IsBelongToWorld(EcsWorld world) => _main.IsBelongToWorld(world);
+                public bool IsBelongToWorld(EcsWorld world)
+                {
+                    return _main.IsBelongToWorld(world);
+                }
 
                 internal Opt(EcsFilterSpecBuilder<TIncl, TOptional, EcsSpec> main)
                 {
@@ -73,7 +83,10 @@ namespace PavEcsSpec.EcsLite
 
                     public EcsFilter Filter => _main.Filter;
 
-                    public bool IsBelongToWorld(EcsWorld world) => _main.IsBelongToWorld(world);
+                    public bool IsBelongToWorld(EcsWorld world)
+                    {
+                        return _main.IsBelongToWorld(world);
+                    }
 
                     internal Exc(EcsFilterSpecBuilder<TIncl, TOptional, TExclude> main)
                     {
@@ -93,16 +106,17 @@ namespace PavEcsSpec.EcsLite
 
                 public EcsFilter Filter => _main.Filter;
 
-                public bool IsBelongToWorld(EcsWorld world) => _main.IsBelongToWorld(world);
+                public bool IsBelongToWorld(EcsWorld world)
+                {
+                    return _main.IsBelongToWorld(world);
+                }
 
                 internal Exc(EcsFilterSpecBuilder<TIncl, EcsSpec, TExclude> main)
                 {
                     _main = main;
                 }
-
             }
         }
-
 
 
         public readonly struct Inc<TInclReadonly, TIncl> : IEcsLinkedToWorld
@@ -118,7 +132,10 @@ namespace PavEcsSpec.EcsLite
 
             public EcsFilter Filter => _main.Filter;
 
-            public bool IsBelongToWorld(EcsWorld world) => _main.IsBelongToWorld(world);
+            public bool IsBelongToWorld(EcsWorld world)
+            {
+                return _main.IsBelongToWorld(world);
+            }
 
             internal Inc(EcsFilterSpecBuilder<EcsMergeSpec<TInclReadonly, TIncl>, EcsSpec, EcsSpec> main)
             {
@@ -137,7 +154,10 @@ namespace PavEcsSpec.EcsLite
 
                 public EcsFilter Filter => _main.Filter;
 
-                public bool IsBelongToWorld(EcsWorld world) => _main.IsBelongToWorld(world);
+                public bool IsBelongToWorld(EcsWorld world)
+                {
+                    return _main.IsBelongToWorld(world);
+                }
 
                 internal Opt(EcsFilterSpecBuilder<EcsMergeSpec<TInclReadonly, TIncl>, TOptional, EcsSpec> main)
                 {
@@ -147,7 +167,8 @@ namespace PavEcsSpec.EcsLite
                 public readonly struct Exc<TExclude> : IEcsLinkedToWorld
                     where TExclude : struct, IHasBuilder<TExclude>, IEcsSpec
                 {
-                    private readonly EcsFilterSpecBuilder<EcsMergeSpec<TInclReadonly, TIncl>, TOptional, TExclude> _main;
+                    private readonly EcsFilterSpecBuilder<EcsMergeSpec<TInclReadonly, TIncl>, TOptional, TExclude>
+                        _main;
 
                     public TInclReadonly IncludeReadonly => _main.Include.Readonly;
                     public TIncl Include => _main.Include.Write;
@@ -156,7 +177,10 @@ namespace PavEcsSpec.EcsLite
 
                     public EcsFilter Filter => _main.Filter;
 
-                    public bool IsBelongToWorld(EcsWorld world) => _main.IsBelongToWorld(world);
+                    public bool IsBelongToWorld(EcsWorld world)
+                    {
+                        return _main.IsBelongToWorld(world);
+                    }
 
                     internal Exc(EcsFilterSpecBuilder<EcsMergeSpec<TInclReadonly, TIncl>, TOptional, TExclude> main)
                     {
@@ -177,16 +201,16 @@ namespace PavEcsSpec.EcsLite
 
                 public EcsFilter Filter => _main.Filter;
 
-                public bool IsBelongToWorld(EcsWorld world) => _main.IsBelongToWorld(world);
+                public bool IsBelongToWorld(EcsWorld world)
+                {
+                    return _main.IsBelongToWorld(world);
+                }
 
                 internal Exc(EcsFilterSpecBuilder<EcsMergeSpec<TInclReadonly, TIncl>, EcsSpec, TExclude> main)
                 {
                     _main = main;
                 }
-
             }
         }
-
     }
-
 }

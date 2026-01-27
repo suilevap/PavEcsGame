@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using Leopotam.Ecs.Types;
 using PavEcsGame.Components;
 
 namespace PavEcsGame.Area
@@ -16,13 +13,9 @@ namespace PavEcsGame.Area
         {
             Int2[] result = null;
             if (radius < _radiusPoints.Length)
-            {
                 result = _radiusPoints[radius];
-            }
             else
-            {
                 Array.Resize(ref _radiusPoints, radius + 1);
-            }
 
             if (result == null)
             {
@@ -39,27 +32,15 @@ namespace PavEcsGame.Area
 
         private static int GetCircleCount(int radius)
         {
-            return radius* 2 * 4;
+            return radius * 2 * 4;
         }
 
         private static IEnumerable<Int2> GetCirclePoints(Int2 pos, int radius)
         {
-            for (int i = -radius; i < radius; i++)
-            {
-                yield return new Int2(pos.X+i, pos.Y - radius);
-            }
-            for (int i = -radius; i < radius; i++)
-            {
-                yield return new Int2(pos.X + radius, pos.Y + i);
-            }
-            for (int i = -radius; i < radius; i++)
-            {
-                yield return new Int2(pos.X - i, pos.Y + radius);
-            }
-            for (int i = -radius; i < radius; i++)
-            {
-                yield return new Int2(pos.X - radius, pos.Y - i);
-            }
+            for (var i = -radius; i < radius; i++) yield return new Int2(pos.X + i, pos.Y - radius);
+            for (var i = -radius; i < radius; i++) yield return new Int2(pos.X + radius, pos.Y + i);
+            for (var i = -radius; i < radius; i++) yield return new Int2(pos.X - i, pos.Y + radius);
+            for (var i = -radius; i < radius; i++) yield return new Int2(pos.X - radius, pos.Y - i);
             //var hex = this + Directions[0] * radius;
             //for (int i = 0; i < Directions.Length; i++)
             //{

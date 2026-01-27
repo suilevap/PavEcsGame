@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using Leopotam.Ecs.Types;
+﻿using System.Diagnostics;
 
 namespace PavEcsGame.Components
 {
@@ -10,7 +6,7 @@ namespace PavEcsGame.Components
     public struct SpeedComponent
     {
         public SpeedComponent(int x, int y)
-            :this(new Int2(x,y))
+            : this(new Int2(x, y))
         {
         }
 
@@ -18,6 +14,7 @@ namespace PavEcsGame.Components
         {
             Speed = speed;
         }
+
         public Int2 Speed;
     }
 }

@@ -7,13 +7,13 @@ namespace PavEcsSpec.EcsLite
     public interface IEcsSpecBuilder<out T>
         where T : struct
     {
-        EcsFilter.Mask Include(EcsWorld world);
-        EcsFilter.Mask Include(EcsFilter.Mask mask);
-        EcsFilter.Mask Exclude(EcsFilter.Mask mask);
+        EcsWorld.Mask Include(EcsWorld world);
+        EcsWorld.Mask Include(EcsWorld.Mask mask);
+        EcsWorld.Mask Exclude(EcsWorld.Mask mask);
 
         IEnumerable<Type> GetArgTypes();
 
-        EcsWorld GetWorld(EcsUniverse universe, EcsSystems systems);
+        EcsWorld GetWorld(EcsUniverse universe, IEcsSystems systems);
 
         T Create(EcsWorld world);
     }

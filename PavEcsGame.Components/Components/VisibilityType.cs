@@ -7,7 +7,6 @@ namespace PavEcsGame.Components
     {
         None = 0,
         Visible = 1 << 0,
-        Known = 1 << 1,
+        Known = 1 << 1
     }
-
 }

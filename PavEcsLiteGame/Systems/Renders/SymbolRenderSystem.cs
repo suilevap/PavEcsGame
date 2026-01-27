@@ -1,9 +1,4 @@
-﻿using System;
-using Leopotam.EcsLite;
-using PavEcsGame.Components;
-using PavEcsSpec.EcsLite;
-
-namespace PavEcsGame.Systems.Renders
+﻿namespace PavEcsGame.Systems.Renders
 {
     //public class SymbolRenderSystem : IEcsInitSystem, IEcsRunSystem, IEcsSystemSpec
     //{
@@ -14,7 +9,7 @@ namespace PavEcsGame.Systems.Renders
     //        EcsSpec<PreviousPositionComponent>, 
     //        EcsSpec<MarkAsRenderedTag>,
     //        EcsSpec> _clearPrevPosSpec;
-        
+
     //    private readonly EcsFilterSpec<
     //        EcsSpec<PositionComponent, SymbolComponent>,
     //        EcsSpec,
@@ -29,12 +24,12 @@ namespace PavEcsGame.Systems.Renders
     //            .Build(ref _updateCurrentPosSpec);
     //    }
 
-    //    public void Init(EcsSystems systems)
+    //    public void Init(IEcsSystems systems)
     //    {
     //        Console.CursorVisible = false;
     //    }
 
-    //    public void Run(EcsSystems systems)
+    //    public void Run(IEcsSystems systems)
     //    {
     //        ClearPreviousPos();
 

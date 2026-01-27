@@ -19,6 +19,9 @@
             return new EcsUnsafeEntity(id);
         }
 
-        public override string ToString() => Id.ToString();
+        public override string ToString()
+        {
+            return Id.ToString();
+        }
     }
 }

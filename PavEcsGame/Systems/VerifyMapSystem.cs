@@ -1,6 +1,5 @@
-﻿using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
 using PavEcsGame.Components;
+
 using PavEcsGame.GameLoop;
 using System;
 using System.Collections.Generic;

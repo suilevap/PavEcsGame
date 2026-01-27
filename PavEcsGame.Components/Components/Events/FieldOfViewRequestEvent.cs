@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace PavEcsGame.Components
 {
     public struct FieldOfViewRequestEvent : IEquatable<FieldOfViewRequestEvent>
     {
-
         public int Radius;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

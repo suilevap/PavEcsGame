@@ -1,19 +1,17 @@
-﻿using Leopotam.EcsLite;
+﻿using System.Diagnostics;
+using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
-using PavEcsGame;
-using System.Diagnostics;
 using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    partial class UpdatePositionSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
+    internal partial class UpdatePositionSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
-        private readonly TurnManager _turnManager;
-                 
         private readonly IMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
-                 
+        private readonly TurnManager _turnManager;
+
         private TurnManager.SimSystemRegistration _registration;
 
         [Entity]
@@ -57,7 +55,7 @@ namespace PavEcsGame.Systems
         }
 
         public UpdatePositionSystem(
-            TurnManager turnManager, 
+            TurnManager turnManager,
             IMapData<PositionComponent, EcsPackedEntityWithWorld> mapData,
             EcsSystems universe)
             : this(universe)
@@ -66,12 +64,12 @@ namespace PavEcsGame.Systems
             _map = mapData;
         }
 
-        public void Init(EcsSystems systems)
+        public void Init(IEcsSystems systems)
         {
             _registration = _turnManager.RegisterSimulationSystem(this);
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             _registration.UpdateState(_providers.NewPosEntProvider.Filter);
 
@@ -83,7 +81,7 @@ namespace PavEcsGame.Systems
 
             void PlaceToNewPos()
             {
-                foreach(var ent in _providers.NewPosForBodyEntProvider)
+                foreach (var ent in _providers.NewPosForBodyEntProvider)
                 {
                     ref var newPosComponent = ref ent.NewPos().Get();
                     if (newPosComponent.Value.TryGet(out var nextPos))
@@ -101,13 +99,11 @@ namespace PavEcsGame.Systems
                         else
                         {
                             if (otherUnsafeEnt != ent.GetRawId()) //try to move to same pos
-                            {
-                                _providers.CollEventEntProvider.New().Col() = new CollisionEvent<EcsEntity>()
+                                _providers.CollEventEntProvider.New().Col() = new CollisionEvent<EcsEntity>
                                 {
                                     Source = ent.Id,
                                     Target = otherEnt
                                 };
-                            }
 
                             ent.NewPos().Remove();
                         }
@@ -121,26 +117,21 @@ namespace PavEcsGame.Systems
                 //remove from previous pos anf store previous pos
                 foreach (var ent in _providers.RemoveFromMapEntProvider)
                 {
-
                     ref readonly var pos = ref ent.Pos();
                     ref var mapEnt = ref _map.GetRef(pos);
-                    Debug.Assert(mapEnt.EqualsTo(ent.Id), $"Unexpected ent in previous pos.\n" +
-                                                     $" Exp :{ent.Id.ToLogString()}.\n" +
-                                                     $" Act : {mapEnt.ToLogString()} ");
+                    Debug.Assert(mapEnt.EqualsTo(ent.Id), "Unexpected ent in previous pos.\n" +
+                                                          $" Exp :{ent.Id.ToLogString()}.\n" +
+                                                          $" Act : {mapEnt.ToLogString()} ");
 
                     _map.Set(pos, default);
-
                 }
             }
 
             void UpdatePrevPos()
             {
-                foreach (var ent in _providers.SetPrevPosEntProvider)
-                {
-                    ent.PrevPos().Ensure().Value = ent.Pos();
-                }
-
+                foreach (var ent in _providers.SetPrevPosEntProvider) ent.PrevPos().Ensure().Value = ent.Pos();
             }
+
             void MoveToNewPos()
             {
                 ////update pos
@@ -150,18 +141,13 @@ namespace PavEcsGame.Systems
                     var newPosComponent = ent.NewPos();
 
                     if (newPosComponent.Get().Value.TryGet(out var nextPos))
-                    {
                         ent.Pos().Ensure().Value = nextPos;
-                    }
                     else
-                    {
                         // move ent to void
                         ent.Pos().Clear();
-                    }
                     ent.NewPos().Remove();
                 }
             }
         }
-
     }
 }

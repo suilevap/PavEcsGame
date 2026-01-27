@@ -1,6 +1,4 @@
-﻿
-
-namespace PavEcsGame.Components
+﻿namespace PavEcsGame.Components
 {
     public struct RelativePositionComponent
     {

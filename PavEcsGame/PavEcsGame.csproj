@@ -1,16 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>PavEcsGame</RootNamespace>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <RootNamespace>PavEcsGame</RootNamespace>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\ecs-types\Leopotam.Ecs.Types.csproj" />
-    <ProjectReference Include="..\ecs\Leopotam.Ecs.csproj" />
-    <ProjectReference Include="..\PavEcsGame.Components\PavEcsGame.Components.csproj" />
-    <ProjectReference Include="..\PavEcsGame.Common\PavEcsGame.Common.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\ecs\Leopotam.Ecs.csproj"/>
+        <ProjectReference Include="..\PavEcsGame.Components\PavEcsGame.Components.csproj"/>
+        <ProjectReference Include="..\PavEcsGame.Common\PavEcsGame.Common.csproj"/>
+    </ItemGroup>
 
 </Project>

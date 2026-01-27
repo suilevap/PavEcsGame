@@ -1,25 +1,19 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
-using PavEcsGame.Components.Events;
 using PavEcsSpec.EcsLite;
 using PavEcsSpec.Generated;
-
 
 namespace PavEcsGame.Systems
 {
     internal partial class SpawnEntitySystem : IEcsRunSystem, IEcsSystemSpec
     {
+        private readonly Random _rnd;
 
         [Entity(SkipFilter = true)]
         private readonly partial struct CommonEntity
         {
             public partial ref IsActiveTag IsActive();
-
         }
 
 
@@ -30,7 +24,6 @@ namespace PavEcsGame.Systems
 
             public partial ref LinkToEntityComponent<EcsEntity> LinkTo();
             public partial ref RelativePositionComponent RelPos();
-
         }
 
 
@@ -40,7 +33,6 @@ namespace PavEcsGame.Systems
             public partial CommonEntity Common();
 
             public partial ref ColliderComponent Collider();
-
         }
 
         [Entity(SkipFilter = true)]
@@ -55,7 +47,6 @@ namespace PavEcsGame.Systems
             public partial ref SymbolComponent View();
             public partial ref MoveFrictionComponent Friction();
             public partial ref WaitCommandTokenComponent WaitCommandToken();
-
         }
 
         [Entity(SkipFilter = true)]
@@ -72,7 +63,6 @@ namespace PavEcsGame.Systems
             public partial ref SymbolComponent View();
             public partial ref MoveFrictionComponent Friction();
             public partial ref WaitCommandTokenComponent WaitCommandToken();
-
         }
 
         [Entity(SkipFilter = true)]
@@ -93,7 +83,6 @@ namespace PavEcsGame.Systems
             public partial ref LightSourceComponent Source();
 
             public partial OptionalComponent<SymbolComponent> View();
-
         }
 
         [Entity(SkipFilter = true)]
@@ -120,8 +109,6 @@ namespace PavEcsGame.Systems
         {
             public partial RequiredComponent<SpawnRequestComponent> Request();
         }
-
-        private readonly Random _rnd;
 
         public SpawnEntitySystem(EcsSystems universe)
         {
@@ -150,10 +137,10 @@ namespace PavEcsGame.Systems
                 actorProvider,
                 dirTileProvider,
                 SpawnRequestEntity.Create(universe)
-                );
+            );
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             foreach (var spawn in _providers.SpawnRequestEntityProvider)
             {
@@ -166,7 +153,6 @@ namespace PavEcsGame.Systems
 
         private void TrySpawnEntity(EcsUnsafeEntity ent, in SpawnRequestComponent request, Random rnd)
         {
-
             switch (request.Type)
             {
                 case EntityType.Wall:
@@ -177,7 +163,7 @@ namespace PavEcsGame.Systems
                         Depth = Depth.Foreground,
                         MainColor = ConsoleColor.Gray
                     };
-                    wall.Tile() = new TileComponent() { RuleName = "wall_rule" };
+                    wall.Tile() = new TileComponent { RuleName = "wall_rule" };
                     break;
                 case EntityType.Player:
                     //Debug.Assert(_playerFactory.IsBelongToWorld(world));
@@ -192,12 +178,12 @@ namespace PavEcsGame.Systems
                     };
                     player.Friction() = new MoveFrictionComponent { FrictionValue = 1 };
                     player.WaitCommandToken() = new WaitCommandTokenComponent(1);
-                    player.Actor().Sensor() = new VisualSensorComponent() { Radius = 16 };
+                    player.Actor().Sensor() = new VisualSensorComponent { Radius = 16 };
 
-                    player.Light().Source() = new LightSourceComponent()
+                    player.Light().Source() = new LightSourceComponent
                     {
                         Radius = 16,
-                        BasicParameters = new LightValueComponent()
+                        BasicParameters = new LightValueComponent
                         {
                             LightType = LightType.None,
                             Value = 32
@@ -223,10 +209,10 @@ namespace PavEcsGame.Systems
 
                 case EntityType.Electricity:
                     var el = _providers.LightEntityProvider.Add(ent);
-                    el.Source() = new LightSourceComponent()
+                    el.Source() = new LightSourceComponent
                     {
                         Radius = 4,
-                        BasicParameters = new LightValueComponent()
+                        BasicParameters = new LightValueComponent
                         {
                             LightType = LightType.Electricity,
                             Value = 32
@@ -238,10 +224,10 @@ namespace PavEcsGame.Systems
                 case EntityType.Light:
                     //Debug.Assert(_lightSourceFactory.IsBelongToWorld(world));
                     var light = _providers.LightEntityProvider.Add(ent);
-                    light.Source() = new LightSourceComponent()
+                    light.Source() = new LightSourceComponent
                     {
                         Radius = 16,
-                        BasicParameters = new LightValueComponent()
+                        BasicParameters = new LightValueComponent
                         {
                             LightType = LightType.Fire,
                             Value = 196
@@ -251,10 +237,10 @@ namespace PavEcsGame.Systems
                     break;
                 case EntityType.Acid:
                     var acid = _providers.LightEntityProvider.Add(ent);
-                    acid.Source() = new LightSourceComponent()
+                    acid.Source() = new LightSourceComponent
                     {
                         Radius = 4,
-                        BasicParameters = new LightValueComponent()
+                        BasicParameters = new LightValueComponent
                         {
                             LightType = LightType.Acid,
                             Value = 32

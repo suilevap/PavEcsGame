@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
-using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
-using PavEcsSpec.EcsLite;
 using PavEcsGame.Tiles;
+using PavEcsSpec.EcsLite;
 using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    partial class DirectionTileSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
+    internal partial class DirectionTileSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
+        private readonly Dictionary<string, DirectionTileRule> _rules = new();
 
         [Entity]
         private partial struct Entity
@@ -19,18 +19,15 @@ namespace PavEcsGame.Systems
             public partial ref SymbolComponent Symbol();
         }
 
-        private readonly Dictionary<string, DirectionTileRule> _rules = new Dictionary<string, DirectionTileRule>();
-
-        public void Init(EcsSystems systems)
+        public void Init(IEcsSystems systems)
         {
             //preload
             TryGetRule("direction_arrow_rule");
             TryGetRule("direction_triangle_rule");
             TryGetRule("direction_v_rule");
-
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             foreach (var ent in _providers.EntityProvider)
             {
@@ -53,6 +50,5 @@ namespace PavEcsGame.Systems
 
             return result;
         }
-
     }
 }

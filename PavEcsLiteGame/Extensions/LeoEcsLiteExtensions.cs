@@ -1,18 +1,16 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Systems;
 using PavEcsSpec.EcsLite;
-using PavEcsGame;
 using PavEcsSpec.Generated;
+using EcsEntityExtensions = Leopotam.EcsLite.EcsEntityExtensions;
 
 namespace PavEcsGame
 {
     public static class LeoEcsLiteExtensions
     {
-
-        public static EcsSystems SetSyncContext(this EcsSystems system)
+        public static IEcsSystems SetSyncContext(this IEcsSystems system)
         {
             return system.Add(new SynchronizationContextSystem());
         }
@@ -65,17 +63,13 @@ namespace PavEcsGame
             return id;
         }
 
-        public static void TryTag<T>(this PavEcsSpec.Generated.OptionalComponent<T> c, bool value)
+        public static void TryTag<T>(this OptionalComponent<T> c, bool value)
             where T : struct, ITag
         {
             if (value)
-            {
                 c.Ensure();
-            }
             else
-            {
                 c.Clear();
-            }
         }
 
         public static bool IsEmpty(this EcsFilter filter)
@@ -97,25 +91,17 @@ namespace PavEcsGame
             where T : struct
         {
             if (pool.Has(ent))
-            {
                 pool.Get(ent) = component;
-            }
             else
-            {
                 pool.Add(ent) = component;
-            }
         }
+
         public static ref T SetObsolete<T>(this EcsPool<T> pool, EcsUnsafeEntity ent)
             where T : struct
         {
-            if (pool.Has(ent))
-            {
-                return ref pool.Get(ent);
-            }
-            else
-            {
-                return ref pool.Add(ent);
-            }
+            if (pool.Has(ent)) return ref pool.Get(ent);
+
+            return ref pool.Add(ent);
         }
 
         public static ref T Ensure<T>(this EcsPool<T> pool, EcsUnsafeEntity ent, out bool isNew)
@@ -126,6 +112,7 @@ namespace PavEcsGame
                 isNew = false;
                 return ref pool.Get(ent);
             }
+
             isNew = true;
             return ref pool.Add(ent);
         }
@@ -133,10 +120,7 @@ namespace PavEcsGame
         public static ref T Ensure<T>(this EcsPool<T> pool, EcsUnsafeEntity ent)
             where T : struct
         {
-            if (pool.Has(ent))
-            {
-                return ref pool.Get(ent);
-            }
+            if (pool.Has(ent)) return ref pool.Get(ent);
             return ref pool.Add(ent);
         }
 
@@ -144,7 +128,7 @@ namespace PavEcsGame
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Unpack(this in EcsEntity packedEntity, out EcsWorld world, out EcsUnsafeEntity entity)
         {
-            var result = Leopotam.EcsLite.EcsEntityExtensions.Unpack(packedEntity, out world, out var entId);
+            var result = EcsEntityExtensions.Unpack(packedEntity, out world, out var entId);
             entity = (EcsUnsafeEntity)entId;
             return result;
         }
@@ -152,22 +136,26 @@ namespace PavEcsGame
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static EcsEntity Pack(this in EcsUnsafeEntity entId, EcsWorld world)
         {
-            return Leopotam.EcsLite.EcsEntityExtensions.PackEntityWithWorld(world, entId);
+            return world.PackEntityWithWorld(entId);
         }
 
 
-        public static EcsSystems MyDelHere<T>(this EcsSystems systems)
-     where T : struct
+        public static IEcsSystems MyDelHere<T>(this IEcsSystems systems)
+            where T : struct
         {
             return systems.Add(new GeneratedDelHereSystem<T>(systems));
         }
-
     }
 
 
-    partial class GeneratedDelHereSystem<T> : IEcsRunSystem//, IEcsSystemSpec
+    internal partial class GeneratedDelHereSystem<T> : IEcsRunSystem //, IEcsSystemSpec
         where T : struct
     {
+        [Entity]
+        private readonly partial struct Ent
+        {
+            public partial RequiredComponent<T> ComponentToDel();
+        }
         //private readonly EcsFilterSpec<EcsSpec<T>, EcsSpec, EcsSpec> _spec;
 
         //public UniverseDelHereSystem(EcsUniverse universe)
@@ -177,25 +165,15 @@ namespace PavEcsGame
         //        .Build(ref _spec);
         //}
 
-        public GeneratedDelHereSystem(EcsSystems systems)
+        public GeneratedDelHereSystem(IEcsSystems systems)
         {
             var worldName = TypeToWorldNameMap.GetWorldName<T>();
             _providers = new Providers(Ent.Create(worldName, systems));
         }
 
-        [Entity]
-        private readonly partial struct Ent
+        public void Run(IEcsSystems systems)
         {
-            public partial RequiredComponent<T> ComponentToDel();
-        }
-
-        public void Run(EcsSystems systems)
-        {
-            foreach (var entity in _providers.EntProvider)
-            {
-                entity.ComponentToDel().Remove();
-            }
+            foreach (var entity in _providers.EntProvider) entity.ComponentToDel().Remove();
         }
     }
-
 }

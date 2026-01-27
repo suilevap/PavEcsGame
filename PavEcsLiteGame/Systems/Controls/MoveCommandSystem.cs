@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using Leopotam.EcsLite;
+﻿using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
@@ -10,9 +6,12 @@ using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    partial class MoveCommandSystem : IEcsInitSystem, IEcsRunSystem, IEcsSystemSpec
+    internal partial class MoveCommandSystem : IEcsInitSystem, IEcsRunSystem, IEcsSystemSpec
     {
         private readonly TurnManager _turnManager;
+
+
+        private TurnManager.SimSystemRegistration _registration;
 
 
         [Entity]
@@ -22,11 +21,7 @@ namespace PavEcsGame.Systems
             public partial ref SpeedComponent Speed();
 
             public partial ref CommandTokenComponent CommandToken();
-
         }
-
-
-        private TurnManager.SimSystemRegistration _registration;
 
 
         public MoveCommandSystem(TurnManager turnManager, EcsSystems universe)
@@ -35,21 +30,18 @@ namespace PavEcsGame.Systems
             _turnManager = turnManager;
         }
 
-        public void Init(EcsSystems systems)
+        public void Init(IEcsSystems systems)
         {
             _registration = _turnManager.RegisterSimulationSystem(this);
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             _registration.UpdateState(_providers.EntityProvider.Filter);
-            foreach (Entity ent in _providers.EntityProvider)
+            foreach (var ent in _providers.EntityProvider)
             {
                 ref readonly var command = ref ent.Move().Get();
-                if (command.IsRelative)
-                {
-                    ent.Speed() = new SpeedComponent(command.Target.Value);
-                }
+                if (command.IsRelative) ent.Speed() = new SpeedComponent(command.Target.Value);
                 ent.Move().Remove();
                 ent.CommandToken().ActionCount--;
             }

@@ -1,6 +1,4 @@
-﻿using Leopotam.Ecs.Types;
-
-namespace PavEcsGame.Components.Events
+﻿namespace PavEcsGame.Components.Events
 {
     public struct MapRawDataEvent
     {

@@ -2,7 +2,6 @@
 
 namespace GenerateTest
 {
-
     public static class LeoExtension
     {
         public static ref T Ensure<T>(this EcsPool<T> pool, EcsUnsafeEntity ent, out bool isNew)
@@ -13,6 +12,7 @@ namespace GenerateTest
                 isNew = false;
                 return ref pool.Get(ent);
             }
+
             isNew = true;
             return ref pool.Add(ent);
         }
@@ -20,13 +20,9 @@ namespace GenerateTest
         public static ref T Ensure<T>(this EcsPool<T> pool, EcsUnsafeEntity ent)
             where T : struct
         {
-            if (pool.Has(ent))
-            {
-                return ref pool.Get(ent);
-            }
+            if (pool.Has(ent)) return ref pool.Get(ent);
             return ref pool.Add(ent);
         }
-
     }
 
     public readonly struct EcsUnsafeEntity
@@ -48,7 +44,10 @@ namespace GenerateTest
             return new EcsUnsafeEntity(id);
         }
 
-        public override string ToString() => Id.ToString();
+        public override string ToString()
+        {
+            return Id.ToString();
+        }
     }
     //public readonly ref struct OptionalComponent<T> where T : struct
     //{

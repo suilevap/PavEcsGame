@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Text;
 using DeBroglie;
 using DeBroglie.Models;
@@ -6,7 +7,6 @@ using DeBroglie.Topo;
 using Leopotam.EcsLite;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.Generated;
-using System.Linq;
 
 namespace PavEcsGame.Systems
 {
@@ -29,7 +29,8 @@ namespace PavEcsGame.Systems
         {
             public partial ref MapRawDataEvent Event();
         }
-        public void Run(EcsSystems systems)
+
+        public void Run(IEcsSystems systems)
         {
             foreach (var ent in _providers.EntProvider)
             {
@@ -38,10 +39,10 @@ namespace PavEcsGame.Systems
                 switch (cmd.Command)
                 {
                     case "load":
-                        {
-                            var fileName = cmd.Args[0];
-                            LoadMap(fileName);
-                        }
+                    {
+                        var fileName = cmd.Args[0];
+                        LoadMap(fileName);
+                    }
                         break;
                 }
 
@@ -68,10 +69,10 @@ namespace PavEcsGame.Systems
             var height = lines.Length;
             // Define some sample data
             var patternLines = (await File.ReadAllLinesAsync(patternFilename))
-                .Select(x=>x.ToArray())
+                .Select(x => x.ToArray())
                 .ToArray();
 
-            ITopoArray<char> sample = TopoArray.Create(patternLines, periodic: false);
+            var sample = TopoArray.Create(patternLines, false);
 
             //ITopoArray<char> sample = TopoArray.Create(new[]
             //{
@@ -89,35 +90,30 @@ namespace PavEcsGame.Systems
             model.AddSample(tiles);
 
             // Set the output dimensions
-            var topology = new GridTopology(width, height, periodic: false);
+            var topology = new GridTopology(width, height, false);
             // Acturally run the algorithm
             var propagator = new TilePropagator(model, topology);
             var status = propagator.Run();
-            int iterations = 0;
-            while(iterations++ < 100 && status != Resolution.Decided)
-            {
-                status = propagator.Run();
-            }
+            var iterations = 0;
+            while (iterations++ < 100 && status != Resolution.Decided) status = propagator.Run();
 
             if (status != Resolution.Decided) throw new InvalidDataException("Undecided");
             var output = propagator.ToValueArray<char>();
             // Display the results
 
-            string[] outputLines = new string[height];
+            var outputLines = new string[height];
             for (var y = 0; y < height; y++)
             {
-                StringBuilder sb = new StringBuilder(width);
+                var sb = new StringBuilder(width);
 
                 for (var x = 0; x < width; x++)
                 {
                     var item = output.Get(x, y);
                     var defined = lines[y][x];
-                    if (defined != '.')
-                    {
-                        item = defined;
-                    }
+                    if (defined != '.') item = defined;
                     sb.Append(item);
                 }
+
                 outputLines[y] = sb.ToString();
             }
 

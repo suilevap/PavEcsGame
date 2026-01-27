@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace PavEcsSpec.Generators
 {
@@ -13,11 +11,14 @@ namespace PavEcsSpec.Generators
                 result = new TV();
                 dict.Add(key, result);
             }
+
             return result;
         }
 
-        public static bool IsRequired(this ComponentDescriptorAccessKind accessType) =>
-          accessType == ComponentDescriptorAccessKind.Include || accessType == ComponentDescriptorAccessKind.IncludeReadonly;
-
+        public static bool IsRequired(this ComponentDescriptorAccessKind accessType)
+        {
+            return accessType == ComponentDescriptorAccessKind.Include ||
+                   accessType == ComponentDescriptorAccessKind.IncludeReadonly;
+        }
     }
 }

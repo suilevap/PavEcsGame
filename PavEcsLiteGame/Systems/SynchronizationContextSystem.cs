@@ -13,12 +13,12 @@ namespace PavEcsGame.Systems
             _workQueue = new WorkQueue();
         }
 
-        public void Init(EcsSystems systems)
+        public void Init(IEcsSystems systems)
         {
             SynchronizationContext.SetSynchronizationContext(new EcsSynchronizationContext(_workQueue));
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             _workQueue.RunEqueuedOnly();
         }

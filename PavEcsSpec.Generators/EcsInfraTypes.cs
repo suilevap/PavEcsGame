@@ -1,30 +1,11 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Text;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace PavEcsSpec.Generators
 {
     internal static class EcsInfraTypes
     {
-        public static (string name, string code)[] Files = new (string name, string code)[]
-        {
-            new (nameof(ProviderTypes), ProviderTypes),
-            new (nameof(EntityAttribute), EntityAttribute),
-            new (nameof(AutoRegisterSystemAttribute), AutoRegisterSystemAttribute),
-            new (nameof(TypeToWorldNameMap), TypeToWorldNameMap),
-        };
-
-        internal static void AddSources(GeneratorPostInitializationContext c)
-        {
-            foreach (var file in EcsInfraTypes.Files)
-            {
-                SourceText sourceText = SourceText.From(file.code.Trim(), Encoding.UTF8);
-                c.AddSource(file.name, sourceText);
-            }
-        }
-
         private const string ProviderTypes = @"
 using Leopotam.EcsLite;
 using System;
@@ -173,6 +154,7 @@ namespace PavEcsSpec.Generated
     }
 }
 ";
+
         private const string AutoRegisterSystemAttribute = @"
 using System;
 namespace PavEcsSpec.Generated
@@ -203,5 +185,22 @@ namespace PavEcsSpec.Generated
     }
 }
 ";
+
+        public static (string name, string code)[] Files =
+        {
+            new(nameof(ProviderTypes), ProviderTypes),
+            new(nameof(EntityAttribute), EntityAttribute),
+            new(nameof(AutoRegisterSystemAttribute), AutoRegisterSystemAttribute),
+            new(nameof(TypeToWorldNameMap), TypeToWorldNameMap)
+        };
+
+        internal static void AddSources(GeneratorPostInitializationContext c)
+        {
+            foreach (var file in Files)
+            {
+                var sourceText = SourceText.From(file.code.Trim(), Encoding.UTF8);
+                c.AddSource(file.name, sourceText);
+            }
+        }
     }
 }

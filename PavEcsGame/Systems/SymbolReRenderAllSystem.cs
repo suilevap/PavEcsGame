@@ -1,8 +1,7 @@
-﻿using System;
-using System.Text;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
 using PavEcsGame.Components;
+using System;
+using System.Text;
+
 using PavEcsGame.GameLoop;
 
 namespace PavEcsGame.Systems

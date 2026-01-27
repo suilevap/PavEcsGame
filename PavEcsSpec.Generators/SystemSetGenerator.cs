@@ -1,266 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-
 
 namespace PavEcsSpec.Generators
 {
     [Generator]
     public class SystemSetGenerator : ISourceGenerator
     {
-
-
-        public void Initialize(GeneratorInitializationContext context)
+        private class EntitySyntaxReceiver : ISyntaxReceiver
         {
-            // Register the attribute source
-            context.RegisterForPostInitialization(
-                c =>
-                {
-                    EcsInfraTypes.AddSources(c);
-                });
-
-            // Register a syntax receiver that will be created for each generation pass
-            //context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
-
-            context.RegisterForSyntaxNotifications(() => new EntitySyntaxReceiver());
-        }
-
-        public void Execute(GeneratorExecutionContext context)
-        {
-#if DEBUG
-            //if (!Debugger.IsAttached)
-            //{
-            //    Debugger.Launch();
-            //}
-#endif 
-            try
-            {
-                ExecuteImpl(context);
-            }
-            catch (Exception ex)
-            {
-#if DEBUG
-                //if (!Debugger.IsAttached)
-                //{
-                //    Debugger.Launch();
-                //}
-#endif 
-                throw;
-            }
-        }
-
-        private void ExecuteImpl(GeneratorExecutionContext context)
-        {
-            // retrieve the populated receiver 
-
-            if (context.SyntaxReceiver is EntitySyntaxReceiver receiver)
-            {
-                var provider = new EntityProviderGenerator();
-
-
-                var entityDescrs = receiver.Candidates
-                    .Select(
-                    declaration =>
-                    {
-                        var model = context.Compilation.GetSemanticModel(declaration.SyntaxTree, true);
-                        var symbol = model.GetDeclaredSymbol(declaration);
-                        if (symbol is ITypeSymbol type)
-                        {
-                            //if (type is null || !IsEnumeration(type))
-                            //    continue;
-                            try
-                            {
-                                var entityDescr = EcsEntityDescriptor.Create(type, declaration);
-                                ReportDiagnostic(context, entityDescr, declaration);
-                                return entityDescr;
-                            }
-                            catch (Exception ex)
-                            {
-                                ReportError(context, declaration, $"Ex {symbol.Name} {ex.Message} {ex.StackTrace}");
-                            }
-                        }
-                        else
-                        {
-                            ReportError(context, declaration, $"unsupported symbol {symbol.Name}");
-                        }
-                        return default(EcsEntityDescriptor);
-                    })
-                    .Where(x => x != null)
-                    .ToList();
-
-                Dictionary<string, QuickUnionFind<ITypeSymbol>> universes = new Dictionary<string, QuickUnionFind<ITypeSymbol>>();
-                foreach (var entity in entityDescrs)
-                {
-                    var universe = universes.GetOrCreate(entity.Universe);
-                    universe.Union(entity.Components.Select(x => x.ComponentType)
-                        .Concat(new[] { entity.EntityType })
-                        .Concat(entity.BaseEntities.Select(x => x.EntityType)));
-                }
-                Dictionary<string, Dictionary<ITypeSymbol, string>> typeToWorldName =
-                    new Dictionary<string, Dictionary<ITypeSymbol, string>>();
-                foreach (var universe in universes)
-                {
-                    Dictionary<ITypeSymbol, string> map = new();
-                    foreach (var gr in universe.Value.GetAllGroups())
-                    {
-                        foreach (var type in gr)
-                        {
-                            if (type is ITypeParameterSymbol genericType)
-                            {
-                                continue;
-                            }
-                            var worldName = $"GENERATED_{universe.Key}_{gr.Key}";
-                            map[type] = worldName;
-                        }
-                    }
-                    typeToWorldName[universe.Key] = map;
-                }
-                var mapCode = TypeToWorldNameGenerator.GeneratedCode(typeToWorldName);
-                AddSource(context, $"{nameof(EcsInfraTypes.TypeToWorldNameMap)}.generated.cs", mapCode);
-
-
-                Dictionary<ITypeSymbol, string> generatedCode = new Dictionary<ITypeSymbol, string>(SymbolEqualityComparer.IncludeNullability);
-                foreach (var entity in entityDescrs)
-                {
-                    try
-                    {
-                        var component = entity.Components.Select(x => x.ComponentType).FirstOrDefault(x => x is not ITypeParameterSymbol);
-                        string worldName = "UNDEFINED_WORLD";
-                        if (component != null)
-                        {
-                            worldName = typeToWorldName[entity.Universe][entity.Components.First().ComponentType];
-                        }
-                        var code = provider.GenerateEntityCode(entity, worldName);
-                        generatedCode.Add(entity.EntityType, code);
-                    }
-                    catch (Exception ex)
-                    {
-                        ReportError(context, entity.Declaration, $"Ex {entity.EntityType} {ex.Message} {ex.StackTrace}");
-                    }
-                }
-                foreach (var gr in entityDescrs.GroupBy(x => x.EntityType.ContainingType, SymbolEqualityComparer.IncludeNullability))
-                {
-                    if (gr.Key is ITypeSymbol parentType)
-                    {
-                        try
-                        {
-                            var providerCode = ProvidersGenerator.GenerateCode(gr);
-                            var field = parentType
-                                .GetMembers()
-                                .OfType<IFieldSymbol>()
-                                .FirstOrDefault(x => x.Type.Name == "Providers");
-
-
-                            var fieldCode = field == null ? "private readonly Providers _providers;" : string.Empty;
-                            string simpleCtor = string.Empty;
-                            if (providerCode.HasSimpleCtor)
-                            {
-                                var hasEmptyCtor = parentType
-                                  .GetMembers()
-                                  .OfType<IMethodSymbol>()
-                                  .FirstOrDefault(x => x.MethodKind == MethodKind.Constructor && x.Parameters.Length == 0 && !x.IsImplicitlyDeclared);
-                                //if (hasEmptyCtor != null)
-                                //{
-                                //    Debugger.Launch();
-                                //}
-                                simpleCtor = $@"
-public {parentType.Name}(Leopotam.EcsLite.EcsSystems systems) {(hasEmptyCtor != null ? " : this()" : string.Empty)}
-{{
-    {(field?.Name ?? "_providers")} = new Providers(systems);
-}}
-";
-                            }
-                            var ctorCode = $@"
-{fieldCode}
-{simpleCtor}
-";
-                            generatedCode.Add(parentType, ctorCode + providerCode.Code);
-                        }
-                        catch (Exception ex)
-                        {
-                            ReportError(context, gr.FirstOrDefault().Declaration, $"Ex {parentType.Name} {ex.Message} {ex.StackTrace.Replace("\n", "|")}");
-                        }
-                    }
-                }
-
-                var types = NestedTypeGenerator.WrapNestedTypes(generatedCode);
-                foreach (var pair in types)
-                {
-                    var fileName = $"{pair.Key.Name}.generated.cs";
-                    var code = pair.Value;
-                    AddSource(context, fileName, code);
-                }
-
-            }
-        }
-
-        private static void AddSource(GeneratorExecutionContext context, string fileName, string code)
-        {
-            context.AddSource(fileName, code);
-
-            try
-            {
-                System.IO.File.WriteAllText("C:/dev/roslyn/" + fileName, code);
-            }
-            catch (Exception ex)
-            {
-                context.ReportDiagnostic(
-                   Diagnostic.Create(
-                       new DiagnosticDescriptor(
-                           "0",
-                           $"Entity {fileName}",
-                          "Failed to save",
-                           "EcsGenerator",
-                           DiagnosticSeverity.Warning,
-                           true),
-                       null)
-                   );
-            }
-        }
-
-        private void ReportDiagnostic(GeneratorExecutionContext context, EcsEntityDescriptor entityDescr, StructDeclarationSyntax declaration)
-        {
-            context.ReportDiagnostic(
-                Diagnostic.Create(
-                    new DiagnosticDescriptor(
-                        "0",
-                        $"Entity {entityDescr.EntityType}",
-                        entityDescr.ToString().Replace(Environment.NewLine, "|"),
-                        "EcsGenerator",
-                        DiagnosticSeverity.Warning,
-                        true),
-                    declaration.GetLocation())
-                );
-        }
-        private void ReportError(GeneratorExecutionContext context, StructDeclarationSyntax declaration, string error)
-        {
-            context.ReportDiagnostic(
-                Diagnostic.Create(
-                    new DiagnosticDescriptor(
-                        "0",
-                        $"Error",
-                        error,
-                        "EcsGenerator",
-                        DiagnosticSeverity.Error,
-                        true),
-                    declaration.GetLocation())
-                );
-#if DEBUG
-            if (!Debugger.IsAttached)
-            {
-                //Debugger.Launch();
-            }
-#endif 
-        }
-
-        class EntitySyntaxReceiver : ISyntaxReceiver
-        {
-            public List<StructDeclarationSyntax> Candidates { get; } = new List<StructDeclarationSyntax>();
+            public List<StructDeclarationSyntax> Candidates { get; } = new();
 
             public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
             {
@@ -281,7 +32,6 @@ public {parentType.Name}(Leopotam.EcsLite.EcsSystems systems) {(hasEmptyCtor != 
             private static string ExtractName(TypeSyntax type)
             {
                 while (type != null)
-                {
                     switch (type)
                     {
                         case IdentifierNameSyntax ins:
@@ -294,11 +44,247 @@ public {parentType.Name}(Leopotam.EcsLite.EcsSystems systems) {(hasEmptyCtor != 
                         default:
                             return null;
                     }
-                }
 
                 return null;
             }
+        }
 
+        public void Initialize(GeneratorInitializationContext context)
+        {
+            // Register the attribute source
+            context.RegisterForPostInitialization(c => { EcsInfraTypes.AddSources(c); });
+
+            // Register a syntax receiver that will be created for each generation pass
+            //context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
+
+            context.RegisterForSyntaxNotifications(() => new EntitySyntaxReceiver());
+        }
+
+        public void Execute(GeneratorExecutionContext context)
+        {
+#if DEBUG
+            if (!Debugger.IsAttached)
+            {
+                Debugger.Launch();
+            }
+#endif
+            ExecuteImpl(context);
+        }
+
+        private void ExecuteImpl(GeneratorExecutionContext context)
+        {
+            // retrieve the populated receiver 
+
+            if (context.SyntaxReceiver is EntitySyntaxReceiver receiver)
+            {
+                var provider = new EntityProviderGenerator();
+
+
+                var entityDescrs = receiver.Candidates
+                    .Select(declaration =>
+                    {
+                        var model = context.Compilation.GetSemanticModel(declaration.SyntaxTree, true);
+                        var symbol = model.GetDeclaredSymbol(declaration);
+                        if (symbol is ITypeSymbol type)
+                            //if (type is null || !IsEnumeration(type))
+                            //    continue;
+                            try
+                            {
+                                var entityDescr = EcsEntityDescriptor.Create(type, declaration);
+                                //ReportDiagnostic(context, entityDescr, declaration);
+                                return entityDescr;
+                            }
+                            catch (Exception ex)
+                            {
+                                ReportError(context, declaration, $"Ex {symbol.Name} {ex.Message} {ex.StackTrace}");
+                            }
+                        else
+                            ReportError(context, declaration, $"unsupported symbol {symbol.Name}");
+
+                        return default;
+                    })
+                    .Where(x => x != null)
+                    .ToList();
+
+                var universes = new Dictionary<string, QuickUnionFind<ITypeSymbol>>();
+                foreach (var entity in entityDescrs)
+                {
+                    var universe = universes.GetOrCreate(entity.Universe);
+                    universe.Union(entity.Components.Select(x => x.ComponentType)
+                        .Concat(new[] { entity.EntityType })
+                        .Concat(entity.BaseEntities.Select(x => x.EntityType)));
+                }
+
+                var typeToWorldName =
+                    new Dictionary<string, Dictionary<ITypeSymbol, string>>();
+                foreach (var universe in universes)
+                {
+                    Dictionary<ITypeSymbol, string> map = new();
+                    foreach (var gr in universe.Value.GetAllGroups())
+                    foreach (var type in gr)
+                    {
+                        if (type is ITypeParameterSymbol genericType) continue;
+                        var worldName = $"GENERATED_{universe.Key}_{gr.Key}";
+                        map[type] = worldName;
+                    }
+
+                    typeToWorldName[universe.Key] = map;
+                }
+
+                var mapCode = TypeToWorldNameGenerator.GeneratedCode(typeToWorldName);
+                AddSource(context, $"{nameof(EcsInfraTypes.TypeToWorldNameMap)}.generated.cs", mapCode);
+
+
+                var generatedCode = new Dictionary<ITypeSymbol, string>(SymbolEqualityComparer.IncludeNullability);
+                foreach (var entity in entityDescrs)
+                    try
+                    {
+                        var component = entity.Components.Select(x => x.ComponentType)
+                            .FirstOrDefault(x => x is not ITypeParameterSymbol);
+                        var worldName = "UNDEFINED_WORLD";
+                        if (component != null)
+                            worldName = typeToWorldName[entity.Universe][entity.Components.First().ComponentType];
+                        var code = provider.GenerateEntityCode(entity, worldName);
+                        generatedCode.Add(entity.EntityType, code);
+                    }
+                    catch (Exception ex)
+                    {
+                        ReportError(context, entity.Declaration,
+                            $"Ex {entity.EntityType} {ex.Message} {ex.StackTrace}");
+                    }
+
+                foreach (var gr in entityDescrs.GroupBy(x => x.EntityType.ContainingType,
+                             SymbolEqualityComparer.IncludeNullability))
+                    if (gr.Key is ITypeSymbol parentType)
+                        try
+                        {
+                            var providerCode = ProvidersGenerator.GenerateCode(gr);
+                            var field = parentType
+                                .GetMembers()
+                                .OfType<IFieldSymbol>()
+                                .FirstOrDefault(x => x.Type.Name == "Providers");
+
+
+                            var fieldCode = field == null ? "private readonly Providers _providers;" : string.Empty;
+                            var simpleCtor = string.Empty;
+                            if (providerCode.HasSimpleCtor)
+                            {
+                                var hasEmptyCtor = parentType
+                                    .GetMembers()
+                                    .OfType<IMethodSymbol>()
+                                    .FirstOrDefault(x =>
+                                        x.MethodKind == MethodKind.Constructor && x.Parameters.Length == 0 &&
+                                        !x.IsImplicitlyDeclared);
+                                //if (hasEmptyCtor != null)
+                                //{
+                                //    Debugger.Launch();
+                                //}
+                                simpleCtor = $@"
+public {parentType.Name}(Leopotam.EcsLite.IEcsSystems systems) {(hasEmptyCtor != null ? " : this()" : string.Empty)}
+{{
+    {field?.Name ?? "_providers"} = new Providers(systems);
+}}
+";
+                            }
+
+                            var ctorCode = $@"
+{fieldCode}
+{simpleCtor}
+";
+                            generatedCode.Add(parentType, ctorCode + providerCode.Code);
+                        }
+                        catch (Exception ex)
+                        {
+                            ReportError(context, gr.FirstOrDefault().Declaration,
+                                $"Ex {parentType.Name} {ex.Message} {ex.StackTrace.Replace("\n", "|")}");
+                        }
+
+                var types = NestedTypeGenerator.WrapNestedTypes(generatedCode);
+                foreach (var pair in types)
+                {
+                    var fileName = $"{pair.Key.Name}.generated.cs";
+                    var code = pair.Value;
+                    AddSource(context, fileName, code);
+                }
+            }
+        }
+
+        private static void AddSource(GeneratorExecutionContext context, string fileName, string code)
+        {
+            context.AddSource(fileName, code);
+
+            // try
+            // {
+            //     System.IO.File.WriteAllText("C:/dev/roslyn/" + fileName, code);
+            // }
+            // catch (Exception ex)
+            // {
+            //     context.ReportDiagnostic(
+            //        Diagnostic.Create(
+            //            new DiagnosticDescriptor(
+            //                "ECSSP001",
+            //                $"Entity {fileName}",
+            //               "Failed to save",
+            //                "EcsGenerator",
+            //                DiagnosticSeverity.Warning,
+            //                true),
+            //            null)
+            //        );
+            // } // try
+            // {
+            //     System.IO.File.WriteAllText("C:/dev/roslyn/" + fileName, code);
+            // }
+            // catch (Exception ex)
+            // {
+            //     context.ReportDiagnostic(
+            //        Diagnostic.Create(
+            //            new DiagnosticDescriptor(
+            //                "ECSSP001",
+            //                $"Entity {fileName}",
+            //               "Failed to save",
+            //                "EcsGenerator",
+            //                DiagnosticSeverity.Warning,
+            //                true),
+            //            null)
+            //        );
+            // }
+        }
+
+        private void ReportDiagnostic(GeneratorExecutionContext context, EcsEntityDescriptor entityDescr,
+            StructDeclarationSyntax declaration)
+        {
+            context.ReportDiagnostic(
+                Diagnostic.Create(
+                    new DiagnosticDescriptor(
+                        "ECSSP003",
+                        $"Entity {entityDescr.EntityType}",
+                        entityDescr.ToString().Replace(Environment.NewLine, "|"),
+                        "EcsGenerator",
+                        DiagnosticSeverity.Warning,
+                        true),
+                    declaration.GetLocation())
+            );
+        }
+
+        private void ReportError(GeneratorExecutionContext context, StructDeclarationSyntax declaration, string error)
+        {
+            context.ReportDiagnostic(
+                Diagnostic.Create(
+                    new DiagnosticDescriptor(
+                        "ECSSP4",
+                        "Error",
+                        error,
+                        "EcsGenerator",
+                        DiagnosticSeverity.Error,
+                        true),
+                    declaration.GetLocation())
+            );
+#if DEBUG
+            if (!Debugger.IsAttached)
+            {
+                Debugger.Launch();
+            }
+#endif
         }
     }
 }

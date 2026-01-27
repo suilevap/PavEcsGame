@@ -1,11 +1,10 @@
-﻿using System;
+using PavEcsGame.Components;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
-using PavEcsGame.Components;
+
 using PavEcsGame.GameLoop;
 using PavEcsGame.Extensions;
 

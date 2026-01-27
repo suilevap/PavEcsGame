@@ -1,38 +1,31 @@
-﻿using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
+﻿using Leopotam.EcsLite;
 using PavEcsGame.Components;
-using PavEcsGame.Components.SystemComponents;
 using PavEcsGame.Systems.Managers;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Leopotam.EcsLite;
-using PavEcsSpec.EcsLite;
 using PavEcsGame.Utils;
+using PavEcsSpec.EcsLite;
 using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
     internal partial class RandomMoveSystem : IEcsRunSystem, IEcsSystemSpec
     {
-        private readonly PositionComponent[] _moves = new[]
+        private readonly PositionComponent[] _moves =
         {
-            new PositionComponent(0, 0), 
-            new PositionComponent(1, 0), 
-            new PositionComponent(-1, 0), 
-            new PositionComponent(0, 1), 
-            new PositionComponent(0, -1)
+            new(0, 0),
+            new(1, 0),
+            new(-1, 0),
+            new(0, 1),
+            new(0, -1)
         };
 
         private readonly TurnManager _turnManager;
-   
+
         [Entity]
         private partial struct Entity
         {
             public partial ref RandomGeneratorComponent Rnd();
             public partial ref readonly IsActiveTag IsActive();
             public partial OptionalComponent<MoveCommandComponent> Move();
-
         }
 
         public RandomMoveSystem(TurnManager turnManager, EcsSystems universe)
@@ -41,7 +34,7 @@ namespace PavEcsGame.Systems
             _turnManager = turnManager;
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
             if (_turnManager.CurrentPhase != TurnManager.Phase.TickUpdate)
                 return;
@@ -51,13 +44,12 @@ namespace PavEcsGame.Systems
                 var rnd = ent.Rnd().Rnd;
                 var newTarget = _moves.GetRandom(rnd);
 
-                ent.Move().Ensure() = new MoveCommandComponent()
+                ent.Move().Ensure() = new MoveCommandComponent
                 {
                     Target = newTarget,
                     IsRelative = true
                 };
             }
         }
-
     }
 }

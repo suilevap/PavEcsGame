@@ -10,6 +10,7 @@ namespace PavEcsGame.Utils
         {
             _workQueue = workQueue;
         }
+
         public override void Post(SendOrPostCallback d, object state)
         {
             _workQueue.Enqueue(d, state);
@@ -24,6 +25,5 @@ namespace PavEcsGame.Utils
         {
             return new EcsSynchronizationContext(_workQueue);
         }
-
     }
 }

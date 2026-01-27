@@ -1,24 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
-using PavEcsGame.Components.SystemComponents;
 using PavEcsGame.Systems.Managers;
 using PavEcsSpec.EcsLite;
 using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    partial class MovementSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
+    internal partial class MovementSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
+        private readonly Providers _providers;
 
         private readonly TurnManager _turnManager;
         private TurnManager.SimSystemRegistration _reg;
 
-        private Providers _providers;
         [Entity]
         private readonly partial struct MoveableEnt
         {
@@ -34,22 +28,22 @@ namespace PavEcsGame.Systems
         {
             _turnManager = turnManager;
         }
-        public void Init(EcsSystems systems)
+
+        public void Init(IEcsSystems systems)
         {
             _reg = _turnManager.RegisterSimulationSystem(this);
         }
 
-        public void Run(EcsSystems systems)
+        public void Run(IEcsSystems systems)
         {
-            bool hasWorkToDo = false;
+            var hasWorkToDo = false;
             foreach (var entity in _providers.MoveableEntProvider)
-            {
                 if (entity.Speed().Speed != Int2.Zero)
                 {
                     hasWorkToDo = true;
                     entity.NewPos().Ensure().Value = new PositionComponent(entity.Pos().Value + entity.Speed().Speed);
                 }
-            }
+
             _reg.UpdateState(hasWorkToDo);
         }
     }

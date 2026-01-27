@@ -8,12 +8,12 @@ namespace PavEcsSpec.EcsLite
     {
         private readonly QuickUnionFind<Type> _worldUnion = new QuickUnionFind<Type>();
 
-        public EcsUniverse Universe { get; }
-
         internal EcsUniverseBuilder(EcsUniverse universe)
         {
             Universe = universe;
         }
+
+        public EcsUniverse Universe { get; }
 
         internal void RegisterSet(IEnumerable<Type> required, IEnumerable<Type> optional)
         {
@@ -23,12 +23,9 @@ namespace PavEcsSpec.EcsLite
 
         internal Dictionary<Type, int> GetMapping()
         {
-            Dictionary<Type, int> result = new Dictionary<Type, int>(_worldUnion.Count);
+            var result = new Dictionary<Type, int>(_worldUnion.Count);
 
-            foreach (var (worldId, type) in _worldUnion.GetAll())
-            {
-                result[type] = worldId;
-            }
+            foreach (var (worldId, type) in _worldUnion.GetAll()) result[type] = worldId;
 
             return result;
         }

@@ -1,27 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Text;
-using Leopotam.Ecs.Types;
 
 namespace PavEcsGame.Components
 {
     public struct PositionComponent : IEquatable<PositionComponent>
     {
-
         public Int2 Value;
 
         public PositionComponent(Int2 value)
         {
             Value = value;
         }
+
         public PositionComponent(int x, int y)
         {
-            Value = new Int2(x,y);
+            Value = new Int2(x, y);
         }
 
-        public override string ToString() => $"Pos:{Value}";
+        public override string ToString()
+        {
+            return $"Pos:{Value}";
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PositionComponent operator +(in PositionComponent lhs, in PositionComponent rhs)

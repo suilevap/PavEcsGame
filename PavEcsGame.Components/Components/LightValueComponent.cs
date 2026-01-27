@@ -14,6 +14,6 @@ namespace PavEcsGame.Components
         None = 0,
         Fire = 1 << 0,
         Electricity = 1 << 1,
-        Acid = 1 << 2,
+        Acid = 1 << 2
     }
 }

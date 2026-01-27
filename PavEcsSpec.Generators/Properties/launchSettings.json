@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GenerateTest": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "../GenerateTest/GenerateTest.csproj"
+    }
+  }
+}

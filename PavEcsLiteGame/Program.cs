@@ -1,19 +1,15 @@
-﻿using System;
-using PavEcsGame.GameLoop;
+﻿using PavEcsGame.GameLoop;
 
 namespace PavEcsGame
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            GameMainContainer game = new GameMainContainer();
+            var game = new GameMainContainer();
 
             game.Start();
-            while (game.IsAlive)
-            {
-                game.Update();
-            }
+            while (game.IsAlive) game.Update();
         }
     }
 }

@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using Leopotam.Ecs;
-using Leopotam.Ecs.Types;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Components.Events;
@@ -13,26 +8,25 @@ using PavEcsGame.Systems;
 using PavEcsGame.Systems.Managers;
 using PavEcsGame.Systems.Renders;
 using PavEcsSpec.EcsLite;
-using PavEcsGame;
 
 namespace PavEcsGame.GameLoop
 {
     internal class GameMainContainer
     {
-        private EcsWorld _world;
-        private EcsUniverse? _universe;
         private EcsSystems _systems;
-
-        public bool IsAlive => _world?.IsAlive() ?? false;
+        private EcsUniverse? _universe;
+        private EcsWorld _world;
 
         public GameMainContainer()
         {
             _world = new EcsWorld();
             _systems = new EcsSystems(_world, "Root");
         }
+
+        public bool IsAlive => _world?.IsAlive() ?? false;
+
         public void Start()
         {
-
             _systems
                 .AddUniverse(out var universe)
                 .Add(new SynchronizationContextSystem());
@@ -49,11 +43,11 @@ namespace PavEcsGame.GameLoop
                 .Add(new SpawnEntitySystem(_systems))
                 //.Add(new LoadMapSystem("Data/lightTest.txt", universe, map))
                 .Add(new TileSystem(_systems, map))
-                ;//.Add(new SpawnSystem());
+                ; //.Add(new SpawnSystem());
 
             _systems
                 .Add(new CommandTokenDistributionSystem(TimeSpan.FromSeconds(1f), _systems))
-                .Add(new KeyboardMoveSystem(waitKey: false, turnManager, _systems))
+                .Add(new KeyboardMoveSystem(false, turnManager, _systems))
                 .Add(new RandomMoveSystem(turnManager, _systems))
                 .Add(new MoveCommandSystem(turnManager, _systems));
 
@@ -72,7 +66,6 @@ namespace PavEcsGame.GameLoop
                 .Add(new DamageOnCollisionSystem(_systems))
                 .Add(new DestroyEntitySystem(turnManager, _systems))
                 .Add(new DirectionTileSystem(_systems))
-
                 .Add(new LightSourceSystems(_systems))
                 .Add(new FieldOfViewSystem(_systems, map));
             //.Add(new LightSystem(universe, map));
@@ -107,7 +100,7 @@ namespace PavEcsGame.GameLoop
             PrintUniverseInfo(universe);
         }
 
-        private void DebugInfo(EcsUniverse universe, EcsSystems systems)
+        private void DebugInfo(EcsUniverse universe, IEcsSystems systems)
         {
             var bytes = GC.GetTotalMemory(false);
             Debug.Print("Memory: {0} kb", bytes / 1024);
@@ -144,15 +137,10 @@ namespace PavEcsGame.GameLoop
 
             if (_universe != null)
             {
-                foreach (var gr in _universe.GetAllWorlds(_systems))
-                {
-                    gr.Key.Destroy();
-                }
+                foreach (var gr in _universe.GetAllWorlds(_systems)) gr.Key.Destroy();
 
                 _universe = null;
             }
-
         }
-
     }
 }
