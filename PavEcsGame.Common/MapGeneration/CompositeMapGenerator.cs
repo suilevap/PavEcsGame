@@ -1,141 +1,113 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace PavEcsGame.MapGeneration
 {
     /// <summary>
-    /// Composite generator that uses a blueprint generator to define zones,
-    /// then fills each zone with zone-specific generators
+    /// Composite generator that identifies zones in input state and fills each with zone-specific generator.
+    /// Zone markers are uppercase letters (A-Z) except 'X' which is treated as wall.
     /// </summary>
     public class CompositeMapGenerator : IMapGenerator
     {
-        private readonly IMapGenerator _blueprintGenerator;
         private readonly Dictionary<char, IMapGenerator> _zoneGenerators;
-        private readonly CompositeGeneratorConfig _config;
+        private readonly char _defaultFill;
 
-        public CompositeMapGenerator(
-            IMapGenerator blueprintGenerator,
-            Dictionary<char, IMapGenerator> zoneGenerators,
-            CompositeGeneratorConfig config = null)
+        public CompositeMapGenerator(Dictionary<char, IMapGenerator> zoneGenerators, char defaultFill = '.')
         {
-            _blueprintGenerator = blueprintGenerator ?? throw new ArgumentNullException(nameof(blueprintGenerator));
-            _zoneGenerators = zoneGenerators ?? throw new ArgumentNullException(nameof(zoneGenerators));
-            _config = config ?? new CompositeGeneratorConfig();
+            _zoneGenerators = zoneGenerators ?? new Dictionary<char, IMapGenerator>();
+            _defaultFill = defaultFill;
         }
 
-        public async Task<MapGeneratorOutput> GenerateAsync(MapGeneratorInput input)
+        public async Task<MapData> GenerateAsync(MapData state, MapData mask = null)
         {
-            // Step 1: Generate blueprint
-            var blueprintResult = await _blueprintGenerator.GenerateAsync(input);
-            if (!blueprintResult.Success)
+            var result = state.Clone();
+            var width = state.Width;
+            var height = state.Height;
+
+            // Find zone bounds
+            var zoneBounds = FindZoneBounds(state);
+
+            // Process each zone
+            foreach (var (marker, bounds) in zoneBounds)
             {
-                return MapGeneratorOutput.Failed($"Blueprint generation failed: {blueprintResult.Error}");
-            }
-
-            var blueprint = blueprintResult.Data;
-
-            // Step 2: Find all zones and their bounds
-            var zoneBounds = FindZoneBounds(blueprint);
-
-            // Step 3: Create output starting from blueprint
-            var output = blueprint.Clone();
-
-            // Step 4: Generate content for each zone
-            var zoneResults = new Dictionary<char, MapGeneratorOutput>();
-
-            foreach (var (zoneMarker, bounds) in zoneBounds)
-            {
-                if (!_zoneGenerators.TryGetValue(zoneMarker, out var zoneGenerator))
+                if (!_zoneGenerators.TryGetValue(marker, out var generator))
                 {
-                    // No generator for this zone - use default behavior
-                    if (_config.DefaultGenerator != null)
+                    // No generator - fill with default
+                    FillZone(result, marker, _defaultFill);
+                    continue;
+                }
+
+                // Create zone state and mask
+                var zoneState = new MapData(bounds.W, bounds.H, _defaultFill);
+                var zoneMask = new MapData(bounds.W, bounds.H, '\0');
+
+                for (int y = 0; y < bounds.H; y++)
+                {
+                    for (int x = 0; x < bounds.W; x++)
                     {
-                        zoneGenerator = _config.DefaultGenerator;
+                        var sx = bounds.X + x;
+                        var sy = bounds.Y + y;
+                        var c = state[sx, sy];
+
+                        if (c == marker)
+                        {
+                            // This cell is part of zone - will be generated
+                            zoneState[x, y] = _defaultFill;
+                        }
+                        else
+                        {
+                            // Not part of zone - preserve
+                            zoneState[x, y] = c;
+                            zoneMask[x, y] = 'x'; // Mark as preserved
+                        }
                     }
-                    else
+                }
+
+                // Generate zone content
+                var zoneResult = await generator.GenerateAsync(zoneState, zoneMask);
+
+                // Copy back only zone cells
+                for (int y = 0; y < bounds.H; y++)
+                {
+                    for (int x = 0; x < bounds.W; x++)
                     {
-                        // Replace zone marker with empty space
-                        FillZone(output, zoneMarker, _config.DefaultFillChar);
-                        continue;
+                        var sx = bounds.X + x;
+                        var sy = bounds.Y + y;
+
+                        if (state[sx, sy] == marker)
+                        {
+                            result[sx, sy] = zoneResult[x, y];
+                        }
                     }
-                }
-
-                // Extract zone area for generator input
-                var zoneInput = new MapGeneratorInput
-                {
-                    Width = bounds.Width,
-                    Height = bounds.Height,
-                    InitialState = _config.PassBlueprintToZones
-                        ? ExtractZoneWithMarker(blueprint, bounds, zoneMarker)
-                        : null,
-                    ConstrainedChars = input.ConstrainedChars,
-                    Seed = input.Seed
-                };
-
-                var zoneResult = await zoneGenerator.GenerateAsync(zoneInput);
-                zoneResults[zoneMarker] = zoneResult;
-
-                if (zoneResult.Success)
-                {
-                    // Blit zone result back to output
-                    BlitZone(output, zoneResult.Data, bounds, zoneMarker, blueprint);
-                }
-                else if (_config.FailOnZoneError)
-                {
-                    return MapGeneratorOutput.Failed(
-                        $"Zone '{zoneMarker}' generation failed: {zoneResult.Error}");
-                }
-                else
-                {
-                    // Fill failed zone with default
-                    FillZone(output, zoneMarker, _config.DefaultFillChar);
                 }
             }
 
-            return new MapGeneratorOutput
-            {
-                Data = output,
-                Success = true,
-                Metadata = new Dictionary<string, object>
-                {
-                    ["zones"] = zoneBounds.Keys.ToList(),
-                    ["zoneBounds"] = zoneBounds,
-                    ["zoneResults"] = zoneResults
-                }
-            };
+            return result;
         }
 
-        private Dictionary<char, ZoneBounds> FindZoneBounds(MapData map)
+        private Dictionary<char, Bounds> FindZoneBounds(MapData map)
         {
-            var bounds = new Dictionary<char, ZoneBounds>();
+            var bounds = new Dictionary<char, Bounds>();
 
             for (int y = 0; y < map.Height; y++)
             {
                 for (int x = 0; x < map.Width; x++)
                 {
                     var c = map[x, y];
+                    if (!IsZoneMarker(c)) continue;
 
-                    // Zone markers are identified by the predicate
-                    if (!_config.IsZoneMarker(c))
-                        continue;
-
-                    if (!bounds.TryGetValue(c, out var zoneBounds))
+                    if (!bounds.TryGetValue(c, out var b))
                     {
-                        zoneBounds = new ZoneBounds
-                        {
-                            MinX = x, MinY = y,
-                            MaxX = x, MaxY = y
-                        };
-                        bounds[c] = zoneBounds;
+                        b = new Bounds { X = x, Y = y, MaxX = x, MaxY = y };
+                        bounds[c] = b;
                     }
                     else
                     {
-                        zoneBounds.MinX = Math.Min(zoneBounds.MinX, x);
-                        zoneBounds.MinY = Math.Min(zoneBounds.MinY, y);
-                        zoneBounds.MaxX = Math.Max(zoneBounds.MaxX, x);
-                        zoneBounds.MaxY = Math.Max(zoneBounds.MaxY, y);
+                        b.X = Math.Min(b.X, x);
+                        b.Y = Math.Min(b.Y, y);
+                        b.MaxX = Math.Max(b.MaxX, x);
+                        b.MaxY = Math.Max(b.MaxY, y);
                     }
                 }
             }
@@ -143,106 +115,21 @@ namespace PavEcsGame.MapGeneration
             return bounds;
         }
 
-        private MapData ExtractZoneWithMarker(MapData source, ZoneBounds bounds, char marker)
+        private static bool IsZoneMarker(char c) => c >= 'A' && c <= 'Z' && c != 'X';
+
+        private static void FillZone(MapData map, char marker, char fill)
         {
-            var result = new MapData(bounds.Width, bounds.Height);
-
-            for (int y = 0; y < bounds.Height; y++)
-            {
-                for (int x = 0; x < bounds.Width; x++)
-                {
-                    var srcX = bounds.MinX + x;
-                    var srcY = bounds.MinY + y;
-                    var c = source[srcX, srcY];
-
-                    // Only include cells that are part of this zone
-                    result[x, y] = (c == marker) ? '.' : c;
-                }
-            }
-
-            return result;
+            for (int y = 0; y < map.Height; y++)
+            for (int x = 0; x < map.Width; x++)
+                if (map[x, y] == marker)
+                    map[x, y] = fill;
         }
 
-        private void BlitZone(MapData output, MapData zoneData, ZoneBounds bounds, char marker, MapData blueprint)
+        private class Bounds
         {
-            for (int y = 0; y < bounds.Height; y++)
-            {
-                for (int x = 0; x < bounds.Width; x++)
-                {
-                    var outX = bounds.MinX + x;
-                    var outY = bounds.MinY + y;
-
-                    if (!output.IsInBounds(outX, outY))
-                        continue;
-
-                    // Only replace cells that were originally this zone marker
-                    if (blueprint[outX, outY] == marker)
-                    {
-                        output[outX, outY] = zoneData[x, y];
-                    }
-                }
-            }
+            public int X, Y, MaxX, MaxY;
+            public int W => MaxX - X + 1;
+            public int H => MaxY - Y + 1;
         }
-
-        private void FillZone(MapData output, char marker, char fillChar)
-        {
-            for (int y = 0; y < output.Height; y++)
-            {
-                for (int x = 0; x < output.Width; x++)
-                {
-                    if (output[x, y] == marker)
-                    {
-                        output[x, y] = fillChar;
-                    }
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Bounding box for a zone
-    /// </summary>
-    public class ZoneBounds
-    {
-        public int MinX { get; set; }
-        public int MinY { get; set; }
-        public int MaxX { get; set; }
-        public int MaxY { get; set; }
-
-        public int Width => MaxX - MinX + 1;
-        public int Height => MaxY - MinY + 1;
-    }
-
-    /// <summary>
-    /// Configuration for composite generator
-    /// </summary>
-    public class CompositeGeneratorConfig
-    {
-        /// <summary>
-        /// Predicate to identify zone marker characters.
-        /// Default: uppercase letters except 'X'
-        /// </summary>
-        public Func<char, bool> IsZoneMarker { get; init; } =
-            c => char.IsUpper(c) && c != 'X';
-
-        /// <summary>
-        /// Default fill character for zones without generators
-        /// </summary>
-        public char DefaultFillChar { get; init; } = '.';
-
-        /// <summary>
-        /// Default generator for zones without specific generators (null = use DefaultFillChar)
-        /// </summary>
-        public IMapGenerator DefaultGenerator { get; init; }
-
-        /// <summary>
-        /// Whether to pass blueprint section to zone generators as initial state
-        /// </summary>
-        public bool PassBlueprintToZones { get; init; } = false;
-
-        /// <summary>
-        /// Whether to fail entire generation if any zone fails
-        /// </summary>
-        public bool FailOnZoneError { get; init; } = false;
     }
 }
