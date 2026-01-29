@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using PavEcsGame.Components;
 
 namespace PavEcsGame.MapGeneration
 {
     /// <summary>
-    /// Composite generator that identifies zones in input state and fills each with zone-specific generator.
+    /// Composite generator that identifies zones in input and fills each with zone-specific generator.
     /// Zone markers are uppercase letters (A-Z) except 'X' which is treated as wall.
     /// </summary>
     public class CompositeMapGenerator : IMapGenerator
@@ -19,11 +20,15 @@ namespace PavEcsGame.MapGeneration
             _defaultFill = defaultFill;
         }
 
-        public async Task<MapData> GenerateAsync(MapData state, MapData mask = null)
+        public async Task<MapData<char>> GenerateAsync(MapData<char> state, MapData<bool> mask = null)
         {
-            var result = state.Clone();
             var width = state.Width;
             var height = state.Height;
+
+            // Copy state to result
+            var result = new MapData<char>();
+            result.Init(new Int2(width, height));
+            result.CopyFrom(state);
 
             // Find zone bounds
             var zoneBounds = FindZoneBounds(state);
@@ -33,33 +38,34 @@ namespace PavEcsGame.MapGeneration
             {
                 if (!_zoneGenerators.TryGetValue(marker, out var generator))
                 {
-                    // No generator - fill with default
                     FillZone(result, marker, _defaultFill);
                     continue;
                 }
 
                 // Create zone state and mask
-                var zoneState = new MapData(bounds.W, bounds.H, _defaultFill);
-                var zoneMask = new MapData(bounds.W, bounds.H, '\0');
+                var zoneState = new MapData<char>();
+                zoneState.Init(new Int2(bounds.W, bounds.H));
+                zoneState.Fill(_defaultFill);
 
-                for (int y = 0; y < bounds.H; y++)
+                var zoneMask = new MapData<bool>();
+                zoneMask.Init(new Int2(bounds.W, bounds.H));
+
+                var pos = new Int2();
+                for (pos.Y = 0; pos.Y < bounds.H; pos.Y++)
                 {
-                    for (int x = 0; x < bounds.W; x++)
+                    for (pos.X = 0; pos.X < bounds.W; pos.X++)
                     {
-                        var sx = bounds.X + x;
-                        var sy = bounds.Y + y;
-                        var c = state[sx, sy];
+                        var srcPos = new Int2(bounds.X + pos.X, bounds.Y + pos.Y);
+                        var c = state.Get(srcPos);
 
                         if (c == marker)
                         {
-                            // This cell is part of zone - will be generated
-                            zoneState[x, y] = _defaultFill;
+                            zoneState.Set(pos, _defaultFill);
                         }
                         else
                         {
-                            // Not part of zone - preserve
-                            zoneState[x, y] = c;
-                            zoneMask[x, y] = 'x'; // Mark as preserved
+                            zoneState.Set(pos, c);
+                            zoneMask.Set(pos, true); // Preserve non-zone cells
                         }
                     }
                 }
@@ -68,16 +74,14 @@ namespace PavEcsGame.MapGeneration
                 var zoneResult = await generator.GenerateAsync(zoneState, zoneMask);
 
                 // Copy back only zone cells
-                for (int y = 0; y < bounds.H; y++)
+                for (pos.Y = 0; pos.Y < bounds.H; pos.Y++)
                 {
-                    for (int x = 0; x < bounds.W; x++)
+                    for (pos.X = 0; pos.X < bounds.W; pos.X++)
                     {
-                        var sx = bounds.X + x;
-                        var sy = bounds.Y + y;
-
-                        if (state[sx, sy] == marker)
+                        var srcPos = new Int2(bounds.X + pos.X, bounds.Y + pos.Y);
+                        if (state.Get(srcPos) == marker)
                         {
-                            result[sx, sy] = zoneResult[x, y];
+                            result.Set(srcPos, zoneResult.Get(pos));
                         }
                     }
                 }
@@ -86,28 +90,29 @@ namespace PavEcsGame.MapGeneration
             return result;
         }
 
-        private Dictionary<char, Bounds> FindZoneBounds(MapData map)
+        private Dictionary<char, Bounds> FindZoneBounds(MapData<char> map)
         {
             var bounds = new Dictionary<char, Bounds>();
+            var pos = new Int2();
 
-            for (int y = 0; y < map.Height; y++)
+            for (pos.Y = 0; pos.Y < map.Height; pos.Y++)
             {
-                for (int x = 0; x < map.Width; x++)
+                for (pos.X = 0; pos.X < map.Width; pos.X++)
                 {
-                    var c = map[x, y];
+                    var c = map.Get(pos);
                     if (!IsZoneMarker(c)) continue;
 
                     if (!bounds.TryGetValue(c, out var b))
                     {
-                        b = new Bounds { X = x, Y = y, MaxX = x, MaxY = y };
+                        b = new Bounds { X = pos.X, Y = pos.Y, MaxX = pos.X, MaxY = pos.Y };
                         bounds[c] = b;
                     }
                     else
                     {
-                        b.X = Math.Min(b.X, x);
-                        b.Y = Math.Min(b.Y, y);
-                        b.MaxX = Math.Max(b.MaxX, x);
-                        b.MaxY = Math.Max(b.MaxY, y);
+                        b.X = Math.Min(b.X, pos.X);
+                        b.Y = Math.Min(b.Y, pos.Y);
+                        b.MaxX = Math.Max(b.MaxX, pos.X);
+                        b.MaxY = Math.Max(b.MaxY, pos.Y);
                     }
                 }
             }
@@ -117,12 +122,13 @@ namespace PavEcsGame.MapGeneration
 
         private static bool IsZoneMarker(char c) => c >= 'A' && c <= 'Z' && c != 'X';
 
-        private static void FillZone(MapData map, char marker, char fill)
+        private static void FillZone(MapData<char> map, char marker, char fill)
         {
-            for (int y = 0; y < map.Height; y++)
-            for (int x = 0; x < map.Width; x++)
-                if (map[x, y] == marker)
-                    map[x, y] = fill;
+            var pos = new Int2();
+            for (pos.Y = 0; pos.Y < map.Height; pos.Y++)
+            for (pos.X = 0; pos.X < map.Width; pos.X++)
+                if (map.Get(pos) == marker)
+                    map.Set(pos, fill);
         }
 
         private class Bounds

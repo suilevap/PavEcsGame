@@ -1,20 +1,18 @@
 using System.Threading.Tasks;
+using PavEcsGame.Components;
 
 namespace PavEcsGame.MapGeneration
 {
     /// <summary>
     /// Map generator interface.
-    /// Takes initial state and mask, returns generated map.
-    /// Mask indicates which cells to preserve (non-null char = preserve that cell from state).
     /// </summary>
     public interface IMapGenerator
     {
         /// <summary>
-        /// Generate map.
+        /// Generate map content.
         /// </summary>
         /// <param name="state">Initial state (provides dimensions and initial values)</param>
-        /// <param name="mask">Mask where non-'\0' means preserve cell from state. Can be null.</param>
-        /// <returns>Generated map</returns>
-        Task<MapData> GenerateAsync(MapData state, MapData mask = null);
+        /// <param name="mask">Optional mask - non-default values mean "preserve from state"</param>
+        Task<MapData<char>> GenerateAsync(MapData<char> state, MapData<bool> mask = null);
     }
 }

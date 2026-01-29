@@ -1,8 +1,8 @@
-using System.IO;
 using System.Threading.Tasks;
 using DeBroglie;
 using DeBroglie.Models;
 using DeBroglie.Topo;
+using PavEcsGame.Components;
 
 namespace PavEcsGame.MapGeneration
 {
@@ -11,31 +11,27 @@ namespace PavEcsGame.MapGeneration
     /// </summary>
     public class WfcMapGenerator : IMapGenerator
     {
-        private readonly MapData _pattern;
+        private readonly MapData<char> _pattern;
         private readonly int _patternSize;
         private readonly int _maxIterations;
 
-        public WfcMapGenerator(MapData pattern, int patternSize = 2, int maxIterations = 100)
+        public WfcMapGenerator(MapData<char> pattern, int patternSize = 2, int maxIterations = 100)
         {
             _pattern = pattern;
             _patternSize = patternSize;
             _maxIterations = maxIterations;
         }
 
-        public static async Task<WfcMapGenerator> FromFileAsync(string path, int patternSize = 2)
-        {
-            var pattern = await MapData.LoadAsync(path);
-            return new WfcMapGenerator(pattern, patternSize);
-        }
-
-        public Task<MapData> GenerateAsync(MapData state, MapData mask = null)
+        public Task<MapData<char>> GenerateAsync(MapData<char> state, MapData<bool> mask = null)
         {
             var width = state.Width;
             var height = state.Height;
 
-            // Create model from pattern
-            var sample = TopoArray.Create(_pattern.ToCharArray(), false);
+            // Convert pattern to char[][]
+            var patternArray = ToCharArray(_pattern);
+            var sample = TopoArray.Create(patternArray, false);
             var tiles = sample.ToTiles();
+
             var model = new OverlappingModel(_patternSize);
             model.AddSample(tiles);
 
@@ -48,25 +44,46 @@ namespace PavEcsGame.MapGeneration
                 status = propagator.Run();
 
             // Build result
-            var result = state.Clone();
+            var result = new MapData<char>();
+            result.Init(new Int2(width, height));
 
             if (status == Resolution.Decided)
             {
                 var output = propagator.ToValueArray<char>();
-                for (int y = 0; y < height; y++)
+                var pos = new Int2();
+                for (pos.Y = 0; pos.Y < height; pos.Y++)
                 {
-                    for (int x = 0; x < width; x++)
+                    for (pos.X = 0; pos.X < width; pos.X++)
                     {
-                        // Check mask - if mask cell is non-null, preserve state
-                        if (mask != null && mask[x, y] != '\0')
-                            continue;
-
-                        result[x, y] = output.Get(x, y);
+                        if (mask != null && mask.Get(pos))
+                        {
+                            result.Set(pos, state.Get(pos));
+                        }
+                        else
+                        {
+                            result.Set(pos, output.Get(pos.X, pos.Y));
+                        }
                     }
                 }
             }
+            else
+            {
+                result.CopyFrom(state);
+            }
 
             return Task.FromResult(result);
+        }
+
+        private static char[][] ToCharArray(MapData<char> map)
+        {
+            var result = new char[map.Height][];
+            for (int y = 0; y < map.Height; y++)
+            {
+                result[y] = new char[map.Width];
+                for (int x = 0; x < map.Width; x++)
+                    result[y][x] = map.Get(new Int2(x, y));
+            }
+            return result;
         }
     }
 }
