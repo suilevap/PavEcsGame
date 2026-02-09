@@ -13,6 +13,7 @@ namespace PavEcsGame.GameLoop
 {
     internal class GameMainContainer
     {
+        private const bool UseOptimizedRenderSystem = true;
         private EcsSystems _systems;
         private EcsUniverse? _universe;
         private EcsWorld _world;
@@ -74,7 +75,9 @@ namespace PavEcsGame.GameLoop
                 .Add(new LightRenderSystem(_systems))
                 .Add(new PlayerFieldOfViewSystem(_systems))
                 .Add(new PrepareForRenderSystem(_systems, map))
-                .Add(new ConsoleRenderSystem(_systems))
+                .Add(UseOptimizedRenderSystem
+                    ? new ConsoleAnsiRenderSystem(_systems)
+                    : new ConsoleRenderSystem(_systems))
                 //.Add(new SymbolRenderSystem(map, universe))
                 ;
 
