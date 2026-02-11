@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
+using PavEcsGame.Tiles;
 using PavEcsSpec.EcsLite;
 using PavEcsSpec.Generated;
 
@@ -9,6 +11,8 @@ namespace PavEcsGame.Systems
     internal partial class SpawnEntitySystem : IEcsRunSystem, IEcsSystemSpec
     {
         private readonly Random _rnd;
+        private readonly WallRuleProvider _wallRuleProvider;
+        private string _selectedWallRule;
 
         [Entity(SkipFilter = true)]
         private readonly partial struct CommonEntity
@@ -112,7 +116,9 @@ namespace PavEcsGame.Systems
 
         public SpawnEntitySystem(EcsSystems universe)
         {
-            _rnd = new Random(42);
+            _rnd = new Random();
+            _wallRuleProvider = new WallRuleProvider();
+            _selectedWallRule = _wallRuleProvider.SelectRandomRule(_rnd);
 
             var commonProvider = CommonEntity.Create(universe);
             var dirTileProvider = DirTileEntity.Create(universe, commonProvider);
@@ -163,7 +169,7 @@ namespace PavEcsGame.Systems
                         Depth = Depth.Foreground,
                         MainColor = ConsoleColor.Gray
                     };
-                    wall.Tile() = new TileComponent { RuleName = "wall_rule" };
+                    wall.Tile() = new TileComponent { RuleName = _selectedWallRule };
                     break;
                 case EntityType.Player:
                     //Debug.Assert(_playerFactory.IsBelongToWorld(world));

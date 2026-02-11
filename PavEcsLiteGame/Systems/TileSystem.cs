@@ -12,6 +12,7 @@ namespace PavEcsGame.Systems
         private readonly IReadOnlyMapData<Int2, EcsPackedEntityWithWorld> _map;
 
         private readonly Dictionary<string, TileRule> _rules = new();
+        private readonly WallRuleProvider _wallRuleProvider = new();
 
         [Entity]
         private readonly partial struct Ent
@@ -29,8 +30,11 @@ namespace PavEcsGame.Systems
 
         public void Init(IEcsSystems systems)
         {
-            //preload
-            TryGetRule("wall_rule");
+            //preload all wall rules
+            foreach (var ruleName in _wallRuleProvider.AvailableRules)
+            {
+                TryGetRule(ruleName);
+            }
         }
 
         public void Run(IEcsSystems systems)
