@@ -26,7 +26,7 @@ namespace PavEcsGame.Components
         }
     }
 
-    public enum Depth
+    public enum Depth : byte
     {
         Back = 0,
         Foreground = 1
