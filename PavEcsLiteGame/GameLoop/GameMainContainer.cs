@@ -7,6 +7,7 @@ using PavEcsGame.Components.Events;
 using PavEcsGame.Systems;
 using PavEcsGame.Systems.Managers;
 using PavEcsGame.Systems.Renders;
+using PavEcsGame.Systems.Utils;
 using PavEcsSpec.EcsLite;
 
 namespace PavEcsGame.GameLoop
@@ -21,7 +22,7 @@ namespace PavEcsGame.GameLoop
         public GameMainContainer()
         {
             _world = new EcsWorld();
-            _systems = new EcsSystems(_world, "Root");
+            _systems = new PerformanceMonitoringEcsSystems(_world, "Root", true);
         }
 
         public bool IsAlive => _world?.IsAlive() ?? false;
