@@ -73,12 +73,14 @@ namespace PavEcsGame.GameLoop
             //.Add(new LightSystem(universe, map));
 
             _systems
+                .Add(new WindowResizeDetectionSystem(_systems))
                 .Add(new LightRenderSystem(_systems))
                 .Add(new PlayerFieldOfViewSystem(_systems))
                 .Add(new PrepareForRenderSystem(_systems, map))
                 .Add(UseOptimizedRenderSystem
                     ? new ConsoleAnsiRenderSystem(_systems)
                     : new ConsoleRenderSystem(_systems))
+                .Add(new TextPanelRenderSystem(_systems))
                 //.Add(new SymbolRenderSystem(map, universe))
                 ;
 
@@ -87,6 +89,7 @@ namespace PavEcsGame.GameLoop
                 //.UniDelHere<NewPositionComponent>(universe)
                 .MyDelHere<CollisionEvent<EcsEntity>>()
                 .MyDelHere<MapLoadedEvent>()
+                .MyDelHere<WindowResizeEvent>()
                 ;
 
             _systems

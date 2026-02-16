@@ -119,6 +119,17 @@ namespace PavEcsGame.Systems.Renders
             _lastX += chars.Length;
         }
 
+        public void AppendLine(int x, int y, int width, ReadOnlySpan<char> text, ConsoleColor fg, ConsoleColor bg)
+        {
+            AppendCursorPosition(x, y);
+            AppendColor(fg, bg);
+            int len = Math.Min(text.Length, width);
+            if (len > 0)
+                AppendChars(text.Slice(0, len));
+            for (int i = len; i < width; i++)
+                AppendChar(' ');
+        }
+
         /// <summary>
         /// Get the built ANSI string.
         /// </summary>

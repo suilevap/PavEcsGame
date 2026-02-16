@@ -190,6 +190,12 @@ namespace PavEcsGame.Systems.Renders
             public partial ref RenderItemCommand RenderCommand();
         }
 
+        [Entity]
+        private readonly partial struct WindowResizeEnt
+        {
+            public partial ref readonly WindowResizeEvent Resize();
+        }
+
 
         public PrepareForRenderSystem(EcsSystems universe, MapData<EcsPackedEntityWithWorld> map)
             : this(universe)
@@ -221,6 +227,11 @@ namespace PavEcsGame.Systems.Renders
                     var size = ent.Loaded().Size;
                     _bufferCurrentFrame.Init(size);
                     _bufferPreviousFrame.Init(size);
+                }
+
+                foreach (var ent in _providers.WindowResizeEntProvider)
+                {
+                    _bufferCurrentFrame.Clear();
                 }
             }
 
