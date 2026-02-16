@@ -6,7 +6,7 @@ using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems.Renders
 {
-    public partial class WindowResizeDetectionSystem : IEcsRunSystem, IEcsSystemSpec
+    public partial class WindowResizeDetectionSystem : IEcsRunSystem, IEcsPostRunSystem, IEcsSystemSpec
     {
         private int _lastWidth;
         private int _lastHeight;
@@ -17,6 +17,12 @@ namespace PavEcsGame.Systems.Renders
         private readonly partial struct WindowResizeEnt
         {
             public partial ref WindowResizeEvent Event();
+        }
+
+        [Entity]
+        private readonly partial struct CleanupWindowResizeEnt
+        {
+            public partial RequiredComponent<WindowResizeEvent> Event();
         }
 
         public void Run(IEcsSystems systems)
@@ -34,6 +40,15 @@ namespace PavEcsGame.Systems.Renders
             _providers.WindowResizeEntProvider
                 .New()
                 .Event() = new WindowResizeEvent { Width = w, Height = h };
+        }
+
+        public void PostRun(IEcsSystems systems)
+        {
+            // Clean up WindowResizeEvent created in Run()
+            foreach (var ent in _providers.CleanupWindowResizeEntProvider)
+            {
+                ent.Event().Remove();
+            }
         }
     }
 }

@@ -7,7 +7,7 @@ using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    internal partial class UpdatePositionSystem : IEcsRunSystem, IEcsInitSystem, IEcsSystemSpec
+    internal partial class UpdatePositionSystem : IEcsRunSystem, IEcsPostRunSystem, IEcsInitSystem, IEcsSystemSpec
     {
         private readonly IMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
         private readonly TurnManager _turnManager;
@@ -52,6 +52,12 @@ namespace PavEcsGame.Systems
         private readonly partial struct CollEventEnt
         {
             public partial ref CollisionEvent<EcsEntity> Col();
+        }
+
+        [Entity]
+        private readonly partial struct CleanupCollEventEnt
+        {
+            public partial RequiredComponent<CollisionEvent<EcsEntity>> Col();
         }
 
         public UpdatePositionSystem(
@@ -147,6 +153,20 @@ namespace PavEcsGame.Systems
                         ent.Pos().Clear();
                     ent.NewPos().Remove();
                 }
+            }
+        }
+
+        public void PostRun(IEcsSystems systems)
+        {
+            // Clean up temporary components created in Run()
+            foreach (var ent in _providers.SetPrevPosEntProvider)
+            {
+                ent.PrevPos().Clear();
+            }
+
+            foreach (var ent in _providers.CleanupCollEventEntProvider)
+            {
+                ent.Col().Remove();
             }
         }
     }

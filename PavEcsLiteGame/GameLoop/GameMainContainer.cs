@@ -90,13 +90,10 @@ namespace PavEcsGame.GameLoop
             _systems.Add(new DebugLogPanelSystem(_systems, debugLog));
 #endif
 
-            _systems
-                .MyDelHere<PreviousPositionComponent>()
-                //.UniDelHere<NewPositionComponent>(universe)
-                .MyDelHere<CollisionEvent<EcsEntity>>()
-                .MyDelHere<MapLoadedEvent>()
-                .MyDelHere<WindowResizeEvent>()
-                ;
+            // Component cleanup now handled by IEcsPostRunSystem in respective systems:
+            // - PreviousPositionComponent & CollisionEvent: UpdatePositionSystem
+            // - MapLoadedEvent: LoadMapSystem
+            // - WindowResizeEvent: WindowResizeDetectionSystem
 
             _systems
                 .Add(new ActionSystem(universe, DebugInfo, TimeSpan.FromSeconds(2)));

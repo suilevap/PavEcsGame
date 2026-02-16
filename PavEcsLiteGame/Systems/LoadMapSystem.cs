@@ -7,7 +7,7 @@ using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems
 {
-    internal partial class LoadMapSystem : IEcsRunSystem, IEcsSystemSpec
+    internal partial class LoadMapSystem : IEcsRunSystem, IEcsPostRunSystem, IEcsSystemSpec
     {
         private readonly IMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
@@ -21,6 +21,12 @@ namespace PavEcsGame.Systems
         private readonly partial struct MapChangedEventEnt
         {
             public partial ref MapLoadedEvent Event();
+        }
+
+        [Entity]
+        private readonly partial struct CleanupMapLoadedEnt
+        {
+            public partial RequiredComponent<MapLoadedEvent> Event();
         }
 
         [Entity(SkipFilter = true)]
@@ -130,6 +136,15 @@ namespace PavEcsGame.Systems
             }
 
             return result;
+        }
+
+        public void PostRun(IEcsSystems systems)
+        {
+            // Clean up MapLoadedEvent created in Run()
+            foreach (var ent in _providers.CleanupMapLoadedEntProvider)
+            {
+                ent.Event().Remove();
+            }
         }
     }
 }
