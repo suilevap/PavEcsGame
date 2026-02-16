@@ -29,6 +29,9 @@ namespace PavEcsGame.GameLoop
 
         public void Start()
         {
+            var debugLog = new GameDebugLog();
+            Trace.Listeners.Add(debugLog);
+
             _systems
                 .AddUniverse(out var universe)
                 .Add(new SynchronizationContextSystem());
@@ -83,6 +86,9 @@ namespace PavEcsGame.GameLoop
                 .Add(new TextPanelRenderSystem(_systems))
                 //.Add(new SymbolRenderSystem(map, universe))
                 ;
+#if DEBUG
+            _systems.Add(new DebugLogPanelSystem(_systems, debugLog));
+#endif
 
             _systems
                 .MyDelHere<PreviousPositionComponent>()
