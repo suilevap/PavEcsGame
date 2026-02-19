@@ -37,3 +37,6 @@ tasks.json
 *.nupkg
 *.snupkg
 .aider*
+
+# Claude Code local settings
+.claude/settings.local.json
