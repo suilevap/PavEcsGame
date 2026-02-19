@@ -1,19 +1,39 @@
+# IDE Settings - Visual Studio
 /.vs/
-/PavEcsGame/obj/
-/PavEcsGame/bin
-/PavEcsGame.Components/bin
-/PavEcsGame.Components/obj
-/PavEcsLiteGame/obj
-/PaveEcsGame.Common/bin
-/PaveEcsGame.Common/obj
-/PavEcsLiteGame/bin
-/PavEcsLiteGame/obj
-/PavEcsSpec.EcsLite/obj
-/PavEcsSpec.EcsLite/bin
-/PavEcsGame.Common/bin/
-/PavEcsGame.Common/obj/
-/PavEcsSpec.Generators/obj/
-/PavEcsSpec.Generators/bin/
-/PaveEcsSpec.Generators/obj/
-/GenerateTest/bin/*
-/GenerateTest/obj/*
+
+# IDE Settings - JetBrains (Rider)
+/.idea/
+*.DotSettings.user
+*.sln.iml
+
+# IDE Settings - VS Code
+.vscode/
+launch.json
+tasks.json
+
+# Editor backups
+*.swp
+*.swo
+*~
+
+# Build directories
+**/bin/
+**/obj/
+
+# Build artifacts
+*.dll
+*.exe
+*.pdb
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# User-specific files
+*.user
+*.rsuser
+
+# NuGet
+*.nupkg
+*.snupkg
+.aider*

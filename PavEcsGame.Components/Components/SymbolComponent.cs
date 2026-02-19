@@ -9,13 +9,13 @@ namespace PavEcsGame.Components
         public char Value;
         public Depth Depth;
 
-        public ConsoleColor MainColor;
+        public Color MainColor;
 
         public SymbolComponent(char value, Depth depth = Depth.Back)
         {
             Value = value;
             Depth = depth;
-            MainColor = ConsoleColor.White;
+            MainColor = Color.One; // White
         }
 
         public bool IsEmpty => Value == Empty.Value || Value == default;

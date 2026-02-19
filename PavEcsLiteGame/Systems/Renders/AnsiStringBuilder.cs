@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using PavEcsGame.Components;
 
 namespace PavEcsGame.Systems.Renders
 {
@@ -18,8 +19,8 @@ namespace PavEcsGame.Systems.Renders
         // State tracking to minimize escape codes
         private int _lastX;
         private int _lastY;
-        private ConsoleColor _lastFg;
-        private ConsoleColor _lastBg;
+        private Color _lastFgRgb;
+        private Color _lastBgRgb;
 
         public AnsiStringBuilder(Span<char> buffer)
         {
@@ -27,8 +28,8 @@ namespace PavEcsGame.Systems.Renders
             _position = 0;
             _lastX = -1;
             _lastY = -1;
-            _lastFg = (ConsoleColor)(-1);
-            _lastBg = (ConsoleColor)(-1);
+            _lastFgRgb = new Color(0xFFFFFFFF); // Invalid sentinel
+            _lastBgRgb = new Color(0xFFFFFFFF); // Invalid sentinel
         }
 
         /// <summary>
@@ -74,25 +75,51 @@ namespace PavEcsGame.Systems.Renders
         }
 
         /// <summary>
-        /// Append color command only if colors changed.
+        /// Append 24-bit RGB color command only if colors changed.
+        /// Emits ESC[38;2;R;G;Bm for foreground and ESC[48;2;R;G;Bm for background.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AppendColor(ConsoleColor fg, ConsoleColor bg)
+        public void AppendColorRgb(Color fg, Color bg)
         {
-            if (_lastFg == fg && _lastBg == bg)
+            // Skip if colors unchanged (same as 16-color optimization)
+            if (_lastFgRgb.PackedValue == fg.PackedValue &&
+                _lastBgRgb.PackedValue == bg.PackedValue)
                 return;
 
-            EnsureCapacity(16);
+            EnsureCapacity(40); // Worst case: ESC[38;2;255;255;255;48;2;255;255;255m
 
+            // Foreground: ESC[38;2;<r>;<g>;<b>m
             _buffer[_position++] = '\u001b';
             _buffer[_position++] = '[';
-            _position += WriteIntToSpan(_buffer.Slice(_position), AnsiColorHelper.GetForegroundCode(fg));
+            _buffer[_position++] = '3';
+            _buffer[_position++] = '8';
             _buffer[_position++] = ';';
-            _position += WriteIntToSpan(_buffer.Slice(_position), AnsiColorHelper.GetBackgroundCode(bg));
+            _buffer[_position++] = '2';
+            _buffer[_position++] = ';';
+            _position += WriteIntToSpan(_buffer.Slice(_position), fg.R);
+            _buffer[_position++] = ';';
+            _position += WriteIntToSpan(_buffer.Slice(_position), fg.G);
+            _buffer[_position++] = ';';
+            _position += WriteIntToSpan(_buffer.Slice(_position), fg.B);
             _buffer[_position++] = 'm';
 
-            _lastFg = fg;
-            _lastBg = bg;
+            // Background: ESC[48;2;<r>;<g>;<b>m
+            _buffer[_position++] = '\u001b';
+            _buffer[_position++] = '[';
+            _buffer[_position++] = '4';
+            _buffer[_position++] = '8';
+            _buffer[_position++] = ';';
+            _buffer[_position++] = '2';
+            _buffer[_position++] = ';';
+            _position += WriteIntToSpan(_buffer.Slice(_position), bg.R);
+            _buffer[_position++] = ';';
+            _position += WriteIntToSpan(_buffer.Slice(_position), bg.G);
+            _buffer[_position++] = ';';
+            _position += WriteIntToSpan(_buffer.Slice(_position), bg.B);
+            _buffer[_position++] = 'm';
+
+            _lastFgRgb = fg;
+            _lastBgRgb = bg;
         }
 
         /// <summary>
@@ -119,10 +146,10 @@ namespace PavEcsGame.Systems.Renders
             _lastX += chars.Length;
         }
 
-        public void AppendLine(int x, int y, int width, ReadOnlySpan<char> text, ConsoleColor fg, ConsoleColor bg)
+        public void AppendLine(int x, int y, int width, ReadOnlySpan<char> text, Color fg, Color bg)
         {
             AppendCursorPosition(x, y);
-            AppendColor(fg, bg);
+            AppendColorRgb(fg, bg);
             int len = Math.Min(text.Length, width);
             if (len > 0)
                 AppendChars(text.Slice(0, len));

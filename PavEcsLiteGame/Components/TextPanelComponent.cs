@@ -9,8 +9,8 @@ namespace PavEcsGame.Components
         public int Width;
         public int LineCount;
         public string[] Lines;
-        public ConsoleColor[] FgColors;
-        public ConsoleColor[] BgColors;
+        public Color[] FgColors;
+        public Color[] BgColors;
 
         public static TextPanelComponent Create(int row, int col, int width, int lineCount)
         {
@@ -21,14 +21,14 @@ namespace PavEcsGame.Components
                 Width = width,
                 LineCount = lineCount,
                 Lines = new string[lineCount],
-                FgColors = new ConsoleColor[lineCount],
-                BgColors = new ConsoleColor[lineCount]
+                FgColors = new Color[lineCount],
+                BgColors = new Color[lineCount]
             };
             for (int i = 0; i < lineCount; i++)
             {
                 panel.Lines[i] = string.Empty;
-                panel.FgColors[i] = ConsoleColor.Gray;
-                panel.BgColors[i] = ConsoleColor.Black;
+                panel.FgColors[i] = new Color(128, 128, 128); // Gray
+                panel.BgColors[i] = Color.Zero; // Black
             }
             return panel;
         }
@@ -43,24 +43,24 @@ namespace PavEcsGame.Components
             panel.Width = width;
             panel.LineCount = lineCount;
             panel.Lines = new string[lineCount];
-            panel.FgColors = new ConsoleColor[lineCount];
-            panel.BgColors = new ConsoleColor[lineCount];
+            panel.FgColors = new Color[lineCount];
+            panel.BgColors = new Color[lineCount];
             for (int i = 0; i < lineCount; i++)
             {
                 panel.Lines[i] = string.Empty;
-                panel.FgColors[i] = ConsoleColor.Gray;
-                panel.BgColors[i] = ConsoleColor.Black;
+                panel.FgColors[i] = new Color(128, 128, 128); // Gray
+                panel.BgColors[i] = Color.Zero; // Black
             }
         }
 
         public static void SetLine(ref TextPanelComponent panel, int line, string text,
-            ConsoleColor fg = ConsoleColor.Gray, ConsoleColor bg = ConsoleColor.Black)
+            Color? fg = null, Color? bg = null)
         {
             if (line < 0 || line >= panel.LineCount)
                 return;
             panel.Lines[line] = text;
-            panel.FgColors[line] = fg;
-            panel.BgColors[line] = bg;
+            panel.FgColors[line] = fg ?? new Color(128, 128, 128); // Gray
+            panel.BgColors[line] = bg ?? Color.Zero; // Black
         }
 
         public static void Clear(ref TextPanelComponent panel)
@@ -68,8 +68,8 @@ namespace PavEcsGame.Components
             for (int i = 0; i < panel.LineCount; i++)
             {
                 panel.Lines[i] = string.Empty;
-                panel.FgColors[i] = ConsoleColor.Gray;
-                panel.BgColors[i] = ConsoleColor.Black;
+                panel.FgColors[i] = new Color(128, 128, 128); // Gray
+                panel.BgColors[i] = Color.Zero; // Black
             }
         }
     }

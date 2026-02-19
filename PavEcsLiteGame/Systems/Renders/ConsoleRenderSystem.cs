@@ -7,9 +7,25 @@ using PavEcsSpec.Generated;
 
 namespace PavEcsGame.Systems.Renders
 {
+    /// <summary>
+    /// Legacy 16-color console renderer. Not actively used (UseOptimizedRenderSystem=true uses ConsoleAnsiRenderSystem).
+    /// Kept for backwards compatibility but does not support 24-bit RGB colors.
+    /// </summary>
     public partial class ConsoleRenderSystem : IEcsInitSystem, IEcsRunSystem, IEcsSystemSpec
     {
         private readonly List<EcsUnsafeEntity>[] _groupedbyColor = new List<EcsUnsafeEntity>[16];
+
+        /// <summary>
+        /// Convert 24-bit RGB color to 16-color ConsoleColor (lossy conversion for legacy renderer).
+        /// </summary>
+        private static ConsoleColor ToConsoleColor(Color c)
+        {
+            var index = (c.R > 128 || c.G > 128 || c.B > 128) ? 8 : 0; // Bright bit
+            index |= c.R > 64 ? 4 : 0; // Red bit
+            index |= c.G > 64 ? 2 : 0; // Green bit
+            index |= c.B > 64 ? 1 : 0; // Blue bit
+            return (ConsoleColor)index;
+        }
 
         [Entity]
         private partial struct RenderCommandEntity
@@ -33,7 +49,7 @@ namespace PavEcsGame.Systems.Renders
         {
             foreach (var ent in _providers.RenderCommandEntityProvider)
             {
-                var key = (int)ent.Command().Get().Symbol.MainColor;
+                var key = (int)ToConsoleColor(ent.Command().Get().Symbol.MainColor);
                 _groupedbyColor[key].Add((EcsUnsafeEntity)ent.GetRawId());
             }
 
@@ -60,7 +76,8 @@ namespace PavEcsGame.Systems.Renders
             {
                 if (Console.CursorLeft != item.Position.Value.X || Console.CursorTop != item.Position.Value.Y)
                     Console.SetCursorPosition(item.Position.Value.X, item.Position.Value.Y);
-                if (Console.BackgroundColor != item.BackgroundColor) Console.BackgroundColor = item.BackgroundColor;
+                var bgColor = ToConsoleColor(item.BackgroundColor);
+                if (Console.BackgroundColor != bgColor) Console.BackgroundColor = bgColor;
                 if (item.Symbol.Value != default)
                     Console.Write(item.Symbol.Value);
                 else

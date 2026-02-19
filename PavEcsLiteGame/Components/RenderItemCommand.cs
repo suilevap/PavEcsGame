@@ -5,7 +5,7 @@ namespace PavEcsGame.Components
     internal struct RenderItemCommand
     {
         public SymbolComponent Symbol;
-        public ConsoleColor BackgroundColor;
+        public Color BackgroundColor;
         public PositionComponent Position;
     }
 }

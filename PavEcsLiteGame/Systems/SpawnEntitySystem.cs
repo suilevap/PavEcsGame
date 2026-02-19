@@ -167,7 +167,7 @@ namespace PavEcsGame.Systems
                     {
                         Value = '#',
                         Depth = Depth.Foreground,
-                        MainColor = ConsoleColor.Gray
+                        MainColor = new Color(128, 128, 128) // Gray
                     };
                     wall.Tile() = new TileComponent { RuleName = _selectedWallRule };
                     break;
@@ -180,7 +180,7 @@ namespace PavEcsGame.Systems
                     {
                         Value = '@',
                         Depth = Depth.Foreground,
-                        MainColor = ConsoleColor.White
+                        MainColor = Color.One // White
                     };
                     player.Friction() = new MoveFrictionComponent { FrictionValue = 1 };
                     player.WaitCommandToken() = new WaitCommandTokenComponent(1);
@@ -192,7 +192,7 @@ namespace PavEcsGame.Systems
                         BasicParameters = new LightValueComponent
                         {
                             LightType = LightType.None,
-                            Value = 32
+                            Value = 196
                         }
                     };
 
@@ -205,7 +205,7 @@ namespace PavEcsGame.Systems
                     {
                         Value = '☺',
                         Depth = Depth.Foreground,
-                        MainColor = ConsoleColor.Red
+                        MainColor = new Color(255, 0, 0) // Red
                     };
                     enemy.Friction() = new MoveFrictionComponent { FrictionValue = 1 };
                     enemy.WaitCommandToken() = new WaitCommandTokenComponent(1);

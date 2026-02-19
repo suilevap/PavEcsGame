@@ -6,94 +6,11 @@ using PavEcsGame.Components.Events;
 using PavEcsGame.Utils;
 using PavEcsSpec.EcsLite;
 using PavEcsSpec.Generated;
-using Color = System.Drawing.Color;
 
 namespace PavEcsGame.Systems.Renders
 {
     public partial class PrepareForRenderSystem : IEcsRunSystem, IEcsSystemSpec
     {
-        private const string _lightShade = "░▒▓";
-
-
-        //index Brgb
-        // 0   0000  dark black
-        // 1   0001  dark blue
-        // 2   0010  dark green
-        // 3   0011  dark cyan
-        // 4   0100  dark red
-        // 5   0101  dark purple
-        // 6   0110  dark yellow(brown)
-        // 7   0111  dark white(light grey)
-        // 8   1000  bright black(dark grey)
-        // 9   1001  bright blue
-        //10   1010  bright green
-        //11   1011  bright cyan    
-        //12   1100  bright red
-        //13   1101  bright purple
-        //14   1110  bright yellow
-        //15   1111  bright white
-
-        private static readonly ConsoleColor[] _fireColors =
-        {
-            ConsoleColor.DarkYellow,
-            ConsoleColor.DarkYellow,
-            ConsoleColor.DarkYellow,
-            ConsoleColor.DarkYellow,
-            ConsoleColor.DarkYellow,
-            ConsoleColor.DarkYellow,
-            ConsoleColor.DarkYellow,
-            ConsoleColor.Yellow,
-            ConsoleColor.Yellow,
-            ConsoleColor.Yellow,
-            ConsoleColor.Yellow,
-            ConsoleColor.Yellow,
-            ConsoleColor.Yellow,
-            ConsoleColor.Yellow,
-            ConsoleColor.Yellow,
-            ConsoleColor.White
-        };
-
-        private static readonly ConsoleColor[] _electroColors =
-        {
-            ConsoleColor.DarkBlue,
-            ConsoleColor.DarkCyan,
-            ConsoleColor.Blue,
-            ConsoleColor.Cyan
-        };
-
-        private static readonly ConsoleColor[] _acidColors =
-        {
-            ConsoleColor.DarkGreen,
-            ConsoleColor.Green
-        };
-
-        private static readonly ConsoleColor[] _noneColors =
-        {
-            ConsoleColor.DarkGray,
-            ConsoleColor.Gray,
-            ConsoleColor.Gray,
-            ConsoleColor.Gray,
-            ConsoleColor.Gray,
-            ConsoleColor.Gray,
-            ConsoleColor.Gray,
-            ConsoleColor.Gray,
-            ConsoleColor.Gray,
-            ConsoleColor.Gray,
-            ConsoleColor.Gray,
-            ConsoleColor.Gray,
-            ConsoleColor.Gray,
-            ConsoleColor.Gray,
-            ConsoleColor.White
-        };
-
-        private static readonly ConsoleColor[] _brightColors =
-        {
-            ConsoleColor.Black,
-            ConsoleColor.DarkGray
-            //ConsoleColor.Gray,
-            //ConsoleColor.White,
-        };
-
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
         private readonly Providers _providers;
@@ -104,15 +21,15 @@ namespace PavEcsGame.Systems.Renders
         private struct RenderItem : IEquatable<RenderItem>
         {
             public SymbolComponent Symbol;
-            public readonly ConsoleColor BackgroundColor;
+            public readonly Color BackgroundColor;
 
-            private RenderItem(SymbolComponent symbol, ConsoleColor back = ConsoleColor.Black)
+            private RenderItem(SymbolComponent symbol, Color back = default)
             {
                 Symbol = symbol;
-                BackgroundColor = back;
+                BackgroundColor = back == default ? Color.Zero : back;
             }
 
-            internal RenderItem(char value, ConsoleColor color)
+            internal RenderItem(char value, Color color)
                 : this(new SymbolComponent(value) { MainColor = color })
             {
             }
@@ -151,7 +68,7 @@ namespace PavEcsGame.Systems.Renders
 
             public override int GetHashCode()
             {
-                return HashCode.Combine(Symbol, (int)BackgroundColor);
+                return HashCode.Combine(Symbol, BackgroundColor.GetHashCode());
             }
         }
 
@@ -277,11 +194,11 @@ namespace PavEcsGame.Systems.Renders
                     }
                     else
                     {
-                        if (visibilityMap.CheckNeighbours(false, pos, _bufferCurrentFrame, 
-                                (result, p, value, buffer) => 
+                        if (visibilityMap.CheckNeighbours(false, pos, _bufferCurrentFrame,
+                                (result, p, value, buffer) =>
                                     result || (value & VisibilityType.Known) != 0 &&
                                            buffer.GetRef(p).Symbol.Depth == Depth.Back))
-                            renderItem = new RenderItem('?', ConsoleColor.DarkRed);
+                            renderItem = new RenderItem('?', new Color(139, 0, 0)); // DarkRed
                     }
                 }
 
@@ -289,7 +206,7 @@ namespace PavEcsGame.Systems.Renders
                     in PositionComponent pos)
                 {
                     var ligthValue = light.Value;
-                    var lightColor = ToConsoleColor(light);
+                    var lightColor = ToRgbColor(light);
 
                     if (item.Symbol.IsEmpty)
                     {
@@ -303,10 +220,6 @@ namespace PavEcsGame.Systems.Renders
                     {
                         item.Symbol.MainColor = lightColor;
                     }
-
-                    //item.BackgroundColor = visibility.HasFlag(VisibilityType.Visible) 
-                    //    ? ConsoleColor.Blue 
-                    //    : ConsoleColor.DarkBlue;
 
                     return item;
                 }
@@ -360,29 +273,30 @@ namespace PavEcsGame.Systems.Renders
         }
 
 
-        public ConsoleColor ToConsoleColor(LightValueComponent lightValue)
+        /// <summary>
+        /// Converts light value to 24-bit RGB color using smooth gradient interpolation.
+        /// Supports additive RGB blending for overlapping light types (e.g., Fire + Electricity).
+        /// </summary>
+        private static Color ToRgbColor(LightValueComponent lightValue)
         {
             if (lightValue.Value == 0)
-                return ConsoleColor.Black;
+                return Color.Zero;
 
-            var color = 0;
-            if ((lightValue.LightType & LightType.Fire) != 0) color |= (int)_fireColors.GetByRate(lightValue.Value);
+            Color result = Color.Zero;
+            byte intensity = lightValue.Value;
+
+            // Additive RGB blending for proper light mixing
+            if ((lightValue.LightType & LightType.Fire) != 0)
+                result = result + LightGradients.FireGradient.GetByRateLerp(intensity);
             if ((lightValue.LightType & LightType.Electricity) != 0)
-                color |= (int)_electroColors.GetByRate(lightValue.Value);
-            if ((lightValue.LightType & LightType.Acid) != 0) color |= (int)_acidColors.GetByRate(lightValue.Value);
+                result = result + LightGradients.ElectricityGradient.GetByRateLerp(intensity);
+            if ((lightValue.LightType & LightType.Acid) != 0)
+                result = result + LightGradients.AcidGradient.GetByRateLerp(intensity);
 
-            if (lightValue.LightType == LightType.None) color = (int)_noneColors.GetByRate(lightValue.Value);
+            if (lightValue.LightType == LightType.None)
+                result = LightGradients.NoneGradient.GetByRateLerp(intensity);
 
-            return (ConsoleColor)color;
-        }
-
-        public static ConsoleColor FromColor(Color c)
-        {
-            var index = (c.R > 128) | (c.G > 128) | (c.B > 128) ? 8 : 0; // Bright bit
-            index |= c.R > 64 ? 4 : 0; // Red bit
-            index |= c.G > 64 ? 2 : 0; // Green bit
-            index |= c.B > 64 ? 1 : 0; // Blue bit
-            return (ConsoleColor)index;
+            return result; // Clamped by Color.operator+
         }
     }
 }

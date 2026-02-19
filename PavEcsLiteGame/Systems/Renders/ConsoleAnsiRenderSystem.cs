@@ -88,7 +88,7 @@ namespace PavEcsGame.Systems.Renders
             {
                 ref readonly var cmd = ref commandPool.Get(_renderCommandBuffer[i]);
                 builder.SetCursorIfNeeded(cmd.Position.Value.X, cmd.Position.Value.Y);
-                builder.AppendColor(cmd.Symbol.MainColor, cmd.BackgroundColor);
+                builder.AppendColorRgb(cmd.Symbol.MainColor, cmd.BackgroundColor);
 
                 char symbol = cmd.Symbol.Value != default ? cmd.Symbol.Value : SymbolComponent.Empty.Value;
                 builder.AppendChar(symbol);
