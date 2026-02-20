@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using PavEcsGame.Common.Utils;
 
 namespace PavEcsGame.Tiles
 {
@@ -28,7 +29,7 @@ namespace PavEcsGame.Tiles
 
         public static TileRule Load(string name)
         {
-            var filename = $"Data/{name}.txt";
+            var filename = FileHelper.ResolvePath($"Data/{name}.txt");
             if (!File.Exists(filename))
                 return null;
             var lines = File.ReadAllLines(filename);

@@ -5,6 +5,7 @@ using DeBroglie;
 using DeBroglie.Models;
 using DeBroglie.Topo;
 using Leopotam.EcsLite;
+using PavEcsGame.Common.Utils;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.Generated;
 
@@ -52,7 +53,7 @@ namespace PavEcsGame.Systems
 
         public async void LoadMap(string fileName)
         {
-            var lines = await File.ReadAllLinesAsync(fileName);
+            var lines = await File.ReadAllLinesAsync(FileHelper.ResolvePath(fileName));
 
             if (lines == null || lines.Length == 0)
                 return;
@@ -61,14 +62,14 @@ namespace PavEcsGame.Systems
 
         public async void GenerateMap(string fileName, string patternFilename)
         {
-            var lines = await File.ReadAllLinesAsync(fileName);
+            var lines = await File.ReadAllLinesAsync(FileHelper.ResolvePath(fileName));
 
             if (lines == null || lines.Length == 0)
                 return;
             var width = lines[0].Length;
             var height = lines.Length;
             // Define some sample data
-            var patternLines = (await File.ReadAllLinesAsync(patternFilename))
+            var patternLines = (await File.ReadAllLinesAsync(FileHelper.ResolvePath(patternFilename)))
                 .Select(x => x.ToArray())
                 .ToArray();
 

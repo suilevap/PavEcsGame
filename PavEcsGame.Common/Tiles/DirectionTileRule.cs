@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using PavEcsGame.Common.Utils;
 using PavEcsGame.Components;
 
 namespace PavEcsGame.Tiles
@@ -32,7 +33,7 @@ namespace PavEcsGame.Tiles
 
         public static DirectionTileRule Load(string name)
         {
-            var filename = $"Data/{name}.txt";
+            var filename = FileHelper.ResolvePath($"Data/{name}.txt");
             if (!File.Exists(filename))
                 return null;
             var lines = File.ReadAllLines(filename);

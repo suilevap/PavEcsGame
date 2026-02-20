@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using PavEcsGame.Common.Utils;
 
 namespace PavEcsGame.Tiles
 {
@@ -26,11 +27,11 @@ namespace PavEcsGame.Tiles
             var rules = new List<string>();
 
             // Add base wall rule if it exists
-            if (File.Exists("Data/wall_rule.txt"))
+            if (File.Exists(FileHelper.ResolvePath("Data/wall_rule.txt")))
                 rules.Add("wall_rule");
 
             // Scan wall_styles folder
-            var stylesDir = "Data/wall_styles";
+            var stylesDir = FileHelper.ResolvePath("Data/wall_styles");
             if (Directory.Exists(stylesDir))
             {
                 var styleFiles = Directory.GetFiles(stylesDir, "*.txt").OrderBy(f => f);
