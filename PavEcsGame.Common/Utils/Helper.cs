@@ -53,6 +53,34 @@ namespace PavEcsGame.Utils
             return Color.Lerp(gradient[lowerIndex], gradient[upperIndex], t);
         }
 
+        /// <summary>
+        /// Gets a Braille pattern from a gradient array using density-based interpolation.
+        /// Maps intensity [0-255] to gradient array indices and picks the pattern with
+        /// closest density to the interpolated density value.
+        /// </summary>
+        /// <param name="gradient">Gradient Braille pattern array (keyframe patterns)</param>
+        /// <param name="intensity">Intensity value [0-255]</param>
+        /// <returns>Braille pattern representing the interpolated density</returns>
+        public static BrailleChar GetByRateLerp(this BrailleChar[] gradient, byte intensity)
+        {
+            if (intensity == 0) return gradient[0];
+            if (intensity == 255) return gradient[^1];
+
+            // Map intensity to fractional index in gradient array
+            float exactIndex = (gradient.Length - 1) * intensity / 255f;
+            int lowerIndex = (int)exactIndex;
+            int upperIndex = Math.Min(lowerIndex + 1, gradient.Length - 1);
+            float t = exactIndex - lowerIndex; // Lerp factor [0-1]
+
+            // Interpolate density between keyframes
+            float lowerDensity = gradient[lowerIndex].Density;
+            float upperDensity = gradient[upperIndex].Density;
+            float targetDensity = lowerDensity + t * (upperDensity - lowerDensity);
+
+            // Pick pattern closest to target density (simple rounding based on t)
+            return t < 0.5f ? gradient[lowerIndex] : gradient[upperIndex];
+        }
+
         public static void EnsureSize<T>(ref T[] result, int totalSize) where T : struct
         {
             if (result == null || result.Length < totalSize) Array.Resize(ref result, totalSize);

@@ -1,4 +1,5 @@
 using PavEcsGame.Components;
+using PavEcsGame.Utils;
 
 namespace PavEcsGame.Systems.Renders
 {
@@ -73,5 +74,103 @@ namespace PavEcsGame.Systems.Renders
             new Color(220, 220, 220),   // Very light gray
             new Color(255, 255, 255)    // White
         };
+
+        // ============================================================================
+        // Braille Pattern Gradients for Sub-Pixel Density Rendering
+        // ============================================================================
+        // These gradients use symmetric dot patterns to create visually balanced
+        // light intensity representations. Patterns are designed to be vertically
+        // and horizontally symmetric for aesthetic consistency.
+        //
+        // Dot layout reference (2×4 grid):
+        //   │ 0 │ 3 │  Row 0 (top)
+        //   │ 1 │ 4 │  Row 1
+        //   │ 2 │ 5 │  Row 2
+        //   │ 6 │ 7 │  Row 3 (bottom)
+        // ============================================================================
+
+        /// <summary>
+        /// Braille patterns for Fire light intensity.
+        /// Center-out radial growth with dithered expansion (symmetric).
+        /// </summary>
+        public static readonly BrailleChar[] FireBrailleGradient = new[]
+        {
+            new BrailleChar(0b00000000), // ⠀ empty (dark)
+            new BrailleChar(0b00010000), // ⠐ center dot (dim ember)
+            new BrailleChar(0b00010010), // ⠒ center row horizontal (symmetric)
+            new BrailleChar(0b00011011), // ⠚ center + top row (expanding up)
+            new BrailleChar(0b00110110), // ⠶ center two rows (symmetric vertical)
+            new BrailleChar(0b00111111), // ⠿ top 3 rows (growing)
+            new BrailleChar(0b01111111), // ⡿ add bottom-left (asymmetric dither)
+            new BrailleChar(0b11111110), // ⣾ all but bottom-right (dithered)
+            new BrailleChar(0b11111111), // ⣿ full (bright flames)
+            BrailleChar.Full             // ⣿ max brightness
+        };
+
+        /// <summary>
+        /// Braille patterns for Electricity light intensity.
+        /// Diagonal/cross pattern expanding from center (symmetric dithering).
+        /// </summary>
+        public static readonly BrailleChar[] ElectricityBrailleGradient = new[]
+        {
+            new BrailleChar(0b00000000), // ⠀ empty (dark)
+            new BrailleChar(0b00010010), // ⠒ center row (symmetric spark)
+            new BrailleChar(0b01010010), // ⡒ center + bottom-left (diagonal start)
+            new BrailleChar(0b01011011), // ⡛ expanding cross pattern
+            new BrailleChar(0b11011011), // ⣛ wider cross (dithered symmetric)
+            new BrailleChar(0b11111111), // ⣿ full arc
+            new BrailleChar(0b11111111), // ⣿ sustained
+            BrailleChar.Full             // ⣿ max brightness
+        };
+
+        /// <summary>
+        /// Braille patterns for Acid light intensity.
+        /// Bottom-center growth with symmetric expansion (puddle spreading).
+        /// </summary>
+        public static readonly BrailleChar[] AcidBrailleGradient = new[]
+        {
+            new BrailleChar(0b00000000), // ⠀ empty (dark)
+            new BrailleChar(0b01000000), // ⡀ bottom-left center (tiny puddle)
+            new BrailleChar(0b11000000), // ⣀ bottom row (symmetric puddle)
+            new BrailleChar(0b11010010), // ⣒ bottom + middle row (expanding up)
+            new BrailleChar(0b11110110), // ⣶ bottom 3 rows (symmetric)
+            new BrailleChar(0b11111111), // ⣿ full (glowing pool)
+            BrailleChar.Full             // ⣿ max brightness
+        };
+
+        /// <summary>
+        /// Braille patterns for None/ambient light intensity.
+        /// Center-out radial expansion with balanced dithering (neutral).
+        /// </summary>
+        public static readonly BrailleChar[] NoneBrailleGradient = new[]
+        {
+            new BrailleChar(0b00000000), // ⠀ empty (dark)
+            new BrailleChar(0b00010010), // ⠒ center row (symmetric)
+            new BrailleChar(0b00110110), // ⠶ center two rows (symmetric vertical)
+            new BrailleChar(0b00111111), // ⠿ top 3 rows (expanding)
+            new BrailleChar(0b11111110), // ⣾ nearly full (dithered)
+            new BrailleChar(0b11111111), // ⣿ full (bright)
+            BrailleChar.Full             // ⣿ max brightness
+        };
+
+        /// <summary>
+        /// Get Braille pattern for a given light type and intensity.
+        /// Uses linear interpolation between gradient keyframes for smooth transitions.
+        /// </summary>
+        /// <param name="lightType">Type of light (Fire, Electricity, Acid, or None)</param>
+        /// <param name="intensity">Light intensity [0-255]</param>
+        /// <returns>Braille pattern representing the light's visual density</returns>
+        public static BrailleChar GetBraillePattern(LightType lightType, byte intensity)
+        {
+            BrailleChar[] gradient = lightType switch
+            {
+                LightType.Fire => FireBrailleGradient,
+                LightType.Electricity => ElectricityBrailleGradient,
+                LightType.Acid => AcidBrailleGradient,
+                _ => NoneBrailleGradient
+            };
+
+            return gradient.GetByRateLerp(intensity);
+        }
     }
 }
