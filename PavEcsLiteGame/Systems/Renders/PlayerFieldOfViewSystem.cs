@@ -54,7 +54,7 @@ namespace PavEcsGame.Systems.Renders
                             ref VisibilityType sourceValue,
                             in float targetValue) =>
                         {
-                            if (targetValue > 0.1
+                            if (targetValue > 0.025
                                ) //&& PositionComponent.ScalarMul(pos - data.Position, data.Direction.Direction) >= 0)//todo proper angle check
                                 sourceValue |= VisibilityType.Visible | VisibilityType.Known;
                             else
