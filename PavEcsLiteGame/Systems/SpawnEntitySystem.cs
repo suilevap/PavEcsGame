@@ -191,8 +191,7 @@ namespace PavEcsGame.Systems
                         Radius = 16,
                         BasicParameters = new LightValueComponent
                         {
-                            LightType = LightType.None,
-                            Value = 196
+                            AccumulatedColor = new Color((byte)196, (byte)0, (byte)0, (byte)LightType.None)
                         }
                     };
 
@@ -220,8 +219,7 @@ namespace PavEcsGame.Systems
                         Radius = 4,
                         BasicParameters = new LightValueComponent
                         {
-                            LightType = LightType.Electricity,
-                            Value = 32
+                            AccumulatedColor = new Color((byte)32, (byte)0, (byte)0, (byte)LightType.Electricity)
                         }
                     };
                     el.View().Ensure().Value = 'Ω';
@@ -235,8 +233,7 @@ namespace PavEcsGame.Systems
                         Radius = 16,
                         BasicParameters = new LightValueComponent
                         {
-                            LightType = LightType.Fire,
-                            Value = 196
+                            AccumulatedColor = new Color((byte)196, (byte)0, (byte)0, (byte)LightType.Fire)
                         }
                     };
                     light.View().Ensure().Value = 'i';
@@ -248,8 +245,7 @@ namespace PavEcsGame.Systems
                         Radius = 4,
                         BasicParameters = new LightValueComponent
                         {
-                            LightType = LightType.Acid,
-                            Value = 32
+                            AccumulatedColor = new Color((byte)32, (byte)0, (byte)0, (byte)LightType.Acid)
                         }
                     };
                     acid.View().Ensure().Value = '▒';

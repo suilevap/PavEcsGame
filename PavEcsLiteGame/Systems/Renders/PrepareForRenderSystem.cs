@@ -11,6 +11,13 @@ namespace PavEcsGame.Systems.Renders
 {
     public partial class PrepareForRenderSystem : IEcsRunSystem, IEcsSystemSpec
     {
+        /// <summary>
+        /// Toggle flag to enable/disable Braille sub-pixel rendering for light gradients.
+        /// When enabled, empty cells use Braille dot patterns to represent light intensity
+        /// through density (sparse dots = dim, dense dots = bright).
+        /// </summary>
+        private const bool UseBraillePatterns = false;
+
         private readonly IReadOnlyMapData<PositionComponent, EcsPackedEntityWithWorld> _map;
 
         private readonly Providers _providers;
@@ -205,19 +212,20 @@ namespace PavEcsGame.Systems.Renders
                 RenderItem Light(ref RenderItem item, ref LightValueComponent light, VisibilityType visibility,
                     in PositionComponent pos)
                 {
-                    var ligthValue = light.Value;
                     var lightColor = ToRgbColor(light);
 
                     if (item.Symbol.IsEmpty)
                     {
                         if ((visibility & VisibilityType.Visible) != 0 || pos.Value.IsHexPos())
                         {
-                            item.Symbol.Value = '.';
+                            // Use Braille pattern for sub-pixel density rendering (if enabled)
+                            item.Symbol.Value = ToLightPattern(light);
                             item.Symbol.MainColor = lightColor;
                         }
                     }
                     else
                     {
+                        // For non-empty cells, just apply color (don't override symbol)
                         item.Symbol.MainColor = lightColor;
                     }
 
@@ -272,31 +280,31 @@ namespace PavEcsGame.Systems.Renders
             }
         }
 
+        
+        private static char ToLightPattern(LightValueComponent lightValue)
+        {
+            if (lightValue.AccumulatedColor.R == 0 || !UseBraillePatterns)
+                return '.';
+
+            // For mixed light types, use dominant type (highest priority)
+            // Priority order: Fire > Electricity > Acid > None
+            LightType dominantType = LightType.None;
+            if ((lightValue.LightTypes & LightType.Fire) != 0)
+                dominantType = LightType.Fire;
+            else if ((lightValue.LightTypes & LightType.Electricity) != 0)
+                dominantType = LightType.Electricity;
+            else if ((lightValue.LightTypes & LightType.Acid) != 0)
+                dominantType = LightType.Acid;
+
+            return LightGradients.GetBraillePattern(dominantType, lightValue.AccumulatedColor.R)
+                .ToChar();
+        }
 
         /// <summary>
-        /// Converts light value to 24-bit RGB color using smooth gradient interpolation.
-        /// Supports additive RGB blending for overlapping light types (e.g., Fire + Electricity).
+        /// Converts light value to 24-bit RGB color for rendering.
+        /// The accumulated color is the result of additive RGB blending already applied in LightRenderSystem.
         /// </summary>
         private static Color ToRgbColor(LightValueComponent lightValue)
-        {
-            if (lightValue.Value == 0)
-                return Color.Zero;
-
-            Color result = Color.Zero;
-            byte intensity = lightValue.Value;
-
-            // Additive RGB blending for proper light mixing
-            if ((lightValue.LightType & LightType.Fire) != 0)
-                result = result + LightGradients.FireGradient.GetByRateLerp(intensity);
-            if ((lightValue.LightType & LightType.Electricity) != 0)
-                result = result + LightGradients.ElectricityGradient.GetByRateLerp(intensity);
-            if ((lightValue.LightType & LightType.Acid) != 0)
-                result = result + LightGradients.AcidGradient.GetByRateLerp(intensity);
-
-            if (lightValue.LightType == LightType.None)
-                result = LightGradients.NoneGradient.GetByRateLerp(intensity);
-
-            return result; // Clamped by Color.operator+
-        }
+            => lightValue.RgbColor;
     }
 }

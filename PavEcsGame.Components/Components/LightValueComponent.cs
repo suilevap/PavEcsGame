@@ -4,8 +4,17 @@ namespace PavEcsGame.Components
 {
     public struct LightValueComponent
     {
-        public byte Value;
-        public LightType LightType;
+        /// <summary>
+        /// R,G,B = accumulated light color (additive blending).
+        /// A = bitmask of LightType flags that have participated.
+        /// </summary>
+        public Color AccumulatedColor;
+
+        /// <summary>Which light types have contributed to this tile (OR of all sources).</summary>
+        public LightType LightTypes => (LightType)AccumulatedColor.A;
+
+        /// <summary>Opaque RGB color for rendering — alpha stripped (set to 255).</summary>
+        public Color RgbColor => new Color(AccumulatedColor, 255);
     }
 
     [Flags]

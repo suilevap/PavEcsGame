@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Leopotam.EcsLite;
 using PavEcsGame.Components;
 using PavEcsGame.Components.Events;
+using PavEcsGame.Utils;
 using PavEcsSpec.EcsLite;
 using PavEcsSpec.Generated;
 
@@ -100,7 +101,7 @@ namespace PavEcsGame.Systems.Renders
 
             _ambient = new LightValueComponent
             {
-                Value = 1
+                AccumulatedColor = new Color(64, 64, 64, 0) // Dark gray; A=0 = no type
             };
         }
 
@@ -165,20 +166,30 @@ namespace PavEcsGame.Systems.Renders
             ref LightValueComponent sourceValue, in float targetValue)
         {
             var sqD = pos.Value.DistanceSquare(c.Center);
-            if (sqD <= c.RadiusSq)
-            {
-                var lightValue = (byte)(targetValue * (1 - sqD * c.InvRadiusSq) * c.BasicParameters.Value);
+            if (sqD > c.RadiusSq) return;
 
-                if ((sourceValue.LightType & c.BasicParameters.LightType) != 0)
-                {
-                    sourceValue.Value = (byte)Math.Min(sourceValue.Value + lightValue, 255);
-                }
-                else if (lightValue > sourceValue.Value)
-                {
-                    sourceValue.Value = lightValue;
-                    sourceValue.LightType = c.BasicParameters.LightType;
-                }
-            }
+            var attenuated = (byte)(targetValue * (1f - sqD * c.InvRadiusSq) * c.BasicParameters.AccumulatedColor.R);
+            if (attenuated == 0) return;
+
+            var type = (LightType)c.BasicParameters.AccumulatedColor.A;
+            var gradColor = GetGradientForType(type).GetByRateLerp(attenuated);
+            var cur = sourceValue.AccumulatedColor;
+
+            // Add RGB (Color(int,int,int,int) constructor clamps per channel automatically)
+            // OR the type flag into A — do NOT add A (Color.operator+ would corrupt the bitmask)
+            sourceValue.AccumulatedColor = new Color(
+                cur.R + gradColor.R,
+                cur.G + gradColor.G,
+                cur.B + gradColor.B,
+                cur.A | (byte)type);
         }
+
+        private static Color[] GetGradientForType(LightType type) => type switch
+        {
+            LightType.Fire => LightGradients.FireGradient,
+            LightType.Electricity => LightGradients.ElectricityGradient,
+            LightType.Acid => LightGradients.AcidGradient,
+            _ => LightGradients.NoneGradient,
+        };
     }
 }
