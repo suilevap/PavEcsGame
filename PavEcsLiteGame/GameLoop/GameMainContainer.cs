@@ -18,9 +18,11 @@ namespace PavEcsGame.GameLoop
         private EcsSystems _systems;
         private EcsUniverse? _universe;
         private EcsWorld _world;
+        private readonly string[] _args;
 
-        public GameMainContainer()
+        public GameMainContainer(string[] args)
         {
+            _args = args;
             _world = new EcsWorld();
             _systems = new PerformanceMonitoringEcsSystems(_world, "Root", true);
         }
@@ -78,6 +80,7 @@ namespace PavEcsGame.GameLoop
             _systems
                 .Add(new WindowResizeDetectionSystem(_systems))
                 .Add(new LightRenderSystem(_systems))
+                .Add(new StaticEntityLightingSystem(_systems, map))
                 .Add(new PlayerFieldOfViewSystem(_systems))
                 .Add(new PrepareForRenderSystem(_systems, map))
                 .Add(UseOptimizedRenderSystem
@@ -101,11 +104,7 @@ namespace PavEcsGame.GameLoop
             _systems
                 .Init();
 
-            //cmdSystem.LoadMap("Data/map1.txt");
-            cmdSystem.LoadMap("Data/lightTest.txt");
-
-            //cmdSystem.GenerateMap("Data/lightTest.txt", "Data/wcf_pattern_test.txt");
-
+            StartupCommandRunner.Run(_args, cmdSystem);
 
             PrintUniverseInfo(universe);
         }

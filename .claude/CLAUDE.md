@@ -11,6 +11,12 @@ dotnet build PavEcsGame.sln
 # Build and run the main game (PavEcsLiteGame)
 dotnet run --project PavEcsLiteGame/PavEcsGame.Lite.csproj
 
+# Build and run the main game with specific map (PavEcsLiteGame)
+dotnet run --project PavEcsLiteGame/PavEcsGame.Lite.csproj -m PavEcsGame.Common/Data/lightTest.txt
+
+# Build and run the main game with generation map (PavEcsLiteGame)
+dotnet run --project PavEcsLiteGame/PavEcsGame.Lite.csproj -g PavEcsGame.Common/Data/lightTest.txt PavEcsGame.Common/Data/wcf_pattern_test.txt 
+
 # Run from build output (required for Data/ folder access)
 cd PavEcsLiteGame/bin/Debug/net10.0 && ./PavEcsGame.Lite
 
@@ -19,11 +25,25 @@ dotnet build PavEcsSpec.Generators/PavEcsSpec.Generators.csproj
 
 # Build the generator test project (validates generated code)
 dotnet build GenerateTest/GenerateTest.csproj
+
+# Run with specific map
+cd PavEcsLiteGame/bin/Debug/net10.0 && ./PavEcsGame.Lite -m Data/lighting_test_map.txt
+
+# Run map generation mode
+cd PavEcsLiteGame/bin/Debug/net10.0 && ./PavEcsGame.Lite -g Data/lightTest.txt Data/wcf_pattern_test.txt
 ```
 
 There is no test framework (no xUnit/NUnit/MSTest). The `GenerateTest` project serves as a compile-time validation that the Roslyn source generator produces correct code.
 
 **Note:** The game requires an interactive console (reads keyboard input). Cannot run in background or via `dotnet run` from project directory - must run the executable from the build output directory where Data/ files are copied.
+
+## CLI Arguments
+
+```
+-m <mapFile>              Load and run a specific map file
+-g <mapFile> <pattern>    Generate map using WCF from pattern
+(no args)                 Loads default map: Data/lightTest.txt
+```
 
 ## Architecture
 

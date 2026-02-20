@@ -6,7 +6,7 @@ namespace PavEcsGame
     {
         private static void Main(string[] args)
         {
-            var game = new GameMainContainer();
+            var game = new GameMainContainer(args);
 
             game.Start();
             while (game.IsAlive) game.Update();
