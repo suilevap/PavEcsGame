@@ -4,29 +4,52 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Run Commands
 
+### Build Commands
+
 ```bash
 # Build entire solution
 dotnet build PavEcsGame.sln
 
-# Build and run the main game (PavEcsLiteGame)
-dotnet run --project PavEcsLiteGame/PavEcsGame.Lite.csproj
-
-# Build and run the main game with specific map (PavEcsLiteGame)
-dotnet run --project PavEcsLiteGame/PavEcsGame.Lite.csproj -m PavEcsGame.Common/Data/lightTest.txt
-
-# Build and run the main game with generation map (PavEcsLiteGame)
-dotnet run --project PavEcsLiteGame/PavEcsGame.Lite.csproj -g PavEcsGame.Common/Data/lightTest.txt PavEcsGame.Common/Data/wcf_pattern_test.txt 
-
-# Run from build output (required for Data/ folder access)
-cd PavEcsLiteGame/bin/Debug/net10.0 && ./PavEcsGame.Lite
+# Build only the main game
+dotnet build PavEcsLiteGame/PavEcsGame.Lite.csproj
 
 # Build only the source generator
 dotnet build PavEcsSpec.Generators/PavEcsSpec.Generators.csproj
 
 # Build the generator test project (validates generated code)
 dotnet build GenerateTest/GenerateTest.csproj
+```
 
-# Run with specific map
+### Run with dotnet run (recommended for development)
+
+File paths are resolved automatically via `FileHelper.ResolvePath()`:
+- Relative paths are first checked against CWD
+- If not found, fallback to executable directory (where `dotnet run` places files)
+
+```bash
+# Run with default map (Data/lightTest.txt)
+dotnet run --project PavEcsLiteGame/PavEcsGame.Lite.csproj
+
+# Run with specific map from repo root (relative or absolute path)
+dotnet run --project PavEcsLiteGame/PavEcsGame.Lite.csproj -m PavEcsGame.Common/Data/lightTest.txt
+
+# Run with custom map file
+dotnet run --project PavEcsLiteGame/PavEcsGame.Lite.csproj -m /path/to/custom_map.txt
+
+# Generate map using WCF from pattern
+dotnet run --project PavEcsLiteGame/PavEcsGame.Lite.csproj -g PavEcsGame.Common/Data/lightTest.txt PavEcsGame.Common/Data/wcf_pattern_test.txt
+```
+
+### Run from build output (direct binary execution)
+
+```bash
+# Build first
+dotnet build PavEcsLiteGame/PavEcsGame.Lite.csproj
+
+# Run from output directory (Data/ files are in bin/Debug/net10.0/Data/)
+cd PavEcsLiteGame/bin/Debug/net10.0 && ./PavEcsGame.Lite
+
+# Run with specific map (path relative to bin/Debug/net10.0/)
 cd PavEcsLiteGame/bin/Debug/net10.0 && ./PavEcsGame.Lite -m Data/lighting_test_map.txt
 
 # Run map generation mode
@@ -35,7 +58,7 @@ cd PavEcsLiteGame/bin/Debug/net10.0 && ./PavEcsGame.Lite -g Data/lightTest.txt D
 
 There is no test framework (no xUnit/NUnit/MSTest). The `GenerateTest` project serves as a compile-time validation that the Roslyn source generator produces correct code.
 
-**Note:** The game requires an interactive console (reads keyboard input). Cannot run in background or via `dotnet run` from project directory - must run the executable from the build output directory where Data/ files are copied.
+**Note:** The game requires an interactive console (reads keyboard input). Cannot run in background.
 
 ## CLI Arguments
 
@@ -44,6 +67,19 @@ There is no test framework (no xUnit/NUnit/MSTest). The `GenerateTest` project s
 -g <mapFile> <pattern>    Generate map using WCF from pattern
 (no args)                 Loads default map: Data/lightTest.txt
 ```
+
+### Path Resolution for Custom Maps
+
+The `FileHelper.ResolvePath()` utility (in `PavEcsGame.Common/Utils/`) enables flexible map loading:
+
+1. **Absolute paths** — Used as-is
+2. **CWD-relative paths** — Used if they exist (supports running from repo root with `-m PavEcsGame.Common/Data/custom.txt`)
+3. **Fallback to executable directory** — For `dotnet run`, paths resolve to `bin/Debug/net10.0/Data/`
+
+This means:
+- `dotnet run ... -m Data/custom.txt` works from repo root (fallback)
+- `dotnet run ... -m PavEcsGame.Common/Data/custom.txt` works from repo root (CWD check)
+- `./PavEcsGame.Lite -m Data/custom.txt` works from `bin/Debug/net10.0/` (CWD check)
 
 ## Architecture
 
@@ -182,5 +218,5 @@ The lighting system uses smooth RGB gradients instead of 16-color palettes:
 - `PavEcsGame.Components/Types/` — Math types (`Int2`, geometry)
 - `PavEcsGame.Components/Data/` — Data types (`Color` struct with RGB/RGBA)
 - `PavEcsGame.Common/Data/` — Map files and wall style definitions (copied to output)
-- `PavEcsGame.Common/Utils/` — Helper methods (`GetByRate`, `GetByRateLerp`, etc.)
+- `PavEcsGame.Common/Utils/` — Helper methods (`FileHelper.ResolvePath()`, `GetByRate`, `GetByRateLerp`, etc.)
 - `PavEcsSpec.EcsLite/Spec/` — ECS abstraction (`EcsSpec`, `EcsUniverse`, `EcsFilterSpec`)
