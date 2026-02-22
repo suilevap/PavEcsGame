@@ -4,6 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Run Commands
 
+**Build outputs:**
+- Executable: `PavEcsLiteGame/bin/Debug/net10.0/PavEcsGame.Lite` (or .exe on Windows)
+- Data files copied to: `PavEcsLiteGame/bin/Debug/net10.0/Data/` (from PavEcsGame.Common/.csproj CopyToOutputDirectory)
+
 ### Build Commands
 
 ```bash
@@ -81,6 +85,11 @@ This means:
 - `dotnet run ... -m PavEcsGame.Common/Data/custom.txt` works from repo root (CWD check)
 - `./PavEcsGame.Lite -m Data/custom.txt` works from `bin/Debug/net10.0/` (CWD check)
 
+**Pattern for future work:** When wrapping file I/O for CWD-independent paths, use this three-tier strategy:
+1. Check if path is absolute → use as-is
+2. Check if exists relative to CWD → use as-is
+3. Fallback to entry point assembly directory → for `dotnet run` artifact resolution
+
 ## Architecture
 
 This is a **roguelike dungeon crawler** built on the **Entity-Component-System** pattern using [Leopotam EcsLite](https://github.com/Leopotam/ecslite) (vendored in `leo/` as a git submodule).
@@ -109,6 +118,8 @@ GenerateTest (net10.0, generator validation)
 ### Roslyn Source Generator (`PavEcsSpec.Generators`)
 
 The generator targets `netstandard2.0` and is referenced as an `Analyzer` (not a normal project reference) in consuming projects. It processes `[Entity]` attributes on partial structs inside systems and generates:
+
+**Note on .NET compatibility:** PavEcsGame.Common targets `netstandard2.1`. Avoid C# 9.0+ features (relational patterns, required keyword) and APIs added after netstandard2.1 (e.g., `AppContext.BaseDirectory`). Use `Assembly.GetEntryAssembly()?.Location` instead for cross-platform path resolution.
 
 - **Entity ref structs** with component accessors (ref, ref readonly, Optional, Required)
 - **Provider classes** with `EcsPool<T>` fields, `EcsFilter`, enumerator, and `New()`/`Get()`/`TryGet()` factory methods
