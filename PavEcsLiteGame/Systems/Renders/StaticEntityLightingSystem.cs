@@ -51,7 +51,7 @@ namespace PavEcsGame.Systems.Renders
                 var pos = entity.Pos();
                 var currentBaseLight = lightMap.Get(pos);
                 ref var cache = ref entity.Cache().Ensure(out var isNew);
-
+                
                 LightValueComponent outputLight;
                 if (!isNew && cache.LastBaseLight.AccumulatedColor == currentBaseLight.AccumulatedColor)
                 {
@@ -60,8 +60,15 @@ namespace PavEcsGame.Systems.Renders
                 else
                 {
                     outputLight = ComputeResultLightValue(pos.Value, lightMap); // cache miss or first use
-                    cache.LastBaseLight = currentBaseLight;
-                    cache.CachedOutputLight = outputLight;
+                    if (currentBaseLight.AccumulatedColor != Color.Zero)
+                    {
+                        cache.LastBaseLight = currentBaseLight;
+                        cache.CachedOutputLight = outputLight;
+                    }
+                    else
+                    {
+                        entity.Cache().Clear();
+                    }
                 }
 
                 lightMap.GetRef(pos) = outputLight;
