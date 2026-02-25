@@ -8,6 +8,8 @@ namespace PavEcsGame.GameLoop
 
         public static void Run(string[] args, CommandSystem cmdSystem)
         {
+            var uncoverMap = false;
+
             if (args.Length == 0)
             {
                 cmdSystem.LoadMap(DefaultMapPath);
@@ -25,8 +27,19 @@ namespace PavEcsGame.GameLoop
                     case "-g":
                         cmdSystem.GenerateMap(args[++i], args[++i]);
                         break;
+                    case "-u":
+                        uncoverMap = true;
+                        break;
+                    case "-ambient_light":
+                        cmdSystem.SetAmbientLight(args[++i]);
+                        break;
                 }
                 i++;
+            }
+
+            if (uncoverMap)
+            {
+                cmdSystem.QueueUncoverMapCommand();
             }
         }
     }

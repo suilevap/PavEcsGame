@@ -11,8 +11,9 @@ namespace PavEcsGame.Systems.Renders
 {
     internal partial class LightRenderSystem : IEcsRunSystem, IEcsSystemSpec
     {
-        private readonly LightValueComponent _ambient;
-
+        private LightValueComponent _ambient;
+        private Color _lastAmbientColor;
+        private int _mapRevision;
 
         private readonly MapData<LightValueComponent> _lightMap;
 
@@ -31,7 +32,7 @@ namespace PavEcsGame.Systems.Renders
         //        //int radiusSq = (lightData.Radius + 1) * (lightData.Radius + 1);
         //        //float invRadiusSq = 1.0f / radiusSq;
         //        var context = new LightDataContext(in lightData, center);
-        //        IMapData<PositionComponent, LightValueComponent> m = lightMap; 
+        //        IMapData<PositionComponent, LightValueComponent> m = lightMap;
         //        m.Merge(lightResult.Data, context, _lightMergeDelegate);
         //    }
         //}
@@ -40,6 +41,7 @@ namespace PavEcsGame.Systems.Renders
             _lightMergeDelegate = LightMerge;
 
         private int _staticLightVersion = -1;
+        private int _lastMapRevision = -1;
 
         private interface ILightSource
         {
@@ -78,6 +80,12 @@ namespace PavEcsGame.Systems.Renders
             public partial ref readonly MapLoadedEvent Loaded();
         }
 
+        [Entity]
+        private partial struct AmbientLightEnt
+        {
+            public partial ref readonly AmbientLightComponent Ambient();
+        }
+
         private readonly struct LightDataContext
         {
             public readonly PositionComponent Center;
@@ -98,11 +106,6 @@ namespace PavEcsGame.Systems.Renders
         {
             _lightMap = new MapData<LightValueComponent>();
             _lightMapStatic = new MapData<LightValueComponent>();
-
-            _ambient = new LightValueComponent
-            {
-                AccumulatedColor = new Color(64, 64, 64, 0) // Dark gray; A=0 = no type
-            };
         }
 
 
@@ -113,14 +116,35 @@ namespace PavEcsGame.Systems.Renders
                 var size = ent.Loaded().Size;
                 _lightMap.Init(size);
                 _lightMapStatic.Init(size);
+                _mapRevision++;
             }
 
-            var currentVersion = 0;
+            // Sum all ambient light contributions; fallback to default dark gray if none
+            var ambientColor = new Color(0, 0, 0, 0);
+            var hasAmbient = false;
+            foreach (var ent in _providers.AmbientLightEntProvider)
+            {
+                var c = ent.Ambient().Color;
+                ambientColor = new Color(ambientColor.R + c.R, ambientColor.G + c.G, ambientColor.B + c.B, 0);
+                hasAmbient = true;
+            }
+            if (!hasAmbient)
+                ambientColor = new Color(64, 64, 64, 0); // default: known-but-dark tiles still visible
+            _ambient = new LightValueComponent { AccumulatedColor = ambientColor };
+
+            var currentVersion = _mapRevision;
 
             foreach (var ent in _providers.LightToRenderStaticEntProvider)
             {
                 var rev = ent.Result().Revision;
                 currentVersion ^= (ent.GetRawId() << 8) | rev;
+            }
+
+            if (ambientColor != _lastAmbientColor || _mapRevision != _lastMapRevision)
+            {
+                _lastAmbientColor = ambientColor;
+                _lastMapRevision = _mapRevision;
+                _staticLightVersion = (currentVersion + 1) % 256;
             }
 
             if (currentVersion != _staticLightVersion)

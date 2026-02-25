@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using DeBroglie;
@@ -6,6 +7,7 @@ using DeBroglie.Models;
 using DeBroglie.Topo;
 using Leopotam.EcsLite;
 using PavEcsGame.Common.Utils;
+using PavEcsGame.Components;
 using PavEcsGame.Components.Events;
 using PavEcsSpec.Generated;
 
@@ -13,6 +15,7 @@ namespace PavEcsGame.Systems
 {
     internal partial class CommandSystem : IEcsRunSystem
     {
+
         public struct CommandComponent
         {
             public string Command;
@@ -31,12 +34,25 @@ namespace PavEcsGame.Systems
             public partial ref MapRawDataEvent Event();
         }
 
+        [Entity]
+        private readonly partial struct VisibilityEnt
+        {
+            public partial ref AreaResultComponent<VisibilityType> Visibility();
+        }
+
+        [Entity(SkipFilter = true)]
+        private readonly partial struct AmbientLightEnt
+        {
+            public partial ref AmbientLightComponent AmbientLight();
+        }
+
         public void Run(IEcsSystems systems)
         {
             foreach (var ent in _providers.EntProvider)
             {
                 ref var cmd = ref ent.Command().Get();
 
+                var shouldRemove = true;
                 switch (cmd.Command)
                 {
                     case "load":
@@ -45,9 +61,27 @@ namespace PavEcsGame.Systems
                         LoadMap(fileName);
                     }
                         break;
+                    case "uncover":
+                    {
+                        shouldRemove = UncoverMap();
+                    }
+                        break;
+                    case "ambient_light":
+                    {
+                        var hex = cmd.Args[0];
+                        var r = Convert.ToByte(hex.Substring(0, 2), 16);
+                        var g = Convert.ToByte(hex.Substring(2, 2), 16);
+                        var b = Convert.ToByte(hex.Substring(4, 2), 16);
+                        _providers.AmbientLightEntProvider.New().AmbientLight() =
+                            new AmbientLightComponent { Color = new Color(r, g, b, (byte)0) };
+                    }
+                        break;
                 }
 
-                ent.Command().Remove();
+                if (shouldRemove)
+                {
+                    ent.Command().Remove();
+                }
             }
         }
 
@@ -126,6 +160,46 @@ namespace PavEcsGame.Systems
             ref var data = ref _providers.MapDataEntProvider.New().Event();
             data.Name = fileName;
             data.Data = lines;
+        }
+
+        public void QueueUncoverMapCommand()
+        {
+            ref var cmd = ref _providers.EntProvider.New().Command().Get();
+            cmd.Command = "uncover";
+            cmd.Args = new string[] { };
+        }
+
+        public bool UncoverMap()
+        {
+            var foundVisibilityData = false;
+            foreach (var ent in _providers.VisibilityEntProvider)
+            {
+                ref var visibility = ref ent.Visibility();
+                if (visibility.Data == null)
+                    continue;
+
+                foundVisibilityData = true;
+                var mapData = visibility.Data;
+                var pos = new PositionComponent();
+                for (pos.Value.Y = mapData.MinPos.Value.Y; pos.Value.Y < mapData.MaxPos.Value.Y; pos.Value.Y++)
+                {
+                    for (pos.Value.X = mapData.MinPos.Value.X; pos.Value.X < mapData.MaxPos.Value.X; pos.Value.X++)
+                    {
+                        ref var tileVisibility = ref mapData.GetRef(pos);
+                        // Set both Visible and Known to make entire map appear uncovered
+                        tileVisibility |= VisibilityType.Known;
+                    }
+                }
+            }
+
+            return foundVisibilityData;
+        }
+
+        public void SetAmbientLight(string hexColor)
+        {
+            ref var cmd = ref _providers.EntProvider.New().Command().Get();
+            cmd.Command = "ambient_light";
+            cmd.Args = new[] { hexColor };
         }
     }
 }
