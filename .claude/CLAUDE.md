@@ -40,6 +40,9 @@ dotnet run --project PavEcsLiteGame/PavEcsGame.Lite.csproj -m PavEcsGame.Common/
 # Run with custom map file
 dotnet run --project PavEcsLiteGame/PavEcsGame.Lite.csproj -m /path/to/custom_map.txt
 
+# Run with ambient light (silver/light gray tint on all tiles)
+dotnet run --project PavEcsLiteGame/PavEcsGame.Lite.csproj -ambient_light C0C0C0
+
 # Generate map using WCF from pattern
 dotnet run --project PavEcsLiteGame/PavEcsGame.Lite.csproj -g PavEcsGame.Common/Data/lightTest.txt PavEcsGame.Common/Data/wcf_pattern_test.txt
 ```
@@ -69,6 +72,7 @@ There is no test framework (no xUnit/NUnit/MSTest). The `GenerateTest` project s
 ```
 -m <mapFile>              Load and run a specific map file
 -g <mapFile> <pattern>    Generate map using WCF from pattern
+-ambient_light <hex>      Set ambient light color (hex RGB, e.g., C0C0C0 for silver)
 (no args)                 Loads default map: Data/lightTest.txt
 ```
 
@@ -209,6 +213,7 @@ Entity types compose via nesting — an entity method returning another entity t
 ### Gradient Lighting System (24-bit RGB)
 
 The lighting system uses smooth RGB gradients instead of 16-color palettes:
+- **Ambient Light** — `AmbientLightComponent` sets base illumination color for all tiles (via CLI `-ambient_light <hex>` or `CommandSystem.SetAmbientLight()`); applied when map loads via `LightRenderSystem` using map revision tracking
 - **Gradient palettes** — `LightGradients.cs` defines Color[] arrays (Fire, Electricity, Acid, None) with keyframe colors
 - **Interpolation** — `Helper.GetByRateLerp()` maps intensity [0-255] to gradient using `Color.Lerp()`
 - **Color blending** — `ToRgbColor()` uses additive RGB blending for overlapping lights (Fire + Electricity = white)
